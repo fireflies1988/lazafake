@@ -1,0 +1,31 @@
+{
+  "name": "lazafake",
+  "version": "1.0.0",
+  "description": "",
+  "main": "backend/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node backend/server.js",
+    "server": "nodemon backend/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fireflies1988/lazafake.git"
+  },
+  "author": "Kieu Huynh Thanh Tung",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fireflies1988/lazafake/issues"
+  },
+  "homepage": "https://github.com/fireflies1988/lazafake#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-async-handler": "^1.2.0",
+    "express-validator": "^6.14.2",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.6.5",
+    "nodemon": "^2.0.20"
+  }
+}
