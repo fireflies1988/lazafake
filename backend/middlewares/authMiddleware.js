@@ -16,7 +16,10 @@ const auth = asyncHandler(async (req, res, next) => {
       console.log(decoded);
 
       // get user data
-      req.user = await User.findById(decoded.id).select("-passwordHash -refreshTokenHash");
+      req.user = await User.findById(
+        decoded.id,
+        "-passwordHash -refreshTokenHash"
+      );
 
       next();
     } catch (err) {

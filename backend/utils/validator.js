@@ -1,43 +1,86 @@
-const { body } = require("express-validator/check");
+const { body } = require("express-validator");
 
 exports.validate = (method) => {
   switch (method) {
     case "changePassword": {
       return [
-        body("currentPassword", "Current password is required.")
-          .not()
-          .isEmpty(),
+        body("currentPassword", "Current password is required.").notEmpty(),
         body(
           "newPassword",
           "Password must be at least 6 characters long."
         ).isLength({
           min: 6,
         }),
-        body(
-          "confirmNewPassword",
-          "Password must be at least 6 characters long."
-        ).isLength({
-          min: 6,
+        body("confirmNewPassword").custom((value, { req }) => {
+          if (value !== req.body.newPassword) {
+            throw new Error("Passwords do not match.");
+          }
+          return true;
         }),
       ];
     }
 
     case "register": {
       return [
-        body("fullName", "Full name is required.").not().isEmpty(),
-        body("email", "Invalid email.").isEmail(),
+        body("fullName")
+          .trim()
+          .notEmpty()
+          .withMessage("Full name is required."),
+        body("email").isEmail().withMessage("Invalid email address."),
         body(
           "password",
           "Password must be at least 6 characters long."
         ).isLength({
           min: 6,
         }),
-        body(
-          "confirmPassword",
-          "Password must be at least 6 characters long."
-        ).isLength({
-          min: 6,
+        body("confirmPassword").custom((value, { req }) => {
+          if (value !== req.body.password) {
+            throw new Error("Passwords do not match.");
+          }
+          return true;
         }),
+      ];
+    }
+
+    case "updateMe": {
+      return [
+        body("fullName", "Full name is required.").optional().trim().notEmpty(),
+        body("phoneNumber", "Invalid phone number.").optional().trim().isNumeric(),
+        body("gender").optional().isIn(["Male", "Female", "Other"]),
+        body("dateOfBirth").optional().isDate(),
+      ];
+    }
+
+    case "addAddress": {
+      return [
+        body("fullName", "Full name is required.").trim().notEmpty(),
+        body("phoneNumber")
+          .trim()
+          .isNumeric()
+          .withMessage("Invalid phone number."),
+        body("province", "Province is required.").trim().notEmpty(),
+        body("district", "District is required.").trim().notEmpty(),
+        body("ward", "Ward is required.").trim().notEmpty(),
+        body("address", "Address is required.").trim().notEmpty(),
+        body("label").optional().isIn(["Work", "Home", "Other"]),
+        body("isDefault").optional().isBoolean(),
+      ];
+    }
+
+    case "updateAddress": {
+      return [
+        body("fullName", "Full name is required.").optional().trim().notEmpty(),
+        body("phoneNumber")
+          .optional()
+          .trim()
+          .isNumeric()
+          .withMessage("Invalid phone number."),
+        body("province", "Province is required.").optional().trim().notEmpty(),
+        body("district", "District is required.").optional().trim().notEmpty(),
+        body("ward", "Ward is required.").optional().trim().notEmpty(),
+        body("address", "Address is required.").optional().trim().notEmpty(),
+        body("label").optional().isIn(["Work", "Home", "Other"]),
+        body("isDefault").optional().isBoolean(),
       ];
     }
   }

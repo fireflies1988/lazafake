@@ -7,7 +7,7 @@ function generateTokens(id, role) {
     role,
   };
   const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_TOKEN_SECRET, {
-    expiresIn: "60m",
+    expiresIn: "30d",
   });
   const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_TOKEN_SECRET, {
     expiresIn: "30d",
