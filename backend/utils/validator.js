@@ -83,5 +83,11 @@ exports.validate = (method) => {
         body("isDefault").optional().isBoolean(),
       ];
     }
+
+    case "addCategory": {
+      return [
+        body("name", "Name is required.").trim().notEmpty()
+      ]
+    }
   }
 };

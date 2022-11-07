@@ -7,8 +7,8 @@ const { validationResult } = require("express-validator");
 const cloudinary = require("../configs/cloudinary");
 
 // @desc    Register
-// @access  Public
 // @route   POST /api/users
+// @access  Public
 const register = asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -47,8 +47,8 @@ const register = asyncHandler(async (req, res) => {
 });
 
 // @desc    Login
-// @access  Public
 // @route   POST /api/users/login
+// @access  Public
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
