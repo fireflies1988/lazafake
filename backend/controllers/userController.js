@@ -123,7 +123,7 @@ const updateMe = asyncHandler(async (req, res) => {
     return;
   }
 
-  const { email, refreshTokenHash, role, passwordHash, ...updatedFields } =
+  const { avatar, email, refreshTokenHash, role, passwordHash, ...updatedFields } =
     req.body;
 
   // upload image
@@ -140,6 +140,7 @@ const updateMe = asyncHandler(async (req, res) => {
       uploadOptions
     );
 
+    console.log(uploadResult);
     if (uploadResult.public_id && uploadResult.secure_url) {
       updatedFields.avatar = {
         publicId: uploadResult.public_id,

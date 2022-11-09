@@ -48,7 +48,7 @@ const productSchema = mongoose.Schema(
     },
     sku: String,
     price: {
-      type: mongoose.Schema.Types.Decimal128,
+      type: Number,
       required: true,
     },
     description: {
@@ -71,7 +71,7 @@ const productSchema = mongoose.Schema(
       type: mongoose.Schema.Types.Mixed,
     },
     rating: {
-      type: mongoose.Schema.Types.Decimal128,
+      type: Number,
     },
     quantity: {
       type: Number,
@@ -84,7 +84,7 @@ const productSchema = mongoose.Schema(
     }
   },
   {
-    timestamp: true,
+    timestamps: true,
   }
 );
 

@@ -45,7 +45,10 @@ exports.validate = (method) => {
     case "updateMe": {
       return [
         body("fullName", "Full name is required.").optional().trim().notEmpty(),
-        body("phoneNumber", "Invalid phone number.").optional().trim().isNumeric(),
+        body("phoneNumber", "Invalid phone number.")
+          .optional()
+          .trim()
+          .isNumeric({ no_symbols: true }),
         body("gender").optional().isIn(["Male", "Female", "Other"]),
         body("dateOfBirth").optional().isDate(),
       ];
@@ -85,9 +88,28 @@ exports.validate = (method) => {
     }
 
     case "addCategory": {
+      return [body("name", "Name is required.").trim().notEmpty()];
+    }
+
+    case "addProduct": {
       return [
-        body("name", "Name is required.").trim().notEmpty()
-      ]
+        body("name", "Name is required.").trim().notEmpty(),
+        body("price").trim().isDecimal(),
+        body("description", "Description is required.").trim().notEmpty(),
+        body("quantity").trim().isNumeric({ no_symbols: true }),
+      ];
+    }
+
+    case "updateProduct": {
+      return [
+        body("name", "Name is required.").optional().trim().notEmpty(),
+        body("price").optional().trim().isDecimal(),
+        body("description", "Description is required.")
+          .optional()
+          .trim()
+          .notEmpty(),
+        body("quantity").optional().trim().isNumeric({ no_symbols: true }),
+      ];
     }
   }
 };
