@@ -24,7 +24,6 @@ router
     addProduct
   )
   .get(getProducts);
-
 router
   .route("/:id")
   .delete(auth, checkPermission(Role.Admin), deleteProduct)
@@ -41,7 +40,6 @@ router.delete(
   checkPermission(Role.Admin),
   removeProductImage
 );
-
 router.post(
   "/:id/images",
   auth,

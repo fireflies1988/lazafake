@@ -2,14 +2,16 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
+const Product = require("../models/productModel");
 const { generateTokens } = require("../utils/jwt");
 const { validationResult } = require("express-validator");
 const cloudinary = require("../configs/cloudinary");
+const { json } = require("express");
 
 // @desc    Register
 // @route   POST /api/users
 // @access  Public
-const register = asyncHandler(async (req, res) => {
+const register = asyncHandler(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json({ errors: errors.array() });
@@ -49,7 +51,7 @@ const register = asyncHandler(async (req, res) => {
 // @desc    Login
 // @route   POST /api/users/login
 // @access  Public
-const login = asyncHandler(async (req, res) => {
+const login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
 
   // check user's email
@@ -76,14 +78,14 @@ const login = asyncHandler(async (req, res) => {
 // @desc    View my profile
 // @route   GET /api/users/me
 // @access  Private
-const getMe = asyncHandler(async (req, res) => {
+const getMe = asyncHandler(async (req, res, next) => {
   res.json(req.user);
 });
 
 // @desc    Get new access token
 // @route   POST /api/users/refresh-token
 // @access  Public
-const refreshToken = asyncHandler(async (req, res) => {
+const refreshToken = asyncHandler(async (req, res, next) => {
   const { refreshToken } = req.body;
 
   if (!refreshToken) {
@@ -116,15 +118,23 @@ const refreshToken = asyncHandler(async (req, res) => {
 // @desc    Update my profile
 // @route   PATCH /api/users/me
 // @access  Private
-const updateMe = asyncHandler(async (req, res) => {
+const updateMe = asyncHandler(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json({ errors: errors.array() });
     return;
   }
 
-  const { avatar, email, refreshTokenHash, role, passwordHash, ...updatedFields } =
-    req.body;
+  const {
+    avatar,
+    email,
+    refreshTokenHash,
+    role,
+    passwordHash,
+    addresses,
+    cartItems,
+    ...updatedFields
+  } = req.body;
 
   // upload image
   if (req.file) {
@@ -153,7 +163,7 @@ const updateMe = asyncHandler(async (req, res) => {
   const updatedUser = await User.findByIdAndUpdate(req.user.id, updatedFields, {
     new: true,
     runValidators: true,
-    select: "-passwordHash -refreshTokenHash",
+    select: "-passwordHash -refreshTokenHash -cartItems",
   });
 
   res.status(200).json(updatedUser);
@@ -162,7 +172,7 @@ const updateMe = asyncHandler(async (req, res) => {
 // @desc    Change password
 // @route   PATCH /api/users/me/password/change
 // @access  Private
-const changePassword = asyncHandler(async (req, res) => {
+const changePassword = asyncHandler(async (req, res, next) => {
   // Finds the validation errors in this request and wraps them in an object with handy functions
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -193,7 +203,7 @@ const changePassword = asyncHandler(async (req, res) => {
 // @route   POST /api/users/me/addresses
 // @access  Private
 // ?? need transaction
-const addAddress = asyncHandler(async (req, res) => {
+const addAddress = asyncHandler(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json({ errors: errors.array() });
@@ -238,7 +248,7 @@ const addAddress = asyncHandler(async (req, res) => {
 // @desc    Delete address
 // @route   DELETE /api/users/me/addresses/:id
 // @access  Private
-const deleteAddress = asyncHandler(async (req, res) => {
+const deleteAddress = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
   if (!user.addresses.id(req.params.id)) {
     res.status(404);
@@ -270,7 +280,7 @@ const deleteAddress = asyncHandler(async (req, res) => {
 // @desc    Update address
 // @route   PATCH /api/users/me/addresses/:id
 // @access  Private
-const updateAddress = asyncHandler(async (req, res) => {
+const updateAddress = asyncHandler(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json({ errors: errors.array() });
@@ -310,6 +320,143 @@ const updateAddress = asyncHandler(async (req, res) => {
   res.status(200).json(user.addresses);
 });
 
+// @desc    Add a product to cart
+// @route   POST /api/users/me/cart/add?productId=
+// @access  Private
+const addToCart = asyncHandler(async (req, res, next) => {
+  if (!req.query.productId) {
+    res.status(400);
+    throw new Error(
+      "Please provide param 'productId' and its value to the query string."
+    );
+  }
+
+  const product = await Product.findById(req.query.productId);
+  if (!product) {
+    res.status(404);
+    throw new Error("Product not found.");
+  }
+
+  const user = await User.findById(req.user.id);
+
+  // check if product is added to cart
+  for (const item of user.cartItems) {
+    console.log(item);
+    if (item.product.toString() === req.query.productId) {
+      res.status(409);
+      throw new Error("This product is already in your cart.");
+    }
+  }
+
+  user.cartItems.push({
+    product: req.query.productId,
+  });
+  await user.save();
+
+  res.json(user.cartItems);
+});
+
+// @desc    Remove a product from cart
+// @route   DELETE /api/users/me/cart/remove?cartItemId=
+// @access  Private
+const removeFromCart = asyncHandler(async (req, res, next) => {
+  if (!req.query.cartItemId) {
+    res.status(400);
+    throw new Error(
+      "Please provide param 'cartItemId' and its value to the query string."
+    );
+  }
+
+  const user = await User.findById(req.user.id);
+
+  const item = user.cartItems.id(req.query.cartItemId);
+  if (!item) {
+    res.status(404);
+    throw new Error("Item not found.");
+  }
+
+  // remove item from cart
+  user.cartItems.pull(req.query.cartItemId);
+  await user.save();
+
+  res.json(user.cartItems);
+});
+
+// @desc    Remove multiple products from cart
+// @route   DELETE /api/users/me/cart/remove-multiple
+// @access  Private
+const removeMultipleFromCart = asyncHandler(async (req, res, next) => {
+  const { items } = req.body;
+
+  const user = await User.findById(req.user.id);
+  console.log(items);
+  for (let item of items) {
+    console.log(item);
+    user.cartItems.pull(item);
+  }
+
+  await user.save();
+  res.json(user.cartItems);
+});
+
+// @desc    Change the quantity of a item in your cart
+// @route   PATCH /api/users/me/cart/changeQty?cartItemId=&increase=true
+// @access  Private
+const changeQtyFromCart = asyncHandler(async (req, res, next) => {
+  if (!req.query.cartItemId) {
+    res.status(400);
+    throw new Error(
+      "Please provide param 'cartItemId' and its value to the query string."
+    );
+  }
+
+  if (!req.query.increase) {
+    res.status(400);
+    throw new Error(
+      "Please provide param 'increase' and its value to the query string."
+    );
+  }
+
+  const user = await User.findById(req.user.id).populate("cartItems.product");
+  const updatedItem = user.cartItems.id(req.query.cartItemId);
+  if (!updatedItem) {
+    res.status(404);
+    throw new Error("Item not found.");
+  }
+
+  if (req.query.increase === "true") {
+    if (updatedItem.quantity < updatedItem.product.quantity) {
+      updatedItem.set({
+        quantity: updatedItem.quantity + 1,
+      });
+    } else {
+      res.status(409);
+      throw new Error(`You can only buy maximum ${updatedItem.product.quantity} of this product.`);
+    }
+  } else {
+    if (updatedItem.quantity > 1) {
+      updatedItem.set({
+        quantity: updatedItem.quantity - 1,
+      });
+    } else {
+      res.status(409);
+      throw new Error("You have reached the minimum 1 in quantity, can't decrease more.");
+    }
+  }
+
+  await user.save();
+
+  res.json(user.cartItems);
+});
+
+// @desc    View cart
+// @route   GET /api/users/me/cart/view
+// @access  Private
+const viewCart = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user.id).populate("cartItems.product");
+  res.json(user.cartItems);
+});
+
 module.exports = {
   register,
   login,
@@ -320,4 +467,9 @@ module.exports = {
   addAddress,
   deleteAddress,
   updateAddress,
+  addToCart,
+  removeFromCart,
+  removeMultipleFromCart,
+  changeQtyFromCart,
+  viewCart,
 };

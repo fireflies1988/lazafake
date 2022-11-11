@@ -15,7 +15,6 @@ router
   .route("/")
   .post(auth, checkPermission(Role.Admin), validate("addCategory"), addCategory)
   .get(getCategories);
-
 router
   .route("/:id")
   .delete(auth, checkPermission(Role.Admin), deleteCategory)
