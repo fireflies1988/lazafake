@@ -7,9 +7,6 @@ const {
   refreshToken,
   updateMe,
   changePassword,
-  addAddress,
-  deleteAddress,
-  updateAddress,
   addToCart,
   removeFromCart,
   removeMultipleFromCart,
@@ -33,12 +30,6 @@ router.patch(
   validate("changePassword"),
   changePassword
 );
-
-router.post("/me/addresses", auth, validate("addAddress"), addAddress);
-router
-  .route("/me/addresses/:id")
-  .delete(auth, deleteAddress)
-  .patch(auth, validate("updateAddress"), updateAddress);
 
 router.post("/me/cart/add", auth, addToCart);
 router.delete("/me/cart/remove", auth, removeFromCart);

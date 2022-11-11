@@ -1,5 +1,4 @@
 const express = require("express");
-const { api } = require("./configs/cloudinary");
 const dotenv = require("dotenv").config();
 const connectDb = require("./configs/db");
 const { errorHandler } = require("./middlewares/errorMiddleware");
@@ -15,6 +14,7 @@ app.use(express.urlencoded({ extended: false }));
 
 // api
 app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/addresses", require("./routes/addressRoutes"));
 app.use("/api/categories", require("./routes/categoryRoutes"));
 app.use("/api/products", require("./routes/productRoutes"));
 

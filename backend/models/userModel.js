@@ -1,47 +1,5 @@
 const mongoose = require("mongoose");
 
-const addressSchema = mongoose.Schema(
-  {
-    fullName: {
-      type: String,
-      required: true,
-    },
-    phoneNumber: {
-      type: Number,
-      required: true,
-    },
-    province: {
-      type: String,
-      required: true,
-    },
-    district: {
-      type: String,
-      required: true,
-    },
-    ward: {
-      type: String,
-      required: true,
-    },
-    address: {
-      type: String,
-      required: true,
-    },
-    label: {
-      type: String,
-      enum: ["Work", "Home", "Other"],
-      default: "Other",
-    },
-    isDefault: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
 const cartItemSchema = mongoose.Schema(
   {
     product: {
@@ -98,7 +56,6 @@ const userSchema = mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
-    addresses: [addressSchema],
     cartItems: [cartItemSchema],
   },
   {
