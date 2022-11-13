@@ -31,10 +31,4 @@ router.patch(
   changePassword
 );
 
-router.post("/me/cart/add", auth, addToCart);
-router.delete("/me/cart/remove", auth, removeFromCart);
-router.delete("/me/cart/remove-multiple", auth, removeMultipleFromCart);
-router.patch("/me/cart/changeQty", auth, changeQtyFromCart);
-router.get("/me/cart/view", auth, viewCart);
-
 module.exports = router;

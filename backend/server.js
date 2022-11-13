@@ -17,6 +17,7 @@ app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/addresses", require("./routes/addressRoutes"));
 app.use("/api/categories", require("./routes/categoryRoutes"));
 app.use("/api/products", require("./routes/productRoutes"));
+app.use("/api/cart", require("./routes/cartRoutes"));
 
 app.use(errorHandler);
 

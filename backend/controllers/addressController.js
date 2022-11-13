@@ -101,6 +101,8 @@ const updateAddress = asyncHandler(async (req, res, next) => {
     return;
   }
 
+  const { user, ...updatedFields } = req.body;
+
   const updatedAddress = await Address.findById(req.params.id);
   if (!updatedAddress) {
     res.status(404);
@@ -130,7 +132,7 @@ const updateAddress = asyncHandler(async (req, res, next) => {
       );
     }
 
-    await Address.findByIdAndUpdate(req.params.id, req.body);
+    await Address.findByIdAndUpdate(req.params.id, updatedFields);
 
     await session.commitTransaction();
   } catch (err) {
