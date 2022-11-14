@@ -12,6 +12,8 @@ const {
   removeMultipleFromCart,
   changeQtyFromCart,
   viewCart,
+  viewMyVouchers,
+  useVoucher,
 } = require("../controllers/userController");
 const { auth } = require("../middlewares/authMiddleware");
 const { validate } = require("../utils/validator");
@@ -30,5 +32,7 @@ router.patch(
   validate("changePassword"),
   changePassword
 );
+router.get("/me/vouchers", auth, viewMyVouchers);
+router.patch("/me/vouchers/:id", auth, useVoucher);
 
 module.exports = router;

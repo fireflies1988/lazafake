@@ -111,5 +111,18 @@ exports.validate = (method) => {
         body("quantity").optional().trim().isNumeric({ no_symbols: true }),
       ];
     }
+
+    case "createVoucher": {
+      return [
+        body("name", "Voucher name is required.").trim().notEmpty(),
+        body("code", "Voucher code is required").trim().notEmpty(),
+        body("type").isIn(["LazaFake", "Free Shipping"]),
+        body("limited").isBoolean(),
+        body("isPercentageDiscount").isBoolean(),
+        body("discountAmount").trim().isDecimal(),
+        body("minSpend").optional().trim().isDecimal(),
+        body("expirationDate").optional().isDate(),
+      ];
+    }
   }
 };

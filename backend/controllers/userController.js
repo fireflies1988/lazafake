@@ -6,6 +6,7 @@ const Product = require("../models/productModel");
 const { generateTokens } = require("../utils/jwt");
 const { validationResult } = require("express-validator");
 const cloudinary = require("../configs/cloudinary");
+const Voucher = require("../models/voucherModel");
 
 // @desc    Register
 // @route   POST /api/users
@@ -198,6 +199,61 @@ const changePassword = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc    View your voucher
+// @route   GET /api/users/me/vouchers
+// @access  Private
+const viewMyVouchers = asyncHandler(async (req, res, next) => {
+  let vouchers = await Voucher.find({
+    expirationDate: { $gt: new Date().toISOString() },
+  });
+
+  // remove vouchers that you already used
+  vouchers = vouchers.filter(
+    (voucher) => voucher.usersUsed.indexOf(req.user.id) <= -1
+  );
+
+  res.json(vouchers);
+});
+
+// @desc    Use voucher
+// @route   PATCH /api/users/me/vouchers/:id
+// @access  Private
+const useVoucher = asyncHandler(async (req, res, next) => {
+  const voucher = await Voucher.findById(req.params.id);
+
+  if (!voucher) {
+    res.status(404);
+    throw new Error("Voucher not found.");
+  }
+
+  if (voucher.expirationDate < new Date().toISOString()) {
+    res.status(422);
+    throw new Error("This voucher is expired");
+  }
+
+  // check if this voucher is used by this user
+  if (voucher.usersUsed.indexOf(req.user.id) > -1) {
+    res.status(409);
+    throw new Error(
+      "You have used this voucher before. You can't use it again."
+    );
+  }
+
+  // check limit
+  if (voucher.limited === true) {
+    if (voucher.usersUsed.length >= voucher.limit) {
+      res.status(422);
+      throw new Error(
+        "This voucher has already been used the maximum number of times."
+      );
+    }
+  }
+
+  voucher.usersUsed.push(req.user.id);
+  await voucher.save();
+  res.json(voucher);
+});
+
 module.exports = {
   register,
   login,
@@ -205,4 +261,6 @@ module.exports = {
   refreshToken,
   updateMe,
   changePassword,
+  viewMyVouchers,
+  useVoucher,
 };
