@@ -19,19 +19,30 @@ const orderSchema = mongoose.Schema(
         required: true,
       },
     ],
+    vouchers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Voucher",
+        required: true,
+      }
+    ],
     taxCode: {
       type: String,
+    },
+    currency: {
+      type: String,
+      required: true,
+      default: "vnd",
     },
     shippingFee: {
       type: Number,
       required: true,
-      default: 15.0,
     },
+    // totalPayment = orderItems * Price + shippingFee
     totalPayment: {
       type: Number,
-      required: true,
     },
-    orderStatus: {
+    status: {
       type: String,
       enum: [
         "To Pay",
@@ -39,11 +50,23 @@ const orderSchema = mongoose.Schema(
         "To Receive",
         "Completed",
         "Canceled",
-        "Return Refund",
+        "Return/Refund",
       ],
       default: "To Pay",
     },
-    
+    cancellationReason: {
+      type: String,
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["Cash", "Paypal"],
+      default: "Cash",
+    },
+    isValid: {
+      type: Boolean,
+      required: true,
+      default: true,
+    }
   },
   {
     timestamps: true,

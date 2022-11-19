@@ -1,6 +1,5 @@
 const asyncHandler = require("express-async-handler");
 const { validationResult } = require("express-validator");
-const { findByIdAndDelete } = require("../models/productModel");
 const Product = require("../models/productModel");
 const cloudinary = require("../configs/cloudinary");
 
@@ -107,7 +106,9 @@ const deleteProduct = asyncHandler(async (req, res, next) => {
   }
 
   // remove cloudinary folder
-  await cloudinary.api.delete_resources_by_prefix(`LazaFake/products/${req.params.id}`);
+  await cloudinary.api.delete_resources_by_prefix(
+    `LazaFake/products/${req.params.id}`
+  );
   await cloudinary.api.delete_folder(`LazaFake/products/${req.params.id}`);
 
   await Product.findByIdAndDelete(req.params.id);

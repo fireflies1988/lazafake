@@ -7,6 +7,7 @@ const { generateTokens } = require("../utils/jwt");
 const { validationResult } = require("express-validator");
 const cloudinary = require("../configs/cloudinary");
 const Voucher = require("../models/voucherModel");
+const Order = require("../models/orderModel");
 
 // @desc    Register
 // @route   POST /api/users
@@ -199,7 +200,7 @@ const changePassword = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc    View your voucher
+// @desc    View your vouchers
 // @route   GET /api/users/me/vouchers
 // @access  Private
 const viewMyVouchers = asyncHandler(async (req, res, next) => {
@@ -215,43 +216,42 @@ const viewMyVouchers = asyncHandler(async (req, res, next) => {
   res.json(vouchers);
 });
 
-// @desc    Use voucher
-// @route   PATCH /api/users/me/vouchers/:id
+// @desc    View your orders
+// @route   GET /api/users/me/orders
 // @access  Private
-const useVoucher = asyncHandler(async (req, res, next) => {
-  const voucher = await Voucher.findById(req.params.id);
+const viewMyOrders = asyncHandler(async (req, res, next) => {
+  res.json(
+    await Order.find({ user: req.user.id }).populate({
+      path: "orderItems",
+      populate: {
+        path: "product",
+      },
+    })
+  );
+});
 
-  if (!voucher) {
-    res.status(404);
-    throw new Error("Voucher not found.");
+// @desc    Cancel order
+// @route   PATCH /api/users/me/orders/:id
+// @access  Private
+const cancelOrder = asyncHandler(async (req, res, next) => {
+  const order = await Order.findById(req.params.id);
+  if (order.user.toString() !== req.user.id) {
+    res.status(403);
+    throw new Error("This is not your order.");
   }
 
-  if (voucher.expirationDate < new Date().toISOString()) {
-    res.status(422);
-    throw new Error("This voucher is expired");
-  }
-
-  // check if this voucher is used by this user
-  if (voucher.usersUsed.indexOf(req.user.id) > -1) {
+  if (order.status !== "To Pay" && order.status !== "To Ship") {
     res.status(409);
-    throw new Error(
-      "You have used this voucher before. You can't use it again."
-    );
+    throw new Error("Can't cancel the order.");
   }
 
-  // check limit
-  if (voucher.limited === true) {
-    if (voucher.usersUsed.length >= voucher.limit) {
-      res.status(422);
-      throw new Error(
-        "This voucher has already been used the maximum number of times."
-      );
-    }
+  order.status = "Canceled";
+  if (req.body.cancellationReason) {
+    order.cancellationReason = req.body.cancellationReason;
   }
+  await order.save();
 
-  voucher.usersUsed.push(req.user.id);
-  await voucher.save();
-  res.json(voucher);
+  res.json(order);
 });
 
 module.exports = {
@@ -262,5 +262,6 @@ module.exports = {
   updateMe,
   changePassword,
   viewMyVouchers,
-  useVoucher,
+  viewMyOrders,
+  cancelOrder,
 };

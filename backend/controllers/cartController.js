@@ -129,10 +129,34 @@ const viewCart = asyncHandler(async (req, res, next) => {
   res.json(cartItems);
 });
 
+// @desc    Check out (check again if the quantity of the items you selected is valid)
+// @route   POST /api/cart/checkout
+// @access  Private
+const checkOut = asyncHandler(async (req, res, next) => {
+  const { items } = req.body;
+  let messages = [];
+
+  for (let itemId of items) {
+    const cartItem = await CartItem.findById(itemId).populate("product");
+    if (cartItem.quantity > cartItem.product.quantity) {
+      messages.push(
+        `There are not enough '${cartItem.product.name}' in stock (remaining ${cartItem.product.quantity}). Please adjust the quantity of this item.`
+      );
+    }
+  }
+
+  if (messages.length > 0) {
+    res.status(409).json(messages);
+  } else {
+    res.status(200).json("Everything is Ok. Let's make an order now.");
+  }
+});
+
 module.exports = {
   addToCart,
   removeFromCart,
   removeMultipleFromCart,
   changeQtyFromCart,
   viewCart,
+  checkOut,
 };

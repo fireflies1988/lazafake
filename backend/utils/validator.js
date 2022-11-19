@@ -124,5 +124,29 @@ exports.validate = (method) => {
         body("expirationDate").optional().isDate(),
       ];
     }
+
+    case "placeOrder": {
+      return [
+        body("shippingAddress", "Shipping address is required.")
+          .trim()
+          .notEmpty(),
+        body("shippingFee").trim().isDecimal(),
+        body("paymentMethod").isIn(["Cash", "Paypal"]),
+        body("orderItems", "Order items can't be empty.").isArray({ min: 1 }),
+      ];
+    }
+
+    case "updateOrderStatus": {
+      return [
+        body("status").isIn([
+          "To Pay",
+          "To Ship",
+          "To Receive",
+          "Completed",
+          "Canceled",
+          "Return/Refund",
+        ]),
+      ];
+    }
   }
 };

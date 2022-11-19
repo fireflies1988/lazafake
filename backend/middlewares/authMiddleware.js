@@ -13,6 +13,7 @@ const auth = asyncHandler(async (req, res, next) => {
         accessToken,
         process.env.JWT_ACCESS_TOKEN_SECRET
       );
+      console.log("authMiddleware");
       console.log(decoded);
 
       // get user data
