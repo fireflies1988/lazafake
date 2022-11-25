@@ -11,9 +11,13 @@ import AddressBook from "./pages/user/account/AddressBook";
 import Password from "./pages/user/account/Password";
 import Orders from "./pages/user/Orders";
 import Vouchers from "./pages/user/Vouchers";
+import AdminLayout from "./pages/admin/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
+import Categories from "./pages/admin/Categories";
 
 function App() {
   const isLoggedIn = true;
+  const isAdmin = true;
 
   return (
     <BrowserRouter>
@@ -49,6 +53,13 @@ function App() {
           )}
 
           <Route path="*" element={<Navigate to="/" />} />
+        </Route>
+
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="dashboard" />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="categories" element={<Categories />} />
+          <Route path="*" element={<Navigate to="dashboard" />} />
         </Route>
       </Routes>
     </BrowserRouter>

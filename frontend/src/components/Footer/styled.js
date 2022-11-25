@@ -2,6 +2,7 @@ import styled from "styled-components";
 
 export const StyledFooter = styled.footer`
   padding: 2rem;
+  background-color: white;
 
   .footer__link {
     color: rgba(0, 0, 0, 0.7);
