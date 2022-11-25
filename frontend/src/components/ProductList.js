@@ -42,7 +42,7 @@ function ProductList({ items }) {
                   <div>
                     {item.rating} <StarFilled style={{ color: "gold" }} />
                   </div>
-                  <div>{item.sold} sold</div>
+                  <div>{item.sold} Sold</div>
                 </div>
               </Space>
             </Card>
