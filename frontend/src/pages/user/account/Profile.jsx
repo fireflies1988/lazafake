@@ -59,6 +59,7 @@ const beforeUpload = (file) => {
 };
 
 function Profile() {
+  const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
 
   const onFinish = (values) => {
@@ -79,10 +80,14 @@ function Profile() {
   );
 
   return (
-    <Card title={<CardTitle title="My Profile" />}>
+    <Card
+      bodyStyle={{ maxWidth: "768px" }}
+      title={<CardTitle title="My Profile" />}
+    >
       <Form
+        form={form}
         {...formItemLayout}
-        name="register"
+        name="profile"
         onFinish={onFinish}
         scrollToFirstError
         initialValues={{
@@ -174,8 +179,19 @@ function Profile() {
         </Form.Item>
 
         <Form.Item {...tailFormItemLayout}>
-          <Button type="primary" htmlType="submit">
-            Sign Up
+          <Button
+            type="primary"
+            htmlType="submit"
+            style={{ marginRight: "8px" }}
+          >
+            Save
+          </Button>
+          <Button
+            onClick={() => {
+              form.resetFields();
+            }}
+          >
+            Reset
           </Button>
         </Form.Item>
       </Form>

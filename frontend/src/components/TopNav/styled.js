@@ -9,14 +9,7 @@ export const StyledTopNav = styled.nav`
   height: 70px;
   display: flex;
   align-items: center;
-  justify-content: center;
   padding: 0 2rem;
-
-  .container {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-  }
 
   .logo {
     color: white;
