@@ -14,6 +14,7 @@ import Vouchers from "./pages/user/Vouchers";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Categories from "./pages/admin/Categories";
+import Products from "./pages/admin/Products";
 
 function App() {
   const isLoggedIn = true;
@@ -59,6 +60,7 @@ function App() {
           <Route index element={<Navigate to="dashboard" />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="categories" element={<Categories />} />
+          <Route path="products" element={<Products />} />
           <Route path="*" element={<Navigate to="dashboard" />} />
         </Route>
       </Routes>

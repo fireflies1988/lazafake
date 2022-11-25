@@ -51,7 +51,7 @@ function TopNav() {
           <Col span={4} style={{ display: "flex", alignItems: "center" }}>
             <Button
               type="link"
-              href="/"
+              href="/admin/dashboard"
               style={{
                 display: "flex",
                 alignItems: "center",

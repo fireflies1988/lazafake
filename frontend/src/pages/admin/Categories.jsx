@@ -1,4 +1,4 @@
-import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
 import {
   Button,
   Card,
@@ -9,10 +9,9 @@ import {
   Space,
   Table,
   Upload,
-  message,
 } from "antd";
-import React, { useState } from "react";
 import ImgCrop from "antd-img-crop";
+import React, { useState } from "react";
 
 const columns = [
   {
@@ -88,8 +87,6 @@ const CategoryAddForm = ({ open, onCreate, onCancel }) => {
     listType: "picture-card",
   };
 
-  console.log(fileList);
-
   return (
     <Modal
       open={open}
@@ -115,11 +112,7 @@ const CategoryAddForm = ({ open, onCreate, onCancel }) => {
           });
       }}
     >
-      <Form
-        form={form}
-        name="form_in_modal"
-        layout="vertical"
-      >
+      <Form form={form} name="form_in_modal" layout="vertical">
         <Form.Item
           name="name"
           label="Name"
