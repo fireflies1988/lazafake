@@ -5,12 +5,12 @@ const { Paragraph, Text } = Typography;
 
 function ProductList({ items, columns }) {
   const span = 24 / columns;
-  console.log(span);
+  
   return (
     <Row gutter={[16, 16]}>
       {items?.length > 0 ? (
-        items.map((item) => (
-          <Col span={span}>
+        items.map((item, index) => (
+          <Col span={span} key={index}>
             <Card
               style={{ height: "320px", borderRadius: 0 }}
               bodyStyle={{ padding: 0 }}
@@ -24,7 +24,7 @@ function ProductList({ items, columns }) {
               />
               <Space
                 direction="vertical"
-                style={{ display: "flex", gap: "0.25rem", padding: "0.5rem" }}
+                style={{ display: "flex", padding: "0.5rem" }}
               >
                 <Paragraph
                   strong

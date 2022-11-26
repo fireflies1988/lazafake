@@ -21,7 +21,7 @@ import SearchPage from "./pages/SearchPage";
 import Orders from "./pages/admin/Orders";
 
 function App() {
-  const isLoggedIn = true;
+  const isLoggedIn = false;
   const isAdmin = true;
 
   return (

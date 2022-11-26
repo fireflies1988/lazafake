@@ -1,9 +1,33 @@
-import React from "react";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
-import { Button, Card, Checkbox, Form, Input, Avatar } from "antd";
+import {
+  Button,
+  Card,
+  Checkbox,
+  Form,
+  Input,
+  message as antMessage,
+} from "antd";
+import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import "../scss/Login.scss";
 
 function Login() {
+  const location = useLocation();
+  const [initialValues] = useState({
+    email: location?.state?.email,
+    password: location?.state?.password,
+    remember: true,
+  });
+
+  useEffect(() => {
+    if (location?.state?.message) {
+      antMessage.success(location?.state?.message);
+      
+      // clear location state
+      window.history.replaceState({}, document.title)
+    }
+  }, []);
+
   const onFinish = (values) => {
     console.log("Received values of form: ", values);
   };
@@ -16,13 +40,11 @@ function Login() {
       <Form
         name="normal_login"
         className="login-form"
-        initialValues={{
-          remember: true,
-        }}
+        initialValues={initialValues}
         onFinish={onFinish}
       >
         <Form.Item
-          name="Email"
+          name="email"
           rules={[
             {
               required: true,

@@ -1,5 +1,9 @@
-import React from "react";
-import { Button, Card, Checkbox, Form, Input } from "antd";
+import { Button, Card, Form, Input, message as antMessage } from "antd";
+import React, { useEffect } from "react";
+import { registerAsync, reset } from "../features/auth/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const formItemLayout = {
   labelCol: {
@@ -34,8 +38,39 @@ const tailFormItemLayout = {
 };
 
 function Register() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [credentials, setCredentials] = useState();
+  const { isError, message, isSuccess } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (isError) {
+      if (Array.isArray(message)) {
+        for (let m of message) {
+          antMessage.error(m);
+        }
+      } else {
+        antMessage.error(message);
+      }
+    }
+
+    if (isSuccess) {
+      navigate("/login", {
+        state: {
+          email: credentials.email,
+          password: credentials.password,
+          message: "Your account has been successfully created. Login now.",
+        },
+      });
+    }
+
+    dispatch(reset());
+  }, [isError, isSuccess]);
+
   const onFinish = (values) => {
-    console.log("Received values of form: ", values);
+    console.log("Received values of Sign Up form: ", values);
+    setCredentials(values);
+    dispatch(registerAsync(values));
   };
 
   return (
@@ -74,6 +109,10 @@ function Register() {
               required: true,
               message: "Please input your password!",
             },
+            {
+              min: 6,
+              message: "Password must be at least 6 characters long!",
+            },
           ]}
           hasFeedback
         >
@@ -81,7 +120,7 @@ function Register() {
         </Form.Item>
 
         <Form.Item
-          name="confirm"
+          name="confirmPassword"
           label="Confirm Password"
           dependencies={["password"]}
           hasFeedback
@@ -89,6 +128,10 @@ function Register() {
             {
               required: true,
               message: "Please confirm your password!",
+            },
+            {
+              min: 6,
+              message: "Password must be at least 6 characters long!",
             },
             ({ getFieldValue }) => ({
               validator(_, value) {
@@ -106,7 +149,7 @@ function Register() {
         </Form.Item>
 
         <Form.Item
-          name="fullname"
+          name="fullName"
           label="Full Name"
           rules={[
             {

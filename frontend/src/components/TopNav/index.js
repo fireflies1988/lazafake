@@ -53,7 +53,7 @@ const items = [
 ];
 
 function TopNav() {
-  const isLoggedIn = true;
+  const isLoggedIn = false;
   const onSearch = (value) => console.log(value);
 
   return (

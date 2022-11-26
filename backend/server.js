@@ -3,10 +3,13 @@ const dotenv = require("dotenv").config();
 const connectDb = require("./configs/db");
 const { errorHandler } = require("./middlewares/errorMiddleware");
 const PORT = process.env.PORT || 5000;
+const cors = require("cors");
 
 connectDb();
 
 const app = express();
+
+app.use(cors());
 
 // accepting body data
 app.use(express.json());

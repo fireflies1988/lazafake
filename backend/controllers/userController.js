@@ -19,13 +19,13 @@ const register = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  const { fullName, email, password, confirmPassword } = req.body;
+  const { fullName, email, password } = req.body;
 
   // check if user exists
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     res.status(409);
-    throw new Error("User already exists.");
+    throw new Error("Email already exists.");
   }
 
   // hash password
@@ -42,8 +42,6 @@ const register = asyncHandler(async (req, res, next) => {
 
   if (user) {
     res.status(201).json({
-      _id: user._id,
-      fullName: user.fullName,
       email: user.email,
     });
   }

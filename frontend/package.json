@@ -1,6 +1,7 @@
 {
   "name": "frontend",
   "version": "0.1.0",
+  "proxy": "http://localhost:5000",
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^4.8.0",
@@ -10,6 +11,7 @@
     "@testing-library/user-event": "^14.4.3",
     "antd": "^5.0.1",
     "antd-img-crop": "^4.5.1",
+    "axios": "^1.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.6.0",
