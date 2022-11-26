@@ -1,6 +1,5 @@
-import { Card, Empty, Image, Table, Tag } from "antd";
+import { Card, Empty, Image, Table, Tabs, Tag } from "antd";
 import React, { useState } from "react";
-import CardTitle from "../../components/CartTitle";
 
 const tabList = [
   {
@@ -79,7 +78,7 @@ function Orders() {
         productName: "Product Name",
         price: "100000",
         quantity: "10",
-        itemSubtotal: "1000000"
+        itemSubtotal: "1000000",
       });
     }
     return <Table columns={columns} dataSource={data} pagination={false} />;
@@ -163,7 +162,6 @@ function Orders() {
 
   return (
     <Card
-      title={<CardTitle title="My Orders" />}
       tabList={tabList}
       activeTabKey={activeTabKey1}
       onTabChange={(key) => {

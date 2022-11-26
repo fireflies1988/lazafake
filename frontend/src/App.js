@@ -9,7 +9,7 @@ import UserLayout from "./pages/user/UserLayout";
 import Profile from "./pages/user/account/Profile";
 import AddressBook from "./pages/user/account/AddressBook";
 import Password from "./pages/user/account/Password";
-import Orders from "./pages/user/Orders";
+import MyOrders from "./pages/user/MyOrders";
 import Vouchers from "./pages/user/Vouchers";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
@@ -18,6 +18,7 @@ import Products from "./pages/admin/Products";
 import ProductDetails from "./pages/ProductDetails";
 import Checkout from "./pages/Checkout";
 import SearchPage from "./pages/SearchPage";
+import Orders from "./pages/admin/Orders";
 
 function App() {
   const isLoggedIn = true;
@@ -47,7 +48,7 @@ function App() {
                   <Route path="*" element={<Navigate to="profile" />} />
                 </Route>
 
-                <Route path="orders" element={<Orders />} />
+                <Route path="orders" element={<MyOrders />} />
                 <Route path="vouchers" element={<Vouchers />} />
 
                 <Route path="*" element={<Navigate to="account/profile" />} />
@@ -68,6 +69,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="categories" element={<Categories />} />
           <Route path="products" element={<Products />} />
+          <Route path="orders" element={<Orders />} />
           <Route path="*" element={<Navigate to="dashboard" />} />
         </Route>
       </Routes>
