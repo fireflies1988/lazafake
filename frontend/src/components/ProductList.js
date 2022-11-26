@@ -3,12 +3,14 @@ import { Card, Col, Empty, Row, Space, Typography } from "antd";
 import React from "react";
 const { Paragraph, Text } = Typography;
 
-function ProductList({ items }) {
+function ProductList({ items, columns }) {
+  const span = 24 / columns;
+  console.log(span);
   return (
     <Row gutter={[16, 16]}>
       {items?.length > 0 ? (
         items.map((item) => (
-          <Col span={4}>
+          <Col span={span}>
             <Card
               style={{ height: "320px", borderRadius: 0 }}
               bodyStyle={{ padding: 0 }}

@@ -206,6 +206,7 @@ function ProductDetails() {
         style={{ borderRadius: 0, border: 0 }}
       >
         <ProductList
+          columns={6}
           items={[
             {
               url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
