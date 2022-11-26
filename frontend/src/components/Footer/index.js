@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Col, Row } from "antd";
+import { Button, Col, Row, Space, Typography } from "antd";
 import Title from "antd/es/typography/Title";
 import { StyledFooter } from "./styled";
 import visa from "../../assets/visa.png";
@@ -20,6 +20,7 @@ import {
   FaYoutube,
 } from "react-icons/fa";
 import Container from "../Container";
+const { Text } = Typography;
 
 function Footer() {
   return (
@@ -138,6 +139,14 @@ function Footer() {
             <FaYoutube size="24px" style={{ marginRight: "1rem" }} />
           </Col>
         </Row>
+
+        <Space direction="vertical" style={{ display: "flex", alignItems: "center", marginTop: "1rem", textAlign: "center" }}>
+          <Text type="secondary">
+            &copy; 2022 LazaFake (My Graduation Project). All Rights Reserved.
+          </Text>
+          <Text type="secondary">Made by: Kieu Huynh Thanh Tung</Text>
+          <Text type="secondary" strong>Tutored by: Phan Thanh Hy</Text>
+        </Space>
       </Container>
     </StyledFooter>
   );
