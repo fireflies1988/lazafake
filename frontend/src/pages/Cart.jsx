@@ -1,7 +1,6 @@
-import { PlusOutlined } from "@ant-design/icons";
 import { Button, Card, Image, InputNumber, Table } from "antd";
 import React, { useState } from "react";
-import CardTitle from "../components/CartTitle";
+import { Link } from "react-router-dom";
 
 const columns = [
   {
@@ -50,8 +49,6 @@ for (let i = 0; i < 3; i++) {
   });
 }
 
-console.log(data);
-
 function Cart() {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const onSelectChange = (newSelectedRowKeys) => {
@@ -67,7 +64,11 @@ function Cart() {
   return (
     <Card
       title="My Shopping Cart"
-      extra={<Button type="primary">Check Out</Button>}
+      extra={
+        <Button type="primary" ghost>
+          <Link to="/checkout">Check Out</Link>
+        </Button>
+      }
     >
       <Table rowSelection={rowSelection} columns={columns} dataSource={data} />
     </Card>

@@ -40,7 +40,7 @@ function Home() {
         ></img>
       </Carousel>
 
-      <Card title="Categories">
+      <Card title="Categories" style={{ borderRadius: 0 }}>
         <Card.Grid style={gridStyle}>
           <Avatar src="https://joeschmoe.io/api/v1/random" size={64} />
           <div>Nguồn máy tính</div>

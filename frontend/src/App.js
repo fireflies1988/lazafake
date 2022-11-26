@@ -16,6 +16,7 @@ import Dashboard from "./pages/admin/Dashboard";
 import Categories from "./pages/admin/Categories";
 import Products from "./pages/admin/Products";
 import ProductDetails from "./pages/ProductDetails";
+import Checkout from "./pages/Checkout";
 
 function App() {
   const isLoggedIn = true;
@@ -55,6 +56,7 @@ function App() {
           )}
 
           <Route path="products/:id" element={<ProductDetails />} />
+          <Route path="checkout" element={<Checkout />} />
 
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
