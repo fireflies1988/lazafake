@@ -48,7 +48,12 @@ function Products() {
       key: "action",
       render: (_, record) => (
         <Space>
-          <Button type="primary" ghost size="small" onClick={() => setOpenUpdate(true)}>
+          <Button
+            type="link"
+            ghost
+            size="small"
+            onClick={() => setOpenUpdate(true)}
+          >
             See Details
           </Button>
         </Space>
@@ -133,8 +138,18 @@ function Products() {
       }
     >
       <Table columns={columns} dataSource={data} />
-      <ProductDrawer onClose={() => setOpenAdd(false)} open={openAdd} type="add" title="Add New Product" />
-      <ProductDrawer onClose={() => setOpenUpdate(false)} open={openUpdate} type="update" title="Product Details" />
+      <ProductDrawer
+        onClose={() => setOpenAdd(false)}
+        open={openAdd}
+        type="add"
+        title="Add New Product"
+      />
+      <ProductDrawer
+        onClose={() => setOpenUpdate(false)}
+        open={openUpdate}
+        type="update"
+        title="Product Details"
+      />
     </Card>
   );
 }

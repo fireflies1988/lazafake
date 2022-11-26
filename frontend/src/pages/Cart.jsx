@@ -70,7 +70,7 @@ function Cart() {
         </Button>
       }
     >
-      <Table rowSelection={rowSelection} columns={columns} dataSource={data} />
+      <Table rowSelection={rowSelection} columns={columns} dataSource={data} pagination={false}/>
     </Card>
   );
 }

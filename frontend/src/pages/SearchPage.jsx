@@ -1,19 +1,19 @@
 import {
-  Button,
-  Card,
-  Checkbox,
-  Col,
-  Divider,
-  Form,
-  InputNumber,
-  Radio,
-  Row,
-  Select,
-  Space,
-  Typography,
+    Button,
+    Card,
+    Checkbox,
+    Col,
+    Divider,
+    Form,
+    InputNumber,
+    Radio,
+    Row,
+    Select,
+    Space,
+    Typography
 } from "antd";
 import React, { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import ProductList from "../components/ProductList";
 const { Text } = Typography;
 
