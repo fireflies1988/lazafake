@@ -48,10 +48,20 @@ export const updateProfileAsync = createAsyncThunk(
       const accessToken = thunkAPI.getState().auth.user?.accessToken;
       return await authService.updateProfileAsync(formData, accessToken);
     } catch (err) {
-      return handleError(err, thunkAPI, "updateProfileAsync", true);
+      return handleError(err, thunkAPI, "updateProfileAsync", false);
     }
   }
 );
+
+// change password
+export const changePasswordAsync = createAsyncThunk("auth/password", async (data, thunkAPI) => {
+  try {
+    const accessToken = thunkAPI.getState().auth.user?.accessToken;
+    return await authService.changePasswordAsync(data, accessToken)
+  } catch (err) {
+    return handleError(err, thunkAPI, "changePasswordAsync", false);
+  }
+});
 
 export const authSlice = createSlice({
   name: "auth",
@@ -107,6 +117,19 @@ export const authSlice = createSlice({
         saveUser(state.user);
       })
       .addCase(updateProfileAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(changePasswordAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(changePasswordAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = action.payload?.message;
+      })
+      .addCase(changePasswordAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

@@ -1,6 +1,10 @@
 import React from "react";
-import { Button, Card, Form, Input } from "antd";
+import { Button, Card, Form, Input, message as antMessage } from "antd";
 import CardTitle from "../../../components/CartTitle";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { showError } from "../../../utils";
+import { reset, changePasswordAsync } from "../../../features/auth/authSlice";
 
 const formItemLayout = {
   labelCol: {
@@ -35,13 +39,37 @@ const tailFormItemLayout = {
 };
 
 function Password() {
+  const dispatch = useDispatch();
+  const [form] = Form.useForm();
+  const { isLoading, isError, isSuccess, message } = useSelector(
+    (state) => state.auth
+  );
+
   const onFinish = (values) => {
-    console.log("Received values of form: ", values);
+    console.log("Received values of Password form: ", values);
+    dispatch(changePasswordAsync(values));
   };
 
+  useEffect(() => {
+    if (isError) {
+      showError(antMessage, message);
+    }
+
+    if (isSuccess) {
+      antMessage.success(message);
+      form.resetFields();
+    }
+
+    return () => dispatch(reset());
+  }, [isSuccess, isError]);
+
   return (
-    <Card bodyStyle={{ maxWidth: "768px" }}  title={<CardTitle title="Change Password" />}>
+    <Card
+      bodyStyle={{ maxWidth: "768px" }}
+      title={<CardTitle title="Change Password" />}
+    >
       <Form
+        form={form}
         {...formItemLayout}
         name="password"
         onFinish={onFinish}
@@ -69,6 +97,10 @@ function Password() {
               required: true,
               message: "Please input your New Password!",
             },
+            {
+              min: 6,
+              message: "Password must be at least 6 characters long!",
+            },
           ]}
           hasFeedback
         >
@@ -84,6 +116,10 @@ function Password() {
             {
               required: true,
               message: "Please confirm your new password!",
+            },
+            {
+              min: 6,
+              message: "Password must be at least 6 characters long!",
             },
             ({ getFieldValue }) => ({
               validator(_, value) {
@@ -101,7 +137,7 @@ function Password() {
         </Form.Item>
 
         <Form.Item {...tailFormItemLayout}>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" loading={isLoading}>
             Confirm
           </Button>
         </Form.Item>

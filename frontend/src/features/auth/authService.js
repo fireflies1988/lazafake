@@ -30,10 +30,22 @@ async function updateProfileAsync(formData, accessToken) {
   return response.data;
 }
 
+// change password
+async function changePasswordAsync(data, accessToken) {
+  const response = await axios.patch(API_URL + "/me/password/change", data, {
+    headers: {
+      Authorization: "Bearer " + accessToken,
+    },
+  });
+
+  return response.data;
+}
+
 const authService = {
   registerAsync,
   loginAsync,
   updateProfileAsync,
+  changePasswordAsync
 };
 
 export default authService;
