@@ -4,6 +4,9 @@ import handleError from "../helpers/errorHandler";
 
 // get user info from localStorage
 const user = JSON.parse(localStorage.getItem("lazafakeUser"));
+function saveUser(data) {
+  localStorage.setItem("lazafakeUser", JSON.stringify(data));
+}
 
 const initialState = {
   user: user ?? null,
@@ -33,6 +36,19 @@ export const loginAsync = createAsyncThunk(
       return await authService.loginAsync(credentails);
     } catch (err) {
       return handleError(err, thunkAPI, "loginAsync");
+    }
+  }
+);
+
+// update profile
+export const updateProfileAsync = createAsyncThunk(
+  "auth/update",
+  async (formData, thunkAPI) => {
+    try {
+      const accessToken = thunkAPI.getState().auth.user?.accessToken;
+      return await authService.updateProfileAsync(formData, accessToken);
+    } catch (err) {
+      return handleError(err, thunkAPI, "updateProfileAsync", true);
     }
   }
 );
@@ -73,8 +89,24 @@ export const authSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.user = action.payload;
+        saveUser(action.payload);
       })
       .addCase(loginAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(updateProfileAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateProfileAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = "Your profile has been successfully updated."
+        state.user = { ...state.user, ...action.payload };
+        saveUser(state.user);
+      })
+      .addCase(updateProfileAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

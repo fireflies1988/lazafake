@@ -5,13 +5,19 @@ import {
   DatePicker,
   Form,
   Input,
-  message,
+  message as antMessage,
   Select,
   Upload,
 } from "antd";
 import ImgCrop from "antd-img-crop";
 import React, { useState } from "react";
 import CardTitle from "../../../components/CartTitle";
+import { checkUploadCondition, showError } from "../../../utils";
+import { useDispatch, useSelector } from "react-redux";
+import dayjs from "dayjs";
+import { useEffect } from "react";
+import { reset, updateProfileAsync } from "../../../features/auth/authSlice";
+
 const { Option } = Select;
 
 const formItemLayout = {
@@ -46,38 +52,74 @@ const tailFormItemLayout = {
   },
 };
 
-const beforeUpload = (file) => {
-  const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
-  if (!isJpgOrPng) {
-    message.error("You can only upload JPG/PNG file!");
-  }
-  const isLt2M = file.size / 1024 / 1024 < 2;
-  if (!isLt2M) {
-    message.error("Image must smaller than 2MB!");
-  }
-  return isJpgOrPng && isLt2M;
-};
-
 function Profile() {
   const [form] = Form.useForm();
-  const [fileList, setFileList] = useState([]);
+  const { user, isError, isSuccess, message, isLoading } = useSelector(
+    (state) => state.auth
+  );
+  let initalFileList = user?.avatar?.url ? [{ url: user?.avatar?.url }] : [];
+  console.log("initalFileList", initalFileList);
+  const [fileList, setFileList] = useState(initalFileList);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (isError) {
+      showError(antMessage, message);
+    }
+
+    if (isSuccess) {
+      antMessage.success(message);
+    }
+
+    return () => dispatch(reset());
+  }, [isError, isSuccess]);
+
+  useEffect(() => {
+    // prevent reupload to cloudinary
+    if (user?.avatar?.url) {
+      initalFileList = [{ url: user?.avatar?.url }];
+      setFileList(initalFileList);
+    }
+  }, [user]);
 
   const onFinish = (values) => {
-    console.log("Received values of form: ", values);
+    console.log("Received values of Profile form: ", values);
+    console.log(values.dateOfBirth.toISOString());
+    console.log("fileList", fileList);
+
+    if (fileList.length > 0 && fileList[0].file) {
+      values.avatar = fileList[0].file;
+    }
+    values.dateOfBirth = values.dateOfBirth.toISOString();
+    console.log(values);
+
+    // convert values to formData
+    const formData = new FormData();
+    for (let key in values) {
+      formData.append(key, values[key]);
+    }
+    dispatch(updateProfileAsync(formData));
   };
 
-  const handleChange = ({ fileList: newFileList }) => {
-    setFileList(newFileList);
-  };
+  const uploadProps = {
+    beforeUpload: (file) => {
+      checkUploadCondition(file, antMessage);
 
-  const prefixSelector = (
-    <Form.Item name="prefix" noStyle>
-      <Select style={{ width: 70 }}>
-        <Option value="84">+84</Option>
-        <Option value="54">+54</Option>
-      </Select>
-    </Form.Item>
-  );
+      setFileList([
+        {
+          file: file,
+          url: URL.createObjectURL(file),
+        },
+      ]);
+      return false;
+    },
+    fileList,
+    listType: "picture-card",
+    name: "avatar",
+    showUploadList: {
+      showRemoveIcon: false,
+    },
+  };
 
   return (
     <Card
@@ -92,23 +134,16 @@ function Profile() {
         scrollToFirstError
         initialValues={{
           prefix: "84",
+          email: user?.email,
+          fullName: user?.fullName,
+          phoneNumber: user?.phoneNumber,
+          gender: user?.gender,
+          dateOfBirth: dayjs(user?.dateOfBirth),
         }}
       >
         <Form.Item label="Avatar">
           <ImgCrop rotate>
-            <Upload
-              name="avatar"
-              listType="picture-card"
-              className="avatar-uploader"
-              action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
-              fileList={fileList}
-              beforeUpload={beforeUpload}
-              onChange={handleChange}
-              maxCount={1}
-              showUploadList={{
-                showRemoveIcon: false,
-              }}
-            >
+            <Upload {...uploadProps}>
               {fileList.length === 0 ? (
                 <div>
                   <PlusOutlined />
@@ -132,7 +167,7 @@ function Profile() {
         </Form.Item>
 
         <Form.Item
-          name="fullname"
+          name="fullName"
           label="Full Name"
           rules={[
             {
@@ -145,8 +180,26 @@ function Profile() {
           <Input />
         </Form.Item>
 
-        <Form.Item name="phoneNumber" label="Phone Number">
-          <Input addonBefore={prefixSelector} style={{ width: "100%" }} />
+        <Form.Item
+          name="phoneNumber"
+          label="Phone Number"
+          rules={[
+            {
+              pattern: new RegExp(/^\d{10}$/),
+              message: "Invalid phone number!",
+            },
+          ]}
+        >
+          <Input
+            addonBefore={
+              <Form.Item name="prefix" noStyle>
+                <Select style={{ width: 70 }}>
+                  <Option value="84">+84</Option>
+                </Select>
+              </Form.Item>
+            }
+            style={{ width: "100%" }}
+          />
         </Form.Item>
 
         <Form.Item
@@ -183,12 +236,14 @@ function Profile() {
             type="primary"
             htmlType="submit"
             style={{ marginRight: "8px" }}
+            loading={isLoading}
           >
             Save
           </Button>
           <Button
             onClick={() => {
               form.resetFields();
+              setFileList(initalFileList);
             }}
           >
             Reset

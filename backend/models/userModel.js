@@ -19,7 +19,7 @@ const userSchema = mongoose.Schema(
       type: String,
     },
     phoneNumber: {
-      type: Number,
+      type: String,
     },
     gender: {
       type: String,

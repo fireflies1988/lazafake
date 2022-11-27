@@ -48,9 +48,9 @@ exports.validate = (method) => {
         body("phoneNumber", "Invalid phone number.")
           .optional()
           .trim()
-          .isNumeric({ no_symbols: true }),
+          .matches(/^\d{10}$/),
         body("gender").optional().isIn(["Male", "Female", "Other"]),
-        body("dateOfBirth").optional().isDate(),
+        body("dateOfBirth", "Invalid dateOfBirth value.").optional().isISO8601(),
       ];
     }
 

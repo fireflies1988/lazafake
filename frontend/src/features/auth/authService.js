@@ -8,16 +8,24 @@ async function registerAsync(userData) {
   console.log("resgiterAsync", response);
 
   return response.data;
-};
+}
 
 // login
 async function loginAsync(credentails) {
   const response = await axios.post(API_URL + "/login", credentails);
   console.log("login", response);
 
-  if (response.data) {
-    localStorage.setItem("lazafakeUser", JSON.stringify(response.data));
-  }
+  return response.data;
+}
+
+// update profile
+async function updateProfileAsync(formData, accessToken) {
+  const response = await axios.patch(API_URL + "/me", formData, {
+    headers: {
+      Authorization: "Bearer " + accessToken,
+      "Content-Type": "multipart/form-data",
+    },
+  });
 
   return response.data;
 }
@@ -25,6 +33,7 @@ async function loginAsync(credentails) {
 const authService = {
   registerAsync,
   loginAsync,
+  updateProfileAsync,
 };
 
 export default authService;

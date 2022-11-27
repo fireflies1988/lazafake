@@ -63,11 +63,10 @@ const login = asyncHandler(async (req, res, next) => {
     user.refreshTokenHash = await bcrypt.hash(refreshToken, salt);
     await user.save();
 
+    const { passwordHash, refreshTokenHash, ...publicFields } = user.toObject();
+
     res.json({
-      id: user.id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
+      ...publicFields,
       accessToken,
       refreshToken,
     });
@@ -134,7 +133,6 @@ const updateMe = asyncHandler(async (req, res, next) => {
     role,
     passwordHash,
     addresses,
-    cartItems,
     ...updatedFields
   } = req.body;
 
@@ -165,7 +163,7 @@ const updateMe = asyncHandler(async (req, res, next) => {
   const updatedUser = await User.findByIdAndUpdate(req.user.id, updatedFields, {
     new: true,
     runValidators: true,
-    select: "-passwordHash -refreshTokenHash -cartItems",
+    select: "-passwordHash -refreshTokenHash",
   });
 
   res.status(200).json(updatedUser);

@@ -4,10 +4,13 @@ import { Provider } from "react-redux";
 import { store } from "./app/store";
 import App from "./App";
 import "./index.css";
-import { ConfigProvider } from "antd";
+import { ConfigProvider, message } from "antd";
 
 const container = document.getElementById("root");
 const root = createRoot(container);
+message.config({
+  top: 80,
+});
 
 root.render(
   <ConfigProvider

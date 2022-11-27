@@ -61,7 +61,7 @@ function Register() {
       });
     }
 
-    dispatch(reset());
+    return () => dispatch(reset());
   }, [isError, isSuccess]);
 
   const onFinish = (values) => {

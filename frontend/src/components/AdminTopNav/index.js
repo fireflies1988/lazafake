@@ -6,10 +6,11 @@ import logo from "../../assets/logo.png";
 import Container from "../Container";
 import { StyledAdminTopNav } from "./styled";
 import { logout } from "../../features/auth/authSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 function TopNav() {
   const dispatch = useDispatch();
+  const { user } = useSelector(state => state.auth);
 
   const items = [
     {
@@ -90,6 +91,7 @@ function TopNav() {
               <Avatar
                 size="large"
                 icon={<UserOutlined />}
+                src={user?.avatar?.url}
                 style={{ cursor: "pointer" }}
               />
             </Dropdown>

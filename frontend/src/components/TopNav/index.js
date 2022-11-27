@@ -1,7 +1,8 @@
 import {
   BellOutlined,
   LogoutOutlined,
-  ShoppingCartOutlined, UserOutlined
+  ShoppingCartOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import { Avatar, Badge, Button, Col, Dropdown, Input, Row } from "antd";
 import React from "react";
@@ -113,6 +114,7 @@ function TopNav() {
                   <Avatar
                     size="large"
                     icon={<UserOutlined />}
+                    src={user?.avatar?.url}
                     style={{ cursor: "pointer" }}
                   />
                 </Dropdown>

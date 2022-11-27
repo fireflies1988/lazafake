@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { BsInboxes } from "react-icons/bs";
 import { RiCoupon3Line } from "react-icons/ri";
 import { Outlet, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const items = [
   {
@@ -38,6 +39,7 @@ const items = [
 ];
 
 function UserLayout() {
+  const { user } = useSelector(state => state.auth);
   const location = useLocation();
   const segments = location.pathname.split("/").filter(Boolean);
   const [currentKey, setCurrentKey] = useState(segments[segments.length - 1]);
@@ -55,8 +57,9 @@ function UserLayout() {
                 size="large"
                 style={{ backgroundColor: "#87d068", flexShrink: 0 }}
                 icon={<UserOutlined />}
+                src={user?.avatar?.url}
               />
-              <div>Tung Kieu</div>
+              <div>{user?.fullName}</div>
             </div>
           }
           bodyStyle={{ padding: "0.25rem 0" }}
