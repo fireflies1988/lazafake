@@ -4,6 +4,7 @@ import { registerAsync, reset } from "../features/auth/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { showError } from "../utils";
 
 const formItemLayout = {
   labelCol: {
@@ -41,17 +42,13 @@ function Register() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [credentials, setCredentials] = useState();
-  const { isError, message, isSuccess } = useSelector((state) => state.auth);
+  const { isError, message, isSuccess, isLoading } = useSelector(
+    (state) => state.auth
+  );
 
   useEffect(() => {
     if (isError) {
-      if (Array.isArray(message)) {
-        for (let m of message) {
-          antMessage.error(m);
-        }
-      } else {
-        antMessage.error(message);
-      }
+      showError(antMessage, message);
     }
 
     if (isSuccess) {
@@ -176,7 +173,7 @@ function Register() {
           }}
         >
           <span>Already have an account?</span>
-          <Button type="link" href="/login">
+          <Button type="link" href="/login" loading={isLoading}>
             Login
           </Button>
         </div>

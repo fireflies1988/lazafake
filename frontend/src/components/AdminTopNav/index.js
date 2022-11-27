@@ -5,45 +5,49 @@ import { BsInboxes } from "react-icons/bs";
 import logo from "../../assets/logo.png";
 import Container from "../Container";
 import { StyledAdminTopNav } from "./styled";
-
-const items = [
-  {
-    key: "1",
-    label: (
-      <a target="_self" rel="noopener noreferrer" href="/user/account/profile">
-        My Account
-      </a>
-    ),
-    icon: <UserOutlined />,
-  },
-  {
-    key: "2",
-    label: (
-      <a target="_self" rel="noopener noreferrer" href="/user/orders">
-        My Orders
-      </a>
-    ),
-    icon: <BsInboxes />,
-  },
-  {
-    type: "divider",
-  },
-  {
-    key: "3",
-    label: (
-      <a
-        target="_self"
-        rel="noopener noreferrer"
-        href="https://www.luohanacademy.com"
-      >
-        Logout
-      </a>
-    ),
-    icon: <LogoutOutlined />,
-  },
-];
+import { logout } from "../../features/auth/authSlice";
+import { useDispatch } from "react-redux";
 
 function TopNav() {
+  const dispatch = useDispatch();
+
+  const items = [
+    {
+      key: "1",
+      label: (
+        <a
+          target="_self"
+          rel="noopener noreferrer"
+          href="/user/account/profile"
+        >
+          My Account
+        </a>
+      ),
+      icon: <UserOutlined />,
+    },
+    {
+      key: "2",
+      label: (
+        <a target="_self" rel="noopener noreferrer" href="/user/orders">
+          My Orders
+        </a>
+      ),
+      icon: <BsInboxes />,
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "3",
+      label: (
+        <a href="/" onClick={() => dispatch(logout())}>
+          Logout
+        </a>
+      ),
+      icon: <LogoutOutlined />,
+    },
+  ];
+
   return (
     <StyledAdminTopNav>
       <Container>

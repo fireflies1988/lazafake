@@ -25,7 +25,7 @@ function Home() {
       }}
       size="large"
     >
-      <Carousel afterChange={onChange}>
+      <Carousel afterChange={onChange} autoplay>
         <img
           src="https://images.fpt.shop/unsafe/fit-in/1176x294/filters:quality(90):fill(white)/fptshop.com.vn/Uploads/Originals/2022/6/14/637907955723186168_F-C1_1200x300.png"
           alt="Linh kiện PC C1"

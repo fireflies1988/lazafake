@@ -8,28 +8,49 @@ import {
   message as antMessage,
 } from "antd";
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../scss/Login.scss";
+import { useDispatch, useSelector } from "react-redux";
+import { loginAsync, reset } from "../features/auth/authSlice";
+import { showError } from "../utils";
 
 function Login() {
+  const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
   const [initialValues] = useState({
     email: location?.state?.email,
     password: location?.state?.password,
     remember: true,
   });
+  const { isLoading, isError, isSuccess, message } = useSelector(
+    (state) => state.auth
+  );
 
   useEffect(() => {
     if (location?.state?.message) {
       antMessage.success(location?.state?.message);
-      
+
       // clear location state
-      window.history.replaceState({}, document.title)
+      window.history.replaceState({}, document.title);
     }
   }, []);
 
+  useEffect(() => {
+    if (isError) {
+      showError(antMessage, message);
+    }
+
+    if (isSuccess) {
+      navigate("/");
+    }
+
+    return () => dispatch(reset());
+  }, [isError, isSuccess]);
+
   const onFinish = (values) => {
-    console.log("Received values of form: ", values);
+    console.log("Received values of Login form: ", values);
+    dispatch(loginAsync(values));
   };
 
   return (
@@ -50,11 +71,15 @@ function Login() {
               required: true,
               message: "Please input your Email!",
             },
+            {
+              type: "email",
+              message: "The input is not valid E-mail!",
+            },
           ]}
         >
           <Input
             prefix={<UserOutlined className="site-form-item-icon" />}
-            placeholder="Username"
+            placeholder="Email"
           />
         </Form.Item>
         <Form.Item
@@ -94,6 +119,7 @@ function Login() {
             type="primary"
             htmlType="submit"
             className="login-form-button"
+            loading={isLoading}
           >
             Log in
           </Button>

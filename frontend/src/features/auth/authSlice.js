@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import authService from "./authService";
+import handleError from "../helpers/errorHandler";
 
 // get user info from localStorage
-const user = JSON.parse(localStorage.getItem("user"));
+const user = JSON.parse(localStorage.getItem("lazafakeUser"));
 
 const initialState = {
   user: user ?? null,
@@ -15,17 +16,23 @@ const initialState = {
 // register
 export const registerAsync = createAsyncThunk(
   "auth/register",
-  async (user, thunkAPI) => {
+  async (userData, thunkAPI) => {
     try {
-      return await authService.registerAsync(user);
+      return await authService.registerAsync(userData);
     } catch (err) {
-      console.log("registerAsync", err);
-      const message =
-        err?.response?.data?.errors?.map((err) => err.msg) ??
-        err?.response?.data?.message ??
-        err?.message ??
-        err.toString();
-      return thunkAPI.rejectWithValue(message);
+      return handleError(err, thunkAPI, "registerAsync");
+    }
+  }
+);
+
+// login
+export const loginAsync = createAsyncThunk(
+  "auth/login",
+  async (credentails, thunkAPI) => {
+    try {
+      return await authService.loginAsync(credentails);
+    } catch (err) {
+      return handleError(err, thunkAPI, "loginAsync");
     }
   }
 );
@@ -40,6 +47,10 @@ export const authSlice = createSlice({
       state.isSuccess = false;
       state.message = "";
     },
+    logout: (state) => {
+      localStorage.removeItem("lazafakeUser");
+      state.user = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -49,9 +60,21 @@ export const authSlice = createSlice({
       .addCase(registerAsync.fulfilled, (state) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.message = "Your account has been created. Login now.";
       })
       .addCase(registerAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(loginAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(loginAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.user = action.payload;
+      })
+      .addCase(loginAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
@@ -59,7 +82,5 @@ export const authSlice = createSlice({
   },
 });
 
-console.log("authSlice", authSlice);
-
-export const { reset } = authSlice.actions;
+export const { reset, logout } = authSlice.actions;
 export default authSlice.reducer;

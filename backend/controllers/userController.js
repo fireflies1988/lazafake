@@ -60,11 +60,14 @@ const login = asyncHandler(async (req, res, next) => {
 
     // save refresh token
     const salt = await bcrypt.genSalt(10);
-    const refreshTokenHash = await bcrypt.hash(refreshToken, salt);
-    user.refreshTokenHash = refreshTokenHash;
+    user.refreshTokenHash = await bcrypt.hash(refreshToken, salt);
     await user.save();
 
     res.json({
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
       accessToken,
       refreshToken,
     });

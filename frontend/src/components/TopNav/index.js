@@ -1,60 +1,61 @@
-import React from "react";
-import { StyledTopNav } from "./styled";
-import logo from "../../assets/logo.png";
-import { Badge, Button, Col, Dropdown, Input, Row } from "antd";
 import {
   BellOutlined,
   LogoutOutlined,
-  ShoppingCartOutlined,
+  ShoppingCartOutlined, UserOutlined
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
-import { UserOutlined } from "@ant-design/icons";
-import { Avatar } from "antd";
+import { Avatar, Badge, Button, Col, Dropdown, Input, Row } from "antd";
+import React from "react";
 import { BsInboxes } from "react-icons/bs";
+import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import logo from "../../assets/logo.png";
+import { logout } from "../../features/auth/authSlice";
 import Container from "../Container";
+import { StyledTopNav } from "./styled";
 
 const { Search } = Input;
 
-const items = [
-  {
-    key: "1",
-    label: (
-      <a target="_self" rel="noopener noreferrer" href="/user/account/profile">
-        My Account
-      </a>
-    ),
-    icon: <UserOutlined />,
-  },
-  {
-    key: "2",
-    label: (
-      <a target="_self" rel="noopener noreferrer" href="/user/orders">
-        My Orders
-      </a>
-    ),
-    icon: <BsInboxes />,
-  },
-  {
-    type: "divider",
-  },
-  {
-    key: "3",
-    label: (
-      <a
-        target="_self"
-        rel="noopener noreferrer"
-        href="https://www.luohanacademy.com"
-      >
-        Logout
-      </a>
-    ),
-    icon: <LogoutOutlined />,
-  },
-];
-
 function TopNav() {
-  const isLoggedIn = false;
+  const { user } = useSelector((state) => state.auth);
   const onSearch = (value) => console.log(value);
+  const dispatch = useDispatch();
+
+  const items = [
+    {
+      key: "1",
+      label: (
+        <a
+          target="_self"
+          rel="noopener noreferrer"
+          href="/user/account/profile"
+        >
+          My Account
+        </a>
+      ),
+      icon: <UserOutlined />,
+    },
+    {
+      key: "2",
+      label: (
+        <a target="_self" rel="noopener noreferrer" href="/user/orders">
+          My Orders
+        </a>
+      ),
+      icon: <BsInboxes />,
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "3",
+      label: (
+        <a href="/" onClick={() => dispatch(logout())}>
+          Logout
+        </a>
+      ),
+      icon: <LogoutOutlined />,
+    },
+  ];
 
   return (
     <StyledTopNav>
@@ -97,7 +98,7 @@ function TopNav() {
               </Badge>
             </Link>
 
-            {isLoggedIn ? (
+            {user ? (
               <>
                 <Badge count={1} overflowCount={99}>
                   <BellOutlined style={{ color: "white", fontSize: "24px" }} />

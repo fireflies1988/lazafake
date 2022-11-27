@@ -19,23 +19,24 @@ import ProductDetails from "./pages/ProductDetails";
 import Checkout from "./pages/Checkout";
 import SearchPage from "./pages/SearchPage";
 import Orders from "./pages/admin/Orders";
+import { useSelector } from "react-redux";
 
 function App() {
-  const isLoggedIn = false;
+  const { user } = useSelector((state) => state.auth);
   const isAdmin = true;
 
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Layout />}>
-          {!isLoggedIn && (
+          {!user && (
             <>
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
             </>
           )}
           <Route index element={<Home />} />
-          {isLoggedIn && (
+          {user && (
             <>
               <Route path="user" element={<UserLayout />}>
                 <Route index element={<Navigate to="account/profile" />} />
@@ -64,14 +65,18 @@ function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
 
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Navigate to="dashboard" />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="categories" element={<Categories />} />
-          <Route path="products" element={<Products />} />
-          <Route path="orders" element={<Orders />} />
-          <Route path="*" element={<Navigate to="dashboard" />} />
-        </Route>
+        {user?.role === "admin" && (
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="dashboard" />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="categories" element={<Categories />} />
+            <Route path="products" element={<Products />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="*" element={<Navigate to="dashboard" />} />
+          </Route>
+        )}
+
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );
