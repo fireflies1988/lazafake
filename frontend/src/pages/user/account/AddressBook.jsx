@@ -1,289 +1,150 @@
-import React, { useState } from "react";
+import { PlusOutlined } from "@ant-design/icons";
 import {
   Button,
   Card,
-  Checkbox,
-  Form,
-  Input,
-  Modal,
-  Radio,
-  Select,
+  message as antMessage,
+  Popconfirm,
   Space,
+  Spin,
   Table,
   Tag,
 } from "antd";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import CardTitle from "../../../components/CartTitle";
-import { PlusOutlined } from "@ant-design/icons";
+import AddAddressModal from "../../../components/modals/AddAddressModal";
+import EditAddressModal from "../../../components/modals/EditAddressModal";
+import {
+  resetState,
+  getAddressesAsync,
+  deleteAddressAsync,
+} from "../../../features/address/addressSlice";
+import { showError } from "../../../utils";
 
-const vietnamProvinces = require("../../../data/vietnam");
-
-const { Option } = Select;
-const columns = [
-  {
-    title: "Name",
-    dataIndex: "name",
-    key: "name",
-  },
-  {
-    title: "Phone Number",
-    dataIndex: "phoneNumber",
-    key: "phoneNumber",
-  },
-  {
-    title: "Street Name, Building, House No.",
-    dataIndex: "address1",
-    key: "address1",
-  },
-  {
-    title: "City, District, Ward",
-    dataIndex: "address2",
-    key: "address2",
-  },
-  {
-    title: "Label",
-    key: "label",
-    dataIndex: "label",
-    render: (_, { isDefault, label }) => (
-      <>
-        {isDefault && <Tag color="green">Default</Tag>}
-        {label === "Home" && <Tag color="red">Home</Tag>}
-        {label === "Work" && <Tag color="blue">Work</Tag>}
-        {label === "Other" && <Tag color="gold">Other</Tag>}
-      </>
-    ),
-  },
-  {
-    title: "Action",
-    key: "action",
-    render: (_, { isDefault }) => (
-      <Space direction="vertical" style={{ display: "flex" }}>
+function AddressBook() {
+  const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [addressId, setAddressId] = useState();
+  const { addresses, isError, isSuccess, isLoading, message } = useSelector(
+    (state) => state.address
+  );
+  const columns = [
+    {
+      title: "Id",
+      dataIndex: "id",
+      key: "id",
+    },
+    {
+      title: "Full Name",
+      dataIndex: "fullName",
+      key: "fullName",
+    },
+    {
+      title: "Phone Number",
+      dataIndex: "phoneNumber",
+      key: "phoneNumber",
+    },
+    {
+      title: "Street Name, Building, House No.",
+      dataIndex: "address1",
+      key: "address1",
+    },
+    {
+      title: "City, District, Ward",
+      dataIndex: "address2",
+      key: "address2",
+    },
+    {
+      title: "Label",
+      key: "label",
+      dataIndex: "label",
+      render: (_, { isDefault, label }) => (
+        <>
+          {isDefault && <Tag color="green">Default</Tag>}
+          {label === "Home" && <Tag color="red">Home</Tag>}
+          {label === "Work" && <Tag color="blue">Work</Tag>}
+          {label === "Other" && <Tag color="gold">Other</Tag>}
+        </>
+      ),
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, { isDefault, id }) => (
         <Space>
-          <Button type="primary" ghost size="small">
+          <Button
+            type="primary"
+            ghost
+            size="small"
+            onClick={() => {
+              setAddressId(id);
+              setOpenEdit(true);
+            }}
+          >
             Edit
           </Button>
           {!isDefault && (
-            <Button type="primary" danger size="small">
-              Delete
-            </Button>
+            <Popconfirm
+              placement="topLeft"
+              title="Are you sure you want to delete this address?"
+              onConfirm={() => onDelete(id)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button type="primary" danger size="small">
+                Delete
+              </Button>
+            </Popconfirm>
           )}
         </Space>
-        {!isDefault && <Button size="small">Set As Default</Button>}
-      </Space>
-    ),
-  },
-];
+      ),
+    },
+  ];
 
-const data = [
-  {
-    key: "1",
-    name: "John Brown",
-    phoneNumber: "0965939861",
-    address1: "97 Man Thiện",
-    address2: "Phường Hiệp Phú, Thành Phố Thủ Đức, TP. Hồ Chí Minh",
-    label: "Home",
-    isDefault: true,
-  },
-  {
-    key: "2",
-    name: "Jim Green",
-    phoneNumber: "0965939861",
-    address1: "97 Man Thiện",
-    address2: "Phường Hiệp Phú, Thành Phố Thủ Đức, TP. Hồ Chí Minh",
-    label: "Work",
-    isDefault: false,
-  },
-  {
-    key: "3",
-    name: "Joe Black",
-    phoneNumber: "0965939861",
-    address1: "97 Man Thiện",
-    address2: "Phường Hiệp Phú, Thành Phố Thủ Đức, TP. Hồ Chí Minh",
-    label: "Other",
-    isDefault: false,
-  },
-];
+  const [data, setData] = useState([]);
+  const dispatch = useDispatch();
 
-const AddressCreateForm = ({ open, onCreate, onCancel }) => {
-  const [form] = Form.useForm();
-  const [districts, setDistricts] = useState([]);
-  const [wards, setWards] = useState([]);
-
-  const prefixSelector = (
-    <Form.Item name="prefix" noStyle>
-      <Select style={{ width: 70 }}>
-        <Option value="84">+84</Option>
-        <Option value="54">+54</Option>
-      </Select>
-    </Form.Item>
-  );
-
-  function handleChangeCity(value) {
-    form.setFieldValue("district", null);
-    form.setFieldValue("ward", null);
-    setDistricts(
-      vietnamProvinces
-        .find((p) => p.Name === value)
-        .Districts.map((d) => ({
-          label: d.Name,
-          value: d.Name,
-        }))
-    );
+  function onDelete(id) {
+    dispatch(deleteAddressAsync(id));
   }
 
-  function handleChangeDistrict(value) {
-    form.setFieldValue("ward", null);
-    console.log(
-      vietnamProvinces
-        .find((p) => p.Name === form.getFieldValue("city"))
-        .Districts.find((d) => d.Name === value).Wards
-    );
-    setWards(
-      vietnamProvinces
-        .find((p) => p.Name === form.getFieldValue("city"))
-        .Districts.find((d) => d.Name === value)
-        .Wards.map((w) => ({
-          label: w.Name,
-          value: w.Name,
-        }))
-    );
-  }
+  useEffect(() => {
+    const tempData = [];
+    for (let i = 0; i < addresses.length; i++) {
+      tempData.push({
+        key: i,
+        id: addresses[i]._id,
+        fullName: addresses[i].fullName,
+        phoneNumber: addresses[i].phoneNumber,
+        address1: addresses[i].address,
+        address2:
+          addresses[i].ward +
+          ", " +
+          addresses[i].district +
+          ", " +
+          addresses[i].province,
+        label: addresses[i].label,
+        isDefault: addresses[i].isDefault,
+      });
+    }
+    setData(tempData);
+  }, [addresses]);
 
-  return (
-    <Modal
-      open={open}
-      title="Add New Address"
-      okText="Save"
-      cancelText="Cancel"
-      onCancel={() => {
-        form.resetFields();
-        onCancel();
-      }}
-      centered
-      closable={false}
-      maskClosable={false}
-      onOk={() => {
-        form
-          .validateFields()
-          .then((values) => {
-            form.resetFields();
-            onCreate(values);
-          })
-          .catch((info) => {
-            console.log("Validate Failed:", info);
-          });
-      }}
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        name="form_in_modal"
-        initialValues={{
-          modifier: "public",
-          prefix: "84",
-        }}
-      >
-        <Form.Item
-          name="fullName"
-          label="Full Name"
-          rules={[
-            {
-              required: true,
-              message: "Please input your Full Name!",
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item>
+  useEffect(() => {
+    dispatch(getAddressesAsync());
+  }, []);
 
-        <Form.Item
-          name="phoneNumber"
-          label="Phone Number"
-          rules={[
-            { required: true, message: "Please input your phone number!" },
-          ]}
-        >
-          <Input addonBefore={prefixSelector} style={{ width: "100%" }} />
-        </Form.Item>
+  useEffect(() => {
+    if (isError) {
+      showError(antMessage, message);
+    }
 
-        <Form.Item
-          name="city"
-          label="City/Province"
-          rules={[
-            { required: true, message: "Please select your City/Province!" },
-          ]}
-        >
-          <Select
-            placeholder="Select your City/Province"
-            onChange={handleChangeCity}
-          >
-            {vietnamProvinces.map((p) => (
-              <Option value={p.Name} key={p.Id}>
-                {p.Name}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
+    if (isSuccess) {
+      antMessage.success(message);
+    }
 
-        <Form.Item
-          name="district"
-          label="District"
-          rules={[{ required: true, message: "Please select your District!" }]}
-        >
-          <Select
-            placeholder="Select your District"
-            options={districts}
-            onChange={handleChangeDistrict}
-          />
-        </Form.Item>
-
-        <Form.Item
-          name="ward"
-          label="Ward"
-          rules={[{ required: true, message: "Please select your Ward!" }]}
-        >
-          <Select placeholder="Select your Ward" options={wards} />
-        </Form.Item>
-
-        <Form.Item
-          name="address"
-          label="Street Name, Building, House No."
-          rules={[
-            {
-              required: true,
-              message: "Please input your Address!",
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-
-        <Form.Item
-          label="Label As"
-          name="label"
-          className="collection-create-form_last-form-item"
-        >
-          <Radio.Group>
-            <Radio value="Home">Home</Radio>
-            <Radio value="Work">Work</Radio>
-            <Radio value="Other">Other</Radio>
-          </Radio.Group>
-        </Form.Item>
-
-        <Form.Item name="isDefault">
-          <Checkbox>Set As Default Address</Checkbox>
-        </Form.Item>
-      </Form>
-    </Modal>
-  );
-};
-
-function AddressBook() {
-  const [open, setOpen] = useState(false);
-
-  const onCreate = (values) => {
-    console.log("Received values of form: ", values);
-    setOpen(false);
-  };
+    return () => dispatch(resetState());
+  }, [isError, isSuccess]);
 
   return (
     <Card
@@ -293,20 +154,32 @@ function AddressBook() {
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => {
-            setOpen(true);
+            setOpenAdd(true);
           }}
         >
           Add New Address
         </Button>
       }
     >
-      <Table columns={columns} dataSource={data} pagination={false} />
-      <AddressCreateForm
-        open={open}
-        onCreate={onCreate}
+      <Spin spinning={isLoading}>
+        <Table
+          columns={columns.filter((col) => col.dataIndex !== "id")}
+          dataSource={data}
+          pagination={false}
+        />
+      </Spin>
+      <AddAddressModal
+        open={openAdd}
         onCancel={() => {
-          setOpen(false);
+          setOpenAdd(false);
         }}
+      />
+      <EditAddressModal
+        open={openEdit}
+        onCancel={() => {
+          setOpenEdit(false);
+        }}
+        addressId={addressId}
       />
     </Card>
   );

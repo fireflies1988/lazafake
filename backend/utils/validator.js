@@ -50,7 +50,9 @@ exports.validate = (method) => {
           .trim()
           .matches(/^\d{10}$/),
         body("gender").optional().isIn(["Male", "Female", "Other"]),
-        body("dateOfBirth", "Invalid dateOfBirth value.").optional().isISO8601(),
+        body("dateOfBirth", "Invalid dateOfBirth value.")
+          .optional()
+          .isISO8601(),
       ];
     }
 
@@ -59,7 +61,7 @@ exports.validate = (method) => {
         body("fullName", "Full name is required.").trim().notEmpty(),
         body("phoneNumber")
           .trim()
-          .isNumeric()
+          .matches(/^\d{10}$/)
           .withMessage("Invalid phone number."),
         body("province", "Province is required.").trim().notEmpty(),
         body("district", "District is required.").trim().notEmpty(),

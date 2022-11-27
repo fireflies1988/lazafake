@@ -54,14 +54,17 @@ export const updateProfileAsync = createAsyncThunk(
 );
 
 // change password
-export const changePasswordAsync = createAsyncThunk("auth/password", async (data, thunkAPI) => {
-  try {
-    const accessToken = thunkAPI.getState().auth.user?.accessToken;
-    return await authService.changePasswordAsync(data, accessToken)
-  } catch (err) {
-    return handleError(err, thunkAPI, "changePasswordAsync", false);
+export const changePasswordAsync = createAsyncThunk(
+  "auth/password",
+  async (data, thunkAPI) => {
+    try {
+      const accessToken = thunkAPI.getState().auth.user?.accessToken;
+      return await authService.changePasswordAsync(data, accessToken);
+    } catch (err) {
+      return handleError(err, thunkAPI, "changePasswordAsync", false);
+    }
   }
-});
+);
 
 export const authSlice = createSlice({
   name: "auth",
@@ -112,7 +115,7 @@ export const authSlice = createSlice({
       .addCase(updateProfileAsync.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.message = "Your profile has been successfully updated."
+        state.message = "Your profile has been successfully updated.";
         state.user = { ...state.user, ...action.payload };
         saveUser(state.user);
       })

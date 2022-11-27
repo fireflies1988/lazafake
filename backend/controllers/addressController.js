@@ -43,14 +43,14 @@ const addAddress = asyncHandler(async (req, res, next) => {
   res.status(201).json(
     await Address.find({ user: req.user.id }, null, {
       sort: {
-        createdAt: -1,
         isDefault: -1,
+        createdAt: -1,
       },
     })
   );
 });
 
-// @desc    Get all addressese
+// @desc    Get all addresses
 // @route   GET /api/addresses
 // @access  Private
 const getAddresses = asyncHandler(async (req, res, next) => {
@@ -62,6 +62,15 @@ const getAddresses = asyncHandler(async (req, res, next) => {
       },
     })
   );
+});
+
+// @desc    Get address by id
+// @route   GET /api/addresses/:id
+// @access  Private
+const getAddressById = asyncHandler(async (req, res, next) => {
+  res
+    .status(200)
+    .json(await Address.find({ user: req.user.id, _id: req.params.id }));
 });
 
 // @desc    Delete address
@@ -84,8 +93,8 @@ const deleteAddress = asyncHandler(async (req, res, next) => {
   res.status(200).json(
     await Address.find({ user: req.user.id }, null, {
       sort: {
-        createdAt: -1,
         isDefault: -1,
+        createdAt: -1,
       },
     })
   );
@@ -119,7 +128,7 @@ const updateAddress = asyncHandler(async (req, res, next) => {
   try {
     // only one default address is allowed
     if (
-      updatedAddress.isDefault !== false &&
+      updatedAddress.isDefault === false &&
       (req.body.isDefault === "true" || req.body.isDefault === true)
     ) {
       await Address.updateMany(
@@ -157,4 +166,5 @@ module.exports = {
   deleteAddress,
   updateAddress,
   getAddresses,
+  getAddressById,
 };

@@ -4,6 +4,7 @@ const {
   deleteAddress,
   updateAddress,
   getAddresses,
+  getAddressById,
 } = require("../controllers/addressController");
 const router = express.Router();
 const { auth } = require("../middlewares/authMiddleware");
@@ -17,5 +18,6 @@ router
   .route("/:id")
   .delete(auth, deleteAddress)
   .patch(auth, validate("updateAddress"), updateAddress);
+router.get("/:id", auth, getAddressById);
 
 module.exports = router;
