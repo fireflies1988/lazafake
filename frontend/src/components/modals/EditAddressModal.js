@@ -11,7 +11,7 @@ function EditAddressModal({ open, onCancel, addressId }) {
 
   useEffect(() => {
     form.setFieldsValue(addresses.find((a) => a._id.toString() === addressId));
-  }, [addressId]);
+  }, [addressId, open]);
 
   function handleCancel() {
     form.resetFields();

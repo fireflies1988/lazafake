@@ -1,7 +1,10 @@
-import { Avatar, Card, Carousel, Space } from "antd";
+import { Avatar, Card, Carousel, Space, Spin } from "antd";
 import React from "react";
 import { Link } from "react-router-dom";
 import ProductList from "../components/ProductList";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { getCategoriesAsync } from "../features/category/categorySlice";
 
 const gridStyle = {
   width: "10%",
@@ -13,9 +16,17 @@ const gridStyle = {
 };
 
 function Home() {
+  const dispatch = useDispatch();
+  const { categories, isLoading: categoriesIsLoading } = useSelector(
+    (state) => state.category
+  );
   const onChange = (currentSlide) => {
     console.log(currentSlide);
   };
+
+  useEffect(() => {
+    dispatch(getCategoriesAsync());
+  }, []);
 
   return (
     <Space
@@ -40,20 +51,17 @@ function Home() {
         ></img>
       </Carousel>
 
-      <Card title="Categories" style={{ borderRadius: 0 }}>
-        <Card.Grid style={gridStyle}>
-          <Avatar src="https://joeschmoe.io/api/v1/random" size={64} />
-          <div>Nguồn máy tính</div>
-        </Card.Grid>
-        <Card.Grid style={gridStyle}>
-          <Avatar src="https://joeschmoe.io/api/v1/random" size={64} />
-          <div>Content</div>
-        </Card.Grid>
-        <Card.Grid style={gridStyle}>
-          <Avatar src="https://joeschmoe.io/api/v1/random" size={64} />
-          <div>Card</div>
-        </Card.Grid>
-      </Card>
+      <Spin spinning={categoriesIsLoading}>
+        <Card title="Categories" style={{ borderRadius: 0 }}>
+          {categories?.length > 0 &&
+            categories.map((c) => (
+              <Card.Grid style={gridStyle}>
+                <Avatar src={c?.thumbnail?.url} size={64} />
+                <div>{c.name}</div>
+              </Card.Grid>
+            ))}
+        </Card>
+      </Spin>
 
       <Card
         title="Featured Products"

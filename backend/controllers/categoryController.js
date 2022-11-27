@@ -1,6 +1,9 @@
 const asyncHandler = require("express-async-handler");
 const { validationResult } = require("express-validator");
 const Category = require("../models/categoryModel");
+const Product = require("../models/productModel");
+const cloudinary = require("../configs/cloudinary");
+const { findById } = require("../models/categoryModel");
 
 // @desc    Add a new category
 // @route   POST /api/categories
@@ -20,7 +23,42 @@ const addCategory = asyncHandler(async (req, res, next) => {
     throw new Error("This category already exists.");
   }
 
-  const newCategory = await Category.create({ name });
+  const session = await Category.startSession();
+  session.startTransaction();
+  try {
+    const newCategory = await Category.create({ name });
+
+    // upload thumbnail
+    if (req.file) {
+      let uploadOptions = {
+        public_id: `LazaFake/categories/${newCategory._id}`,
+      };
+
+      const uploadResult = await cloudinary.uploader.upload(
+        req.file.path,
+        uploadOptions
+      );
+
+      console.log(uploadResult);
+      if (uploadResult.public_id && uploadResult.secure_url) {
+        newCategory.thumbnail = {
+          publicId: uploadResult.public_id,
+          url: uploadResult.secure_url,
+        };
+      }
+    }
+
+    await newCategory.save();
+
+    await session.commitTransaction();
+  } catch (err) {
+    await session.abortTransaction();
+    console.log("hello");
+    throw err;
+  } finally {
+    await session.endSession();
+  }
+
   res.status(201).json(await Category.find({}));
 });
 
@@ -35,7 +73,26 @@ const getCategories = asyncHandler(async (req, res, next) => {
 // @route   DELETE /api/categories/:id
 // @access  Private (admin)
 const deleteCategory = asyncHandler(async (req, res, next) => {
+  const category = await Category.findById(req.params.id);
+
+  if (!category) {
+    res.status(404);
+    throw new Error("Category not found.");
+  }
+
+  if (category?.thumbnail?.publicId) {
+    await cloudinary.uploader.destroy(category?.thumbnail?.publicId);
+  }
+
   await Category.findByIdAndDelete(req.params.id);
+  await Product.updateMany(
+    { category: req.params.id },
+    {
+      $set: {
+        category: null,
+      },
+    }
+  );
 
   res.json(await Category.find({}));
 });
@@ -50,9 +107,29 @@ const updateCategory = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  await Category.findByIdAndUpdate(req.params.id, {
-    name: req.body.name,
-  });
+  const category = await Category.findById(req.params.id);
+  if (!category) {
+    res.status(404);
+    throw new Error("Category not found.");
+  }
+
+  // upload image
+  if (req.file) {
+    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      public_id: `LazaFake/categories/${category._id}`,
+    });
+
+    console.log(uploadResult);
+    if (uploadResult.public_id && uploadResult.secure_url) {
+      category.thumbnail = {
+        publicId: uploadResult.public_id,
+        url: uploadResult.secure_url,
+      };
+    }
+  }
+
+  category.name = req.body.name;
+  await category.save();
 
   res.json(await Category.find({}));
 });

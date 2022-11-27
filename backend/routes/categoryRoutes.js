@@ -10,17 +10,26 @@ const {
   deleteCategory,
   updateCategory,
 } = require("../controllers/categoryController");
+const upload = require("../configs/multer");
 
 router
   .route("/")
-  .post(auth, checkPermission(Role.Admin), validate("addCategory"), addCategory)
+  .post(
+    auth,
+    checkPermission(Role.Admin),
+    upload.single("thumbnail"),
+    validate("addCategory"),
+    addCategory
+  )
   .get(getCategories);
+
 router
   .route("/:id")
   .delete(auth, checkPermission(Role.Admin), deleteCategory)
   .patch(
     auth,
     checkPermission(Role.Admin),
+    upload.single("thumbnail"),
     validate("addCategory"),
     updateCategory
   );

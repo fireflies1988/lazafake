@@ -2,147 +2,106 @@ import { PlusOutlined } from "@ant-design/icons";
 import {
   Button,
   Card,
-  Form,
   Image,
-  Input,
-  Modal,
   Space,
   Table,
-  Upload,
+  message as antMessage,
+  Popconfirm,
 } from "antd";
-import ImgCrop from "antd-img-crop";
 import React, { useState } from "react";
-
-const columns = [
-  {
-    title: "Name",
-    dataIndex: "name",
-    key: "name",
-  },
-  {
-    title: "Thumbnail",
-    dataIndex: "thumbnail",
-    key: "thumbnail",
-  },
-  {
-    title: "Action",
-    key: "action",
-    render: (_, record) => (
-      <Space>
-        <Button type="primary" ghost size="small">
-          Edit
-        </Button>
-        <Button type="primary" danger size="small">
-          Delete
-        </Button>
-      </Space>
-    ),
-  },
-];
-
-const data = [
-  {
-    key: "1",
-    name: "John Brown",
-    thumbnail: (
-      <Image
-        width={150}
-        src="https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png"
-      />
-    ),
-  },
-  {
-    key: "2",
-    name: "John Brown",
-    thumbnail: (
-      <Image
-        width={150}
-        src="https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png"
-      />
-    ),
-  },
-];
-
-const CategoryAddForm = ({ open, onCreate, onCancel }) => {
-  const [form] = Form.useForm();
-  const [fileList, setFileList] = useState([]);
-
-  const props = {
-    onRemove: (file) => {
-      const index = fileList.indexOf(file);
-      const newFileList = fileList.slice();
-      newFileList.splice(index, 1);
-      setFileList(newFileList);
-    },
-    beforeUpload: (file) => {
-      setFileList([
-        {
-          file: file,
-          url: URL.createObjectURL(file),
-        },
-      ]);
-      return false;
-    },
-    fileList,
-    listType: "picture-card",
-  };
-
-  return (
-    <Modal
-      open={open}
-      title="Add New Category"
-      okText="Save"
-      cancelText="Cancel"
-      onCancel={() => {
-        form.resetFields();
-        onCancel();
-      }}
-      centered
-      closable={false}
-      maskClosable={false}
-      onOk={() => {
-        form
-          .validateFields()
-          .then((values) => {
-            form.resetFields();
-            onCreate(values);
-          })
-          .catch((info) => {
-            console.log("Validate Failed:", info);
-          });
-      }}
-    >
-      <Form form={form} name="form_in_modal" layout="vertical">
-        <Form.Item
-          name="name"
-          label="Name"
-          rules={[
-            {
-              required: true,
-              message: "Please input category name!",
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-
-        <Form.Item label="Thumbnail" required>
-          <ImgCrop rotate>
-            <Upload {...props}>Select Image</Upload>
-          </ImgCrop>
-        </Form.Item>
-      </Form>
-    </Modal>
-  );
-};
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import AddCategoryModal from "../../components/modals/AddCategoryModal";
+import EditCategoryModal from "../../components/modals/EditCategoryModal";
+import {
+  deleteCategoryAsync,
+  getCategoriesAsync,
+  reset,
+} from "../../features/category/categorySlice";
+import { showError } from "../../utils";
 
 function Categories() {
-  const [open, setOpen] = useState(false);
+  const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const { categories, isError, isSuccess, message } = useSelector(
+    (state) => state.category
+  );
+  const [categoryId, setCategoryId] = useState();
+  const columns = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Thumbnail",
+      dataIndex: "thumbnail",
+      key: "thumbnail",
+      render: (_, { thumbnail }) => <Image width={150} src={thumbnail} />,
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="primary"
+            ghost
+            size="small"
+            onClick={() => {
+              setCategoryId(record._id);
+              setOpenEdit(true);
+            }}
+          >
+            Edit
+          </Button>
+          <Popconfirm
+            placement="topLeft"
+            title="Are you sure you want to delete this address?"
+            onConfirm={() => dispatch(deleteCategoryAsync(record._id))}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button type="primary" danger size="small">
+              Delete
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
 
-  const onCreate = (values) => {
-    console.log("Received values of form: ", values);
-    setOpen(false);
-  };
+  const [data, setData] = useState([]);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(getCategoriesAsync());
+  }, []);
+
+  useEffect(() => {
+    if (isError) {
+      showError(antMessage, message);
+    }
+
+    if (isSuccess) {
+      antMessage.success(message);
+    }
+
+    return () => dispatch(reset());
+  }, [isError, isSuccess]);
+
+  useEffect(() => {
+    const tempData = [];
+    for (let i = 0; i < categories.length; i++) {
+      tempData.push({
+        key: i,
+        _id: categories[i]._id,
+        name: categories[i].name,
+        thumbnail: categories[i]?.thumbnail?.url,
+      });
+    }
+    setData(tempData);
+  }, [categories]);
 
   return (
     <Card
@@ -152,7 +111,7 @@ function Categories() {
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => {
-            setOpen(true);
+            setOpenAdd(true);
           }}
         >
           Add New Category
@@ -160,12 +119,18 @@ function Categories() {
       }
     >
       <Table columns={columns} dataSource={data} pagination={false} />
-      <CategoryAddForm
-        open={open}
-        onCreate={onCreate}
+      <AddCategoryModal
+        open={openAdd}
         onCancel={() => {
-          setOpen(false);
+          setOpenAdd(false);
         }}
+      />
+      <EditCategoryModal
+        open={openEdit}
+        onCancel={() => {
+          setOpenEdit(false);
+        }}
+        categoryId={categoryId}
       />
     </Card>
   );
