@@ -1,4 +1,4 @@
-import { Card, Empty, Image, Table, Tabs, Tag } from "antd";
+import { Button, Card, Empty, Image, Space, Table, Tabs, Tag } from "antd";
 import React, { useState } from "react";
 
 const tabList = [
@@ -66,6 +66,18 @@ function Orders() {
         title: "Item Subtotal",
         dataIndex: "itemSubtotal",
         key: "itemSubtotal",
+      },
+      {
+        action: "Actions",
+        dataIndex: "actions",
+        render: (_, record) => (
+          <Space>
+            <Button type="primary">Update Status</Button>
+            <Button type="" danger>
+              Cancel
+            </Button>
+          </Space>
+        ),
       },
     ];
 

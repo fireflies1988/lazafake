@@ -1,10 +1,11 @@
 import { Avatar, Card, Carousel, Space, Spin } from "antd";
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ProductList from "../components/ProductList";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { getCategoriesAsync } from "../features/category/categorySlice";
+import { getProductsAsync } from "../features/product/productSlice";
 
 const gridStyle = {
   width: "10%",
@@ -17,15 +18,18 @@ const gridStyle = {
 
 function Home() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { categories, isLoading: categoriesIsLoading } = useSelector(
     (state) => state.category
   );
+  const { products } = useSelector((state) => state.product);
   const onChange = (currentSlide) => {
     console.log(currentSlide);
   };
 
   useEffect(() => {
     dispatch(getCategoriesAsync());
+    dispatch(getProductsAsync());
   }, []);
 
   return (
@@ -55,7 +59,10 @@ function Home() {
         <Card title="Categories" style={{ borderRadius: 0 }}>
           {categories?.length > 0 &&
             categories.map((c) => (
-              <Card.Grid style={gridStyle}>
+              <Card.Grid
+                style={gridStyle}
+                onClick={() => navigate("/search?keyword=test")}
+              >
                 <Avatar src={c?.thumbnail?.url} size={64} />
                 <div>{c.name}</div>
               </Card.Grid>
@@ -73,210 +80,43 @@ function Home() {
       >
         <ProductList
           columns={6}
-          items={[
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-          ]}
+          items={products.map((p) => ({
+            _id: p._id,
+            url: p?.images[0]?.url,
+            name: p.name,
+            price: `${p.price}đ`,
+            rating: "4.0",
+            sold: 100,
+          }))}
         />
       </Card>
 
-      <Card
-        extra={<Link to="#">More</Link>}
-        title="RAM"
-        bodyStyle={{
-          backgroundColor: "#efefef",
-          padding: "0.5rem 0",
-        }}
-        style={{ borderRadius: 0, border: 0 }}
-      >
-        <ProductList
-          columns={6}
-          items={[
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-          ]}
-        />
-      </Card>
-
-      <Card
-        extra={<Link to="#">More</Link>}
-        title="Mouse"
-        bodyStyle={{
-          backgroundColor: "#efefef",
-          padding: "0.5rem 0",
-        }}
-        style={{ borderRadius: 0, border: 0 }}
-      >
-        <ProductList
-          columns={6}
-          items={[
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-          ]}
-        />
-      </Card>
+      {categories?.length > 0 &&
+        categories.map((c) => (
+          <Card
+            extra={<Link to="#">More</Link>}
+            title={c.name}
+            bodyStyle={{
+              backgroundColor: "#efefef",
+              padding: "0.5rem 0",
+            }}
+            style={{ borderRadius: 0, border: 0 }}
+          >
+            <ProductList
+              columns={6}
+              items={products
+                .filter((p) => p?.category?._id.toString() === c._id)
+                .map((p) => ({
+                  _id: p._id,
+                  url: p?.images[0]?.url,
+                  name: p.name,
+                  price: `${p.price}đ`,
+                  rating: "4.0",
+                  sold: 100,
+                }))}
+            />
+          </Card>
+        ))}
     </Space>
   );
 }

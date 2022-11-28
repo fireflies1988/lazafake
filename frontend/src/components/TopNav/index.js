@@ -4,13 +4,24 @@ import {
   ShoppingCartOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Avatar, Badge, Button, Col, Dropdown, Input, Row } from "antd";
-import React from "react";
+import {
+  Avatar,
+  Badge,
+  Button,
+  Col,
+  Dropdown,
+  Input,
+  message as antMessage,
+  Row,
+} from "antd";
+import React, { useEffect } from "react";
 import { BsInboxes } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { logout } from "../../features/auth/authSlice";
+import { reset, viewCartAsync } from "../../features/cart/cartSlice";
+import { showError } from "../../utils";
 import Container from "../Container";
 import { StyledTopNav } from "./styled";
 
@@ -18,8 +29,34 @@ const { Search } = Input;
 
 function TopNav() {
   const { user } = useSelector((state) => state.auth);
-  const onSearch = (value) => console.log(value);
+  const { cart, isSuccess, isError, message } = useSelector(
+    (state) => state.cart
+  );
+  const navigate = useNavigate();
+
+  const onSearch = (value) => {
+    console.log(value);
+    navigate(`/search?keyword=${value}`);
+  };
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (user) {
+      dispatch(viewCartAsync());
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isError) {
+      showError(antMessage, message);
+    }
+
+    if (isSuccess) {
+      antMessage.success(message);
+    }
+
+    return () => dispatch(reset());
+  }, [isError, isSuccess]);
 
   const items = [
     {
@@ -92,7 +129,7 @@ function TopNav() {
             />
 
             <Link to="/cart">
-              <Badge count={2} overflowCount={99}>
+              <Badge count={cart?.length} overflowCount={99}>
                 <ShoppingCartOutlined
                   style={{ color: "white", fontSize: "30px" }}
                 />

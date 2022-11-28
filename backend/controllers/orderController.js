@@ -261,7 +261,14 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
 // @route   GET /api/orders?status=
 // @access  Private (admin)
 const viewOrders = asyncHandler(async (req, res, next) => {
-  const statuses = ["To Pay", "To Ship", "To Receive", "Completed", "Canceled", "Return/Refund"];
+  const statuses = [
+    "To Pay",
+    "To Ship",
+    "To Receive",
+    "Completed",
+    "Canceled",
+    "Return/Refund",
+  ];
   const index = Number(req.query.status);
   if (index < statuses.length && index >= 0) {
     res.json(await Order.find({ status: statuses[index] }));

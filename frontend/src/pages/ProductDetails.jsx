@@ -10,12 +10,17 @@ import {
   List,
   Rate,
   Row,
+  message as antMessage,
 } from "antd";
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { ShoppingCartOutlined, StarFilled } from "@ant-design/icons";
 import { Space, Typography, Empty, Descriptions } from "antd";
 import ProductList from "../components/ProductList";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { getProductsAsync } from "../features/product/productSlice";
+import { addToCartAsync } from "../features/cart/cartSlice";
 const { Text, Link } = Typography;
 
 const tabListNoTitle = [
@@ -28,20 +33,6 @@ const tabListNoTitle = [
     tab: "Specifications",
   },
 ];
-const contentListNoTitle = {
-  description: <Empty />,
-  specifications: (
-    <Descriptions bordered column={1}>
-      <Descriptions.Item label="Product">Cloud Database</Descriptions.Item>
-      <Descriptions.Item label="Billing Mode">Prepaid</Descriptions.Item>
-      <Descriptions.Item label="Billing Mode">Prepaid</Descriptions.Item>
-      <Descriptions.Item label="Billing Mode">Prepaid</Descriptions.Item>
-      <Descriptions.Item label="Billing Mode">Prepaid</Descriptions.Item>
-      <Descriptions.Item label="Billing Mode">Prepaid</Descriptions.Item>
-      <Descriptions.Item label="Billing Mode">Prepaid</Descriptions.Item>
-    </Descriptions>
-  ),
-};
 
 const data = [
   {
@@ -61,10 +52,30 @@ const data = [
 function ProductDetails() {
   const [visible, setVisible] = useState(false);
   const { id } = useParams();
-  const [activeTabKey2, setActiveTabKey2] = useState("app");
+  const { products } = useSelector((state) => state.product);
+  const { user } = useSelector((state) => state.auth);
+  const { isLoading: isLoadingCart } = useSelector((state) => state.cart);
+  const [product, setProduct] = useState();
+  const [sepcificationsData, setSepcificationsData] = useState();
+  const dispatch = useDispatch();
+  const [activeTabKey2, setActiveTabKey2] = useState("description");
   const onTab2Change = (key) => {
     setActiveTabKey2(key);
   };
+
+  useEffect(() => {
+    const product = products.find((p) => p._id.toString() === id);
+    setProduct(product);
+
+    if (product?.specifications) {
+      console.log(JSON.parse(product?.specifications));
+      setSepcificationsData(JSON.parse(product?.specifications));
+    }
+  }, [products, id]);
+
+  useEffect(() => {
+    dispatch(getProductsAsync());
+  }, []);
 
   return (
     <Space direction="vertical" size="large" style={{ display: "flex" }}>
@@ -91,7 +102,7 @@ function ProductDetails() {
                 visible: false,
               }}
               style={{ maxHeight: "550px" }}
-              src="https://gw.alipayobjects.com/zos/antfincdn/LlvErxo8H9/photo-1503185912284-5271ff81b9a8.webp"
+              src={product?.images[0]?.url}
               onClick={() => setVisible(true)}
             />
             <div
@@ -105,9 +116,8 @@ function ProductDetails() {
                   onVisibleChange: (vis) => setVisible(vis),
                 }}
               >
-                <Image src="https://gw.alipayobjects.com/zos/antfincdn/LlvErxo8H9/photo-1503185912284-5271ff81b9a8.webp" />
-                <Image src="https://gw.alipayobjects.com/zos/antfincdn/cV16ZqzMjW/photo-1473091540282-9b846e7965e3.webp" />
-                <Image src="https://gw.alipayobjects.com/zos/antfincdn/x43I27A55%26/photo-1438109491414-7198515b166b.webp" />
+                {product?.images.length > 0 &&
+                  product?.images?.map((p) => <Image src={p?.url} />)}
               </Image.PreviewGroup>
             </div>
           </div>
@@ -116,7 +126,7 @@ function ProductDetails() {
         <Col span={14} style={{ paddingLeft: "1rem" }}>
           <Space direction="vertical" size="middle">
             <Text strong style={{ fontSize: "24px" }}>
-              Chuột Máy Tính Razer Naga Trinity - Multicolor Wired Mmo Gaming
+              {product?.name}
             </Text>
             <Text style={{ fontSize: "18px" }}>
               4.6 <StarFilled style={{ color: "gold" }} />
@@ -126,11 +136,11 @@ function ProductDetails() {
               3.1k Sold
             </Text>
             <Text type="warning" style={{ fontSize: "20px" }}>
-              1.000.000đ
+              {product?.price}đ
             </Text>
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
               <InputNumber addonBefore="Quantity" min={1} defaultValue={1} />
-              <div>38346 pieces available</div>
+              <div>{product?.quantity} pieces available</div>
             </div>
 
             <Space>
@@ -139,6 +149,14 @@ function ProductDetails() {
                 ghost
                 size="large"
                 icon={<ShoppingCartOutlined />}
+                onClick={() => {
+                  if (user) {
+                    dispatch(addToCartAsync(product._id));
+                  } else {
+                    antMessage.info("You need to login to use this feature!");
+                  }
+                }}
+                loading={isLoadingCart}
               >
                 Add to Cart
               </Button>
@@ -157,7 +175,21 @@ function ProductDetails() {
           onTab2Change(key);
         }}
       >
-        {contentListNoTitle[activeTabKey2]}
+        {
+          {
+            description: product?.description ?? <Empty />,
+            specifications: (
+              <Descriptions bordered column={1}>
+                {sepcificationsData?.length > 0 &&
+                  sepcificationsData.map((spec) => (
+                    <Descriptions.Item label={spec.key} key={spec.key}>
+                      {spec.value}
+                    </Descriptions.Item>
+                  ))}
+              </Descriptions>
+            ),
+          }[activeTabKey2]
+        }
       </Card>
 
       <Card title="Product Ratings" bordered={false}>
@@ -207,57 +239,14 @@ function ProductDetails() {
       >
         <ProductList
           columns={6}
-          items={[
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-            {
-              url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-              name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-              price: "1.000.000đ",
-              rating: "4.0",
-              sold: 100,
-            },
-          ]}
+          items={products.map((p) => ({
+            _id: p._id,
+            url: p?.images[0]?.url,
+            name: p.name,
+            price: `${p.price}đ`,
+            rating: "4.0",
+            sold: 100,
+          }))}
         />
       </Card>
     </Space>

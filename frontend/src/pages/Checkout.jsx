@@ -2,21 +2,28 @@ import {
   Button,
   Card,
   Image,
+  InputNumber,
   Radio,
   Space,
   Table,
   Tag,
   Typography,
 } from "antd";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ImLocation } from "react-icons/im";
+import { useSelector } from "react-redux";
 
 const { Text } = Typography;
 
 const columns = [
   {
-    title: "Products Ordered",
-    dataIndex: "product",
+    title: "Thumbnail",
+    dataIndex: "thumbnail",
+    render: (_, record) => <Image width={100} src={record.thumbnail} />,
+  },
+  {
+    title: "Name",
+    dataIndex: "name",
   },
   {
     title: "Unit Price",
@@ -27,6 +34,9 @@ const columns = [
     title: "Quantity",
     dataIndex: "quantity",
     align: "right",
+    render: (_, record) => (
+      <InputNumber min={1} defaultValue={record.quantity} />
+    ),
   },
   {
     title: "Item Subtotal",
@@ -35,31 +45,34 @@ const columns = [
   },
 ];
 
-const data = [];
-for (let i = 0; i < 3; i++) {
-  data.push({
-    key: i,
-    product: (
-      <>
-        <Image
-          width={100}
-          src="https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png"
-        />
-        &nbsp;&nbsp;Product Name
-      </>
-    ),
-    price: 10000,
-    quantity: 3,
-    itemSubtotal: 200000,
-  });
-}
-
 function Checkout() {
+  const { cart, isLoading } = useSelector((state) => state.cart);
   const [value, setValue] = useState("Cash");
+  const [data, setData] = useState();
+
   const onChange = (e) => {
     console.log("radio checked", e.target.value);
     setValue(e.target.value);
   };
+
+  useEffect(() => {
+    const tempData = [];
+    for (let i = 0; i < cart.length; i++) {
+      tempData.push({
+        key: cart[i]._id,
+        _id: cart[i]._id,
+        thumbnail:
+          cart[i]?.product?.images?.length > 0
+            ? cart[i]?.product?.images[0]?.url
+            : "",
+        name: cart[i].product?.name,
+        price: `${cart[i].product?.price}`,
+        quantity: cart[i].quantity,
+        itemSubtotal: `${cart[i].quantity * cart[i].product?.price}đ`,
+      });
+    }
+    setData(tempData);
+  }, [cart]);
 
   return (
     <Space direction="vertical" style={{ display: "flex" }} size="large">
@@ -133,9 +146,15 @@ function Checkout() {
         />
       </Space>
 
-      <Card title="Vouchers" style={{ borderRadius: 0 }} extra={<Button type="primary" ghost>Select Voucher</Button>}>
-        
-      </Card>
+      <Card
+        title="Vouchers"
+        style={{ borderRadius: 0 }}
+        extra={
+          <Button type="primary" ghost>
+            Select Voucher
+          </Button>
+        }
+      ></Card>
 
       <Card title="Payment Method" style={{ borderRadius: 0 }}>
         <Radio.Group onChange={onChange} value={value}>
@@ -172,7 +191,13 @@ function Checkout() {
             </Text>
           </Space>
 
-          <Button type="primary" style={{ width: "200px", marginTop: "0.5rem" }} size="large">Place Order</Button>
+          <Button
+            type="primary"
+            style={{ width: "200px", marginTop: "0.5rem" }}
+            size="large"
+          >
+            Place Order
+          </Button>
         </Space>
       </Card>
     </Space>

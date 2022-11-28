@@ -1,11 +1,13 @@
 import { StarFilled } from "@ant-design/icons";
 import { Card, Col, Empty, Row, Space, Typography } from "antd";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 const { Paragraph, Text } = Typography;
 
 function ProductList({ items, columns }) {
+  const navigate = useNavigate();
   const span = 24 / columns;
-  
+
   return (
     <Row gutter={[16, 16]}>
       {items?.length > 0 ? (
@@ -16,6 +18,7 @@ function ProductList({ items, columns }) {
               bodyStyle={{ padding: 0 }}
               hoverable
               bordered={false}
+              onClick={() => navigate(`/products/${item._id}`)}
             >
               <img
                 src={item.url}
