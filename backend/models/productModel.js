@@ -46,7 +46,10 @@ const productSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    sku: String,
+    sku: {
+      type: String,
+      required: true,
+    },
     price: {
       type: Number,
       required: true,
@@ -81,7 +84,7 @@ const productSchema = mongoose.Schema(
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-    }
+    },
   },
   {
     timestamps: true,

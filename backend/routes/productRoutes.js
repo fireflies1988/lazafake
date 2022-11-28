@@ -30,6 +30,7 @@ router
   .patch(
     auth,
     checkPermission(Role.Admin),
+    upload.array("images"),
     validate("updateProduct"),
     updateProduct
   );

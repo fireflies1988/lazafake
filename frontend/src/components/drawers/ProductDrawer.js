@@ -1,4 +1,8 @@
-import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  MinusCircleOutlined,
+  PlusOutlined,
+  SkinOutlined,
+} from "@ant-design/icons";
 import {
   Button,
   Drawer,
@@ -8,15 +12,67 @@ import {
   Select,
   Space,
   Upload,
-  message,
+  message as antMessage,
+  Spin,
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import React, { useState } from "react";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getCategoriesAsync } from "../../features/category/categorySlice";
+import {
+  addProductAsync,
+  deleteProductAsync,
+} from "../../features/product/productSlice";
+import { checkUploadCondition } from "../../utils";
 const { Option } = Select;
 
-function ProductDrawer({ open, onClose, title, type }) {
+function ProductDrawer({ open, onClose, title, type, productId }) {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
+  const dispatch = useDispatch();
+  const { categories, isLoading: loadingCategories } = useSelector(
+    (state) => state.category
+  );
+
+  const {
+    isSuccess,
+    isLoading: savingProduct,
+    products,
+  } = useSelector((state) => state.product);
+
+  useEffect(() => {
+    dispatch(getCategoriesAsync());
+  }, []);
+
+  useEffect(() => {
+    if (type === "edit") {
+      const product = products.find((p) => p._id.toString() === productId);
+      console.log(product);
+      if (product) {
+        const { specifications, ...fields } = product;
+        form.setFieldsValue(fields);
+        if (specifications) {
+          form.setFieldValue("specifications", JSON.parse(specifications));
+        }
+
+        const temp = [];
+        for (const image of product?.images) {
+          temp.push({
+            url: image?.url,
+          });
+        }
+        setFileList(temp);
+      }
+    }
+  }, [productId, open]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      form.resetFields();
+      setFileList([]);
+    }
+  }, [isSuccess]);
 
   const uploadProps = {
     onRemove: (file) => {
@@ -26,17 +82,7 @@ function ProductDrawer({ open, onClose, title, type }) {
       setFileList(newFileList);
     },
     beforeUpload: (file) => {
-      const isJpgOrPng =
-        file.type === "image/jpeg" || file.type === "image/png";
-      if (!isJpgOrPng) {
-        message.error("You can only upload JPG/PNG file!");
-        return false;
-      }
-      const isLt2M = file.size / 1024 / 1024 < 2;
-      if (!isLt2M) {
-        message.error("Image must smaller than 2MB!");
-        return false;
-      }
+      checkUploadCondition(file, antMessage);
 
       setFileList([
         ...fileList,
@@ -51,8 +97,49 @@ function ProductDrawer({ open, onClose, title, type }) {
     listType: "picture-card",
   };
 
+  function onSave() {
+    form
+      .validateFields()
+      .then((values) => {
+        console.log("Product drawer: ", values);
+        console.log("fileList: ", fileList);
+
+        if (type === "add") {
+          const formData = new FormData();
+          if (fileList.length > 0 && fileList[0].file) {
+            for (const file of fileList) {
+              formData.append("images", file.file);
+            }
+          }
+
+          // convert values to formData
+          formData.append("sku", values.sku);
+          formData.append("name", values.name);
+          formData.append("price", values.price);
+          formData.append("quantity", values.quantity);
+          formData.append("description", values.description);
+          formData.append("category", values.category);
+          if (values.specifications) {
+            formData.append(
+              "specifications",
+              JSON.stringify(values.specifications)
+            );
+          }
+
+          dispatch(addProductAsync(formData));
+        }
+
+        if (type === "edit") {
+        }
+      })
+      .catch((info) => {
+        console.log("Validate Failed:", info);
+      });
+  }
+
   return (
     <Drawer
+      destroyOnClose={true}
       title={title}
       width={720}
       onClose={onClose}
@@ -66,21 +153,19 @@ function ProductDrawer({ open, onClose, title, type }) {
       extra={
         <Space>
           <Button onClick={onClose}>Cancel</Button>
-          {type === "update" && <Button danger>Delete</Button>}
-          <Button
-            onClick={() => {
-              form
-                .validateFields()
-                .then((values) => {
-                  form.resetFields();
-                  console.log(values);
-                })
-                .catch((info) => {
-                  console.log("Validate Failed:", info);
-                });
-            }}
-            type="primary"
-          >
+          {type === "edit" && (
+            <Button
+              danger
+              onClick={() => {
+                dispatch(deleteProductAsync(productId));
+                onClose();
+              }}
+              loading={savingProduct}
+            >
+              Delete
+            </Button>
+          )}
+          <Button onClick={onSave} type="primary" loading={savingProduct}>
             Save
           </Button>
         </Space>
@@ -102,6 +187,7 @@ function ProductDrawer({ open, onClose, title, type }) {
             {
               required: true,
               message: "Please input product SKU!",
+              whitespace: true,
             },
           ]}
         >
@@ -115,6 +201,7 @@ function ProductDrawer({ open, onClose, title, type }) {
             {
               required: true,
               message: "Please input product name!",
+              whitespace: true,
             },
           ]}
         >
@@ -147,12 +234,18 @@ function ProductDrawer({ open, onClose, title, type }) {
           <InputNumber min={1} />
         </Form.Item>
 
-        <Form.Item name="category" label="Category">
-          <Select placeholder="Please select a category" allowClear>
-            <Option value="Mouse">Mouse</Option>
-            <Option value="CPU">CPU</Option>
-          </Select>
-        </Form.Item>
+        <Spin spinning={loadingCategories}>
+          <Form.Item name="category" label="Category">
+            <Select placeholder="Please select a category" allowClear>
+              {categories.length > 0 &&
+                categories.map((c) => (
+                  <Option key={c._id} value={c._id}>
+                    {c.name}
+                  </Option>
+                ))}
+            </Select>
+          </Form.Item>
+        </Spin>
 
         <Form.Item
           name="description"
@@ -167,7 +260,7 @@ function ProductDrawer({ open, onClose, title, type }) {
           <TextArea showCount maxLength={2000} rows={5} />
         </Form.Item>
 
-        <Form.Item name="images" label="Images">
+        <Form.Item label="Images">
           <Upload {...uploadProps}>
             <div>
               <PlusOutlined />

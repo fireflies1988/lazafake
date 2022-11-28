@@ -1,12 +1,27 @@
 import { PlusOutlined } from "@ant-design/icons";
-import { Button, Card, Image, Space, Table } from "antd";
-import React, { useState } from "react";
+import {
+  Button,
+  Card,
+  Image,
+  Space,
+  Table,
+  message as antMessage,
+  Spin,
+} from "antd";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import ProductDrawer from "../../components/drawers/ProductDrawer";
+import { getProductsAsync, reset } from "../../features/product/productSlice";
+import { showError } from "../../utils";
 
 function Products() {
   const [openAdd, setOpenAdd] = useState(false);
-  const [openUpdate, setOpenUpdate] = useState(false);
-
+  const [openEdit, setOpenEdit] = useState(false);
+  const { products, isError, isSuccess, message, isLoading } = useSelector(
+    (state) => state.product
+  );
+  const [productId, setProductId] = useState();
+  const dispatch = useDispatch();
   const columns = [
     {
       title: "SKU",
@@ -17,6 +32,7 @@ function Products() {
       title: "Thumbnail",
       dataIndex: "thumbnail",
       key: "thumbnail",
+      render: (_, record) => <Image width={100} src={record.thumbnail} />,
     },
     {
       title: "Name",
@@ -40,8 +56,8 @@ function Products() {
     },
     {
       title: "Imported At",
-      dataIndex: "importedAt",
-      key: "importedAt",
+      dataIndex: "createdAt",
+      key: "createdAt",
     },
     {
       title: "Action",
@@ -52,7 +68,10 @@ function Products() {
             type="link"
             ghost
             size="small"
-            onClick={() => setOpenUpdate(true)}
+            onClick={() => {
+              setOpenEdit(true);
+              setProductId(record._id);
+            }}
           >
             See Details
           </Button>
@@ -60,69 +79,42 @@ function Products() {
       ),
     },
   ];
+  const [data, setData] = useState([]);
 
-  const data = [
-    {
-      key: "1",
-      sku: "3412sadf",
-      name: "John Brown",
-      price: "32142314",
-      quantity: 10,
-      category: "Mouse",
-      thumbnail: (
-        <Image
-          width={100}
-          src="https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png"
-        />
-      ),
-      importedAt: "15/25/2022",
-    },
-    {
-      key: "1",
-      sku: "3412sadf",
-      name: "John Brown",
-      price: "32142314",
-      quantity: 10,
-      category: "Mouse",
-      thumbnail: (
-        <Image
-          width={100}
-          src="https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png"
-        />
-      ),
-      importedAt: "15/25/2022",
-    },
-    {
-      key: "1",
-      sku: "3412sadf",
-      name: "John Brown",
-      price: "32142314",
-      quantity: 10,
-      category: "Mouse",
-      thumbnail: (
-        <Image
-          width={100}
-          src="https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png"
-        />
-      ),
-      importedAt: "15/25/2022",
-    },
-    {
-      key: "1",
-      sku: "3412sadf",
-      name: "John Brown",
-      price: "32142314",
-      quantity: 10,
-      category: "Mouse",
-      thumbnail: (
-        <Image
-          width={100}
-          src="https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png"
-        />
-      ),
-      importedAt: "15/25/2022",
-    },
-  ];
+  useEffect(() => {
+    if (isError) {
+      showError(antMessage, message);
+    }
+
+    if (isSuccess) {
+      antMessage.success(message);
+    }
+
+    return () => dispatch(reset());
+  }, [isError, isSuccess]);
+
+  useEffect(() => {
+    dispatch(getProductsAsync());
+  }, []);
+
+  useEffect(() => {
+    const tempData = [];
+    for (let i = 0; i < products.length; i++) {
+      tempData.push({
+        key: i,
+        _id: products[i]._id,
+        sku: products[i].sku,
+        name: products[i].name,
+        price: products[i].price,
+        quantity: products[i].quantity,
+        category: products[i].category,
+        thumbnail:
+          products[i]?.images?.length > 0 ? products[i]?.images[0]?.url : "",
+        createdAt: products[i].createdAt,
+      });
+    }
+    setData(tempData);
+  }, [products]);
 
   return (
     <Card
@@ -137,7 +129,9 @@ function Products() {
         </Button>
       }
     >
-      <Table columns={columns} dataSource={data} />
+      <Spin spinning={isLoading}>
+        <Table columns={columns} dataSource={data} />
+      </Spin>
       <ProductDrawer
         onClose={() => setOpenAdd(false)}
         open={openAdd}
@@ -145,10 +139,11 @@ function Products() {
         title="Add New Product"
       />
       <ProductDrawer
-        onClose={() => setOpenUpdate(false)}
-        open={openUpdate}
-        type="update"
+        onClose={() => setOpenEdit(false)}
+        open={openEdit}
+        type="edit"
         title="Product Details"
+        productId={productId}
       />
     </Card>
   );

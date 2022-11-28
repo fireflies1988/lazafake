@@ -34,10 +34,19 @@ const addProduct = asyncHandler(async (req, res, next) => {
       });
     }
   }
-
   newProduct.images = uploadedImages;
+
+  // console.log(fields.specifications);
+  // if (fields.specifications?.length > 0) {
+  //   for (const spec of fields.specifications) {
+  //     newProduct.specifications.push(spec);
+  //   }
+  // }
+
   await newProduct.save();
-  res.status(201).json(newProduct);
+  res
+    .status(201)
+    .json(await Product.findById(newProduct.id).populate("category"));
 });
 
 // @desc    Add a new product image
@@ -92,7 +101,7 @@ const removeProductImage = asyncHandler(async (req, res, next) => {
 // @route   GET /api/products
 // @access  Public
 const getProducts = asyncHandler(async (req, res, next) => {
-  res.status(200).json(await Product.find({}));
+  res.status(200).json(await Product.find({}).populate("category"));
 });
 
 // @desc    Delete product
@@ -105,15 +114,19 @@ const deleteProduct = asyncHandler(async (req, res, next) => {
     throw new Error("Product not found");
   }
 
-  // remove cloudinary folder
-  await cloudinary.api.delete_resources_by_prefix(
-    `LazaFake/products/${req.params.id}`
-  );
-  await cloudinary.api.delete_folder(`LazaFake/products/${req.params.id}`);
+  try {
+    // remove cloudinary folder
+    await cloudinary.api.delete_resources_by_prefix(
+      `LazaFake/products/${req.params.id}`
+    );
+    await cloudinary.api.delete_folder(`LazaFake/products/${req.params.id}`);
+  } catch (err) {
+    console.log("deleteProduct: ", err);
+  }
 
   await Product.findByIdAndDelete(req.params.id);
 
-  res.status(200).json(await Product.find({}));
+  res.status(200).json(product);
 });
 
 // @desc    Update product
@@ -126,11 +139,48 @@ const updateProduct = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  const { images, reviews, rating, ...updatedFields } = req.body;
+  const { images, reviews, rating, deletedImages, ...updatedFields } = req.body;
 
+  const product = await Product.findById(req.params.id);
+  if (!product) {
+    res.status(404);
+    throw new Error("Product not found.");
+  }
+
+  // delete removed images
+  if (deletedImages?.length > 0) {
+    for (const imageId of deletedImages) {
+      const productImage = product.images.id(imageId);
+      if (productImage) {
+        await cloudinary.uploader.destroy(productImage.publicId);
+        product.images.pull(imageId);
+      }
+    }
+  }
+
+  // upload new images
+  const uploadOptions = {
+    folder: `LazaFake/products/${product._id}`,
+  };
+
+  for (const file of req.files) {
+    const uploadResult = await cloudinary.uploader.upload(
+      file.path,
+      uploadOptions
+    );
+
+    if (uploadResult.public_id && uploadResult.secure_url) {
+      product.images.push({
+        publicId: uploadResult.public_id,
+        url: uploadResult.secure_url,
+      });
+    }
+  }
+
+  await product.save();
   await Product.findByIdAndUpdate(req.params.id, updatedFields);
 
-  res.json(await Product.find({}));
+  res.json(await Product.findById(product.id).populate("category"));
 });
 
 module.exports = {
