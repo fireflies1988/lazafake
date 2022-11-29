@@ -15,16 +15,18 @@ async function viewCartAsync(accessToken) {
 }
 
 // view cart
-async function addToCartAsync(productId, accessToken) {
-  const config = {
-    headers: {
-      Authorization: "Bearer " + accessToken,
-    },
-  };
+async function addToCartAsync(productId, quantity, accessToken) {
   const response = await axios.post(
-    API_URL + `/add?productId=${productId}`,
-    null,
-    config
+    `${API_URL}/add`,
+    { quantity },
+    {
+      headers: {
+        Authorization: "Bearer " + accessToken,
+      },
+      params: {
+        productId,
+      },
+    }
   );
   console.log("addToCartAsync", response);
 
@@ -46,18 +48,38 @@ async function removeFromCartAsync(cartItemId, accessToken) {
   return response.data;
 }
 
-// change quantity from cart
-async function changeQuantityAsync(cartItemId, increase, accessToken) {
-  const response = await axios.delete(API_URL + `/changeQty`, {
+// remove from cart
+async function removeMultipleFromCartAsync(items, accessToken) {
+  const response = await axios.delete(`${API_URL}/remove-multiple`, {
     headers: {
       Authorization: "Bearer " + accessToken,
     },
-    params: {
-      cartItemId,
-      increase,
+    data: {
+      items,
     },
   });
-  console.log("addToCartAsync", response);
+  console.log("removeMultipleFromCartAsync", response);
+
+  return response.data;
+}
+
+// change quantity from cart
+async function changeQtyAsync(cartItemId, quantity, accessToken) {
+  const response = await axios.patch(
+    API_URL + `/changeQty`,
+    {
+      quantity,
+    },
+    {
+      headers: {
+        Authorization: "Bearer " + accessToken,
+      },
+      params: {
+        cartItemId,
+      },
+    }
+  );
+  console.log("changeQtyAsync", response);
 
   return response.data;
 }
@@ -77,9 +99,10 @@ async function checkoutAsync(cartItems, accessToken) {
 const cartService = {
   addToCartAsync,
   removeFromCartAsync,
-  changeQuantityAsync,
+  changeQtyAsync,
   viewCartAsync,
-  checkoutAsync
+  checkoutAsync,
+  removeMultipleFromCartAsync,
 };
 
 export default cartService;

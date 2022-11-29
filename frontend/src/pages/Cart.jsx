@@ -1,23 +1,51 @@
-import { Button, Card, Image, InputNumber, Table } from "antd";
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import {
+  Button,
+  Card,
+  Image,
+  InputNumber,
+  Space,
+  Spin,
+  Table,
+  Typography,
+} from "antd";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
-import { removeFromCartAsync } from "../features/cart/cartSlice";
+import { useNavigate } from "react-router-dom";
+import {
+  changeQtyAsync,
+  removeFromCartAsync,
+  removeMultipleFromCartAsync,
+} from "../features/cart/cartSlice";
+import { moneyFormatter, reverseMoneyFormattedText } from "../utils";
+const { Text } = Typography;
 
 function Cart() {
-  const { cart, isLoading } = useSelector((state) => state.cart);
+  const { cartItems, isLoading } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [disabled, setDisabled] = useState(true);
   const onSelectChange = (newSelectedRowKeys) => {
     console.log("selectedRowKeys changed: ", newSelectedRowKeys);
     setSelectedRowKeys(newSelectedRowKeys);
+
+    if (newSelectedRowKeys.length > 0) {
+      setDisabled(false);
+    } else {
+      setDisabled(true);
+    }
   };
+
+  function removeSelectedItems() {
+    dispatch(removeMultipleFromCartAsync(selectedRowKeys));
+    setSelectedRowKeys([]);
+  }
+
   const columns = [
     {
       title: "Thumbnail",
       dataIndex: "thumbnail",
-      render: (_, record) => <Image width={100} src={record.thumbnail} />,
+      render: (_, record) => <Image width={100} src={record?.thumbnail} />,
     },
     {
       title: "Name",
@@ -31,7 +59,18 @@ function Cart() {
       title: "Quantity",
       dataIndex: "quantity",
       render: (_, record) => (
-        <InputNumber min={1} defaultValue={record.quantity} />
+        <InputNumber
+          min={1}
+          defaultValue={record?.quantity}
+          max={record?.productQuantity}
+          onChange={(value) => {
+            if (value) {
+              dispatch(
+                changeQtyAsync({ cartItemId: record._id, quantity: value })
+              );
+            }
+          }}
+        />
       ),
     },
     {
@@ -50,7 +89,6 @@ function Cart() {
           onClick={() => {
             dispatch(removeFromCartAsync(record._id));
           }}
-          loading={isLoading}
         >
           Delete
         </Button>
@@ -61,24 +99,27 @@ function Cart() {
 
   useEffect(() => {
     const tempData = [];
-    for (let i = 0; i < cart.length; i++) {
+    for (let i = 0; i < cartItems.length; i++) {
       tempData.push({
-        key: cart[i]._id,
-        _id: cart[i]._id,
+        key: cartItems[i]._id,
+        _id: cartItems[i]._id,
         thumbnail:
-          cart[i]?.product?.images?.length > 0
-            ? cart[i]?.product?.images[0]?.url
+          cartItems[i]?.product?.images?.length > 0
+            ? cartItems[i]?.product?.images[0]?.url
             : "",
-        name: cart[i].product?.name,
-        price: `${cart[i].product?.price}`,
-        quantity: cart[i].quantity,
-        totalPrice: `${cart[i].quantity * cart[i].product?.price}đ`,
+        name: cartItems[i].product?.name,
+        price: moneyFormatter.format(cartItems[i].product?.price),
+        quantity: cartItems[i].quantity,
+        productQuantity: cartItems[i].product.quantity,
+        totalPrice: moneyFormatter.format(
+          cartItems[i].quantity * cartItems[i].product?.price
+        ),
       });
     }
     setData(tempData);
-  }, [cart]);
+  }, [cartItems]);
 
-  console.log(cart);
+  console.log("CartItems", cartItems);
 
   const rowSelection = {
     selectedRowKeys,
@@ -89,17 +130,48 @@ function Cart() {
     <Card
       title="My Shopping Cart"
       extra={
-        <Button type="primary" ghost>
-          <Link to="/checkout">Check Out</Link>
-        </Button>
+        <Space size="large">
+          {selectedRowKeys?.length > 0 && (
+            <Text strong type="danger" style={{ fontSize: "16px" }}>
+              Total ({selectedRowKeys.length} items):{" "}
+              {data.reduce((sum, object) => {
+                if (selectedRowKeys.includes(object.key)) {
+                  sum += reverseMoneyFormattedText(object.totalPrice);
+                }
+                return sum;
+              }, 0)}
+              đ{" "}
+            </Text>
+          )}
+
+          <Button
+            type="primary"
+            ghost
+            disabled={disabled}
+            onClick={() => navigate("/checkout")}
+          >
+            Check Out
+          </Button>
+        </Space>
       }
     >
-      <Table
-        rowSelection={rowSelection}
-        columns={columns}
-        dataSource={data}
-        pagination={false}
-      />
+      <Space
+        style={{
+          marginBottom: 16,
+        }}
+      >
+        <Button disabled={disabled} onClick={removeSelectedItems}>
+          Remove Selected Items
+        </Button>
+      </Space>
+      <Spin spinning={isLoading}>
+        <Table
+          rowSelection={rowSelection}
+          columns={columns}
+          dataSource={data}
+          pagination={false}
+        />
+      </Spin>
     </Card>
   );
 }

@@ -151,5 +151,13 @@ exports.validate = (method) => {
         ]),
       ];
     }
+
+    case "addToCart": {
+      return [
+        body("quantity", "Quantity is required.")
+          .trim()
+          .isNumeric({ no_symbols: true }),
+      ];
+    }
   }
 };

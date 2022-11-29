@@ -20,3 +20,14 @@ export function checkUploadCondition(file, antMessage) {
     return false;
   }
 }
+
+export const moneyFormatter = new Intl.NumberFormat("vi-vn", {
+  style: "currency",
+  currency: "vnd",
+});
+
+export function reverseMoneyFormattedText(formattedText) {
+  const regex = /[. ₫]/g;
+
+  return Number(formattedText.replace(regex, ""));
+}

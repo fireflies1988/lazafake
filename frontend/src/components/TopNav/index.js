@@ -17,10 +17,10 @@ import {
 import React, { useEffect } from "react";
 import { BsInboxes } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import { logout } from "../../features/auth/authSlice";
-import { reset, viewCartAsync } from "../../features/cart/cartSlice";
+import { getCartItems, reset } from "../../features/cart/cartSlice";
 import { showError } from "../../utils";
 import Container from "../Container";
 import { StyledTopNav } from "./styled";
@@ -29,7 +29,7 @@ const { Search } = Input;
 
 function TopNav() {
   const { user } = useSelector((state) => state.auth);
-  const { cart, isSuccess, isError, message } = useSelector(
+  const { cartItems, isSuccess, isError, message } = useSelector(
     (state) => state.cart
   );
   const navigate = useNavigate();
@@ -42,7 +42,8 @@ function TopNav() {
 
   useEffect(() => {
     if (user) {
-      dispatch(viewCartAsync());
+      // to get number of items
+      dispatch(getCartItems());
     }
   }, []);
 
@@ -129,7 +130,7 @@ function TopNav() {
             />
 
             <Link to="/cart">
-              <Badge count={cart?.length} overflowCount={99}>
+              <Badge count={cartItems?.length} overflowCount={99}>
                 <ShoppingCartOutlined
                   style={{ color: "white", fontSize: "30px" }}
                 />

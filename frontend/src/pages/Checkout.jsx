@@ -46,7 +46,7 @@ const columns = [
 ];
 
 function Checkout() {
-  const { cart, isLoading } = useSelector((state) => state.cart);
+  const { cartItems, isLoading } = useSelector((state) => state.cart);
   const [value, setValue] = useState("Cash");
   const [data, setData] = useState();
 
@@ -57,22 +57,22 @@ function Checkout() {
 
   useEffect(() => {
     const tempData = [];
-    for (let i = 0; i < cart.length; i++) {
+    for (let i = 0; i < cartItems.length; i++) {
       tempData.push({
-        key: cart[i]._id,
-        _id: cart[i]._id,
+        key: cartItems[i]._id,
+        _id: cartItems[i]._id,
         thumbnail:
-          cart[i]?.product?.images?.length > 0
-            ? cart[i]?.product?.images[0]?.url
+          cartItems[i]?.product?.images?.length > 0
+            ? cartItems[i]?.product?.images[0]?.url
             : "",
-        name: cart[i].product?.name,
-        price: `${cart[i].product?.price}`,
-        quantity: cart[i].quantity,
-        itemSubtotal: `${cart[i].quantity * cart[i].product?.price}đ`,
+        name: cartItems[i].product?.name,
+        price: `${cartItems[i].product?.price}`,
+        quantity: cartItems[i].quantity,
+        itemSubtotal: `${cartItems[i].quantity * cartItems[i].product?.price}đ`,
       });
     }
     setData(tempData);
-  }, [cart]);
+  }, [cartItems]);
 
   return (
     <Space direction="vertical" style={{ display: "flex" }} size="large">

@@ -1,26 +1,28 @@
+import { ShoppingCartOutlined, StarFilled } from "@ant-design/icons";
 import {
   Alert,
   Avatar,
   Button,
   Card,
   Col,
+  Descriptions,
   Divider,
+  Empty,
   Image,
   InputNumber,
   List,
+  message as antMessage,
   Rate,
   Row,
-  message as antMessage,
+  Space,
+  Typography,
 } from "antd";
-import React, { useState } from "react";
-import { useParams } from "react-router-dom";
-import { ShoppingCartOutlined, StarFilled } from "@ant-design/icons";
-import { Space, Typography, Empty, Descriptions } from "antd";
-import ProductList from "../components/ProductList";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
-import { getProductsAsync } from "../features/product/productSlice";
+import { useParams } from "react-router-dom";
+import ProductList from "../components/ProductList";
 import { addToCartAsync } from "../features/cart/cartSlice";
+import { getProductsAsync } from "../features/product/productSlice";
 const { Text, Link } = Typography;
 
 const tabListNoTitle = [
@@ -51,27 +53,25 @@ const data = [
 
 function ProductDetails() {
   const [visible, setVisible] = useState(false);
-  const { id } = useParams();
+  const { productId } = useParams();
   const { products } = useSelector((state) => state.product);
   const { user } = useSelector((state) => state.auth);
   const { isLoading: isLoadingCart } = useSelector((state) => state.cart);
   const [product, setProduct] = useState();
+  const [quantity, setQuantity] = useState(1);
   const [sepcificationsData, setSepcificationsData] = useState();
   const dispatch = useDispatch();
-  const [activeTabKey2, setActiveTabKey2] = useState("description");
-  const onTab2Change = (key) => {
-    setActiveTabKey2(key);
-  };
+  const [activeTabKey, setActiveTabKey] = useState("description");
 
   useEffect(() => {
-    const product = products.find((p) => p._id.toString() === id);
+    setQuantity(1);
+    const product = products.find((p) => p._id.toString() === productId);
     setProduct(product);
 
     if (product?.specifications) {
-      console.log(JSON.parse(product?.specifications));
       setSepcificationsData(JSON.parse(product?.specifications));
     }
-  }, [products, id]);
+  }, [products, productId]);
 
   useEffect(() => {
     dispatch(getProductsAsync());
@@ -139,8 +139,16 @@ function ProductDetails() {
               {product?.price}đ
             </Text>
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-              <InputNumber addonBefore="Quantity" min={1} defaultValue={1} />
-              <div>{product?.quantity} pieces available</div>
+              <InputNumber
+                addonBefore="Quantity"
+                min={1}
+                max={product?.quantity}
+                defaultValue={quantity}
+                onChange={(value) => setQuantity(value)}
+              />
+              <Text type="secondary" style={{ fontSize: "16px" }}>
+                {product?.quantity} pieces available
+              </Text>
             </div>
 
             <Space>
@@ -151,7 +159,12 @@ function ProductDetails() {
                 icon={<ShoppingCartOutlined />}
                 onClick={() => {
                   if (user) {
-                    dispatch(addToCartAsync(product._id));
+                    dispatch(
+                      addToCartAsync({
+                        productId: product._id,
+                        quantity: quantity,
+                      })
+                    );
                   } else {
                     antMessage.info("You need to login to use this feature!");
                   }
@@ -170,9 +183,9 @@ function ProductDetails() {
 
       <Card
         tabList={tabListNoTitle}
-        activeTabKey={activeTabKey2}
+        activeTabKey={activeTabKey}
         onTabChange={(key) => {
-          onTab2Change(key);
+          setActiveTabKey(key);
         }}
       >
         {
@@ -180,7 +193,7 @@ function ProductDetails() {
             description: product?.description ?? <Empty />,
             specifications: (
               <Descriptions bordered column={1}>
-                {sepcificationsData?.length > 0 &&
+                {sepcificationsData &&
                   sepcificationsData.map((spec) => (
                     <Descriptions.Item label={spec.key} key={spec.key}>
                       {spec.value}
@@ -188,7 +201,7 @@ function ProductDetails() {
                   ))}
               </Descriptions>
             ),
-          }[activeTabKey2]
+          }[activeTabKey]
         }
       </Card>
 

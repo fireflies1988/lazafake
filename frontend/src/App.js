@@ -23,7 +23,6 @@ import { useSelector } from "react-redux";
 
 function App() {
   const { user } = useSelector((state) => state.auth);
-  const isAdmin = true;
 
   return (
     <BrowserRouter>
@@ -58,7 +57,7 @@ function App() {
             </>
           )}
 
-          <Route path="products/:id" element={<ProductDetails />} />
+          <Route path="products/:productId" element={<ProductDetails />} />
           <Route path="checkout" element={<Checkout />} />
           <Route path="search" element={<SearchPage />} />
 

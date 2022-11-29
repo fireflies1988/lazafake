@@ -3,7 +3,7 @@ import handleError from "../helpers/errorHandler";
 import cartService from "./cartService";
 
 const initialState = {
-  cart: [],
+  cartItems: [],
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -11,7 +11,7 @@ const initialState = {
 };
 
 // view cart
-export const viewCartAsync = createAsyncThunk(
+export const getCartItems = createAsyncThunk(
   "cart/view",
   async (_, thunkAPI) => {
     try {
@@ -26,10 +26,10 @@ export const viewCartAsync = createAsyncThunk(
 // add to cart
 export const addToCartAsync = createAsyncThunk(
   "cart/add",
-  async (productId, thunkAPI) => {
+  async ({ productId, quantity }, thunkAPI) => {
     try {
       const accessToken = thunkAPI.getState().auth.user?.accessToken;
-      return await cartService.addToCartAsync(productId, accessToken);
+      return await cartService.addToCartAsync(productId, quantity, accessToken);
     } catch (err) {
       return handleError(err, thunkAPI, "addToCartAsync", false);
     }
@@ -49,23 +49,38 @@ export const removeFromCartAsync = createAsyncThunk(
   }
 );
 
-// change quantity
-export const changeQuantityAsync = createAsyncThunk(
-  "cart/changeQty",
-  async ({ cartItemId, increase }, thunkAPI) => {
+// remove from cart
+// items: list of item ids
+export const removeMultipleFromCartAsync = createAsyncThunk(
+  "cart/remove-multiple",
+  async (items, thunkAPI) => {
     try {
       const accessToken = thunkAPI.getState().auth.user?.accessToken;
-      return await cartService.changeQuantityAsync(
-        cartItemId,
-        increase,
-        accessToken
-      );
+      return await cartService.removeMultipleFromCartAsync(items, accessToken);
     } catch (err) {
-      return handleError(err, thunkAPI, "changeQuantityAsync", false);
+      return handleError(err, thunkAPI, "removeMultipleFromCartAsync", false);
     }
   }
 );
 
+// change quantity
+export const changeQtyAsync = createAsyncThunk(
+  "cart/changeQty",
+  async ({ cartItemId, quantity }, thunkAPI) => {
+    try {
+      const accessToken = thunkAPI.getState().auth.user?.accessToken;
+      return await cartService.changeQtyAsync(
+        cartItemId,
+        quantity,
+        accessToken
+      );
+    } catch (err) {
+      return handleError(err, thunkAPI, "changeQtyAsync", false);
+    }
+  }
+);
+
+// check out 
 export const checkoutAsync = createAsyncThunk(
   "cart/checkout",
   async (cartItems, thunkAPI) => {
@@ -97,7 +112,7 @@ export const cartSlice = createSlice({
       .addCase(addToCartAsync.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.cart = action.payload;
+        state.cartItems.push(action.payload);
         state.message = "This item has been added to your cart.";
       })
       .addCase(addToCartAsync.rejected, (state, action) => {
@@ -105,14 +120,14 @@ export const cartSlice = createSlice({
         state.isError = true;
         state.message = action.payload;
       })
-      .addCase(viewCartAsync.pending, (state) => {
+      .addCase(getCartItems.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(viewCartAsync.fulfilled, (state, action) => {
+      .addCase(getCartItems.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.cart = action.payload;
+        state.cartItems = action.payload;
       })
-      .addCase(viewCartAsync.rejected, (state, action) => {
+      .addCase(getCartItems.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
@@ -123,7 +138,9 @@ export const cartSlice = createSlice({
       .addCase(removeFromCartAsync.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.cart = action.payload;
+        state.cartItems = state.cartItems.filter(
+          (item) => item._id !== action.payload._id
+        );
         state.message = "Removed from your cart.";
       })
       .addCase(removeFromCartAsync.rejected, (state, action) => {
@@ -131,16 +148,31 @@ export const cartSlice = createSlice({
         state.isError = true;
         state.message = action.payload;
       })
-      .addCase(changeQuantityAsync.pending, (state) => {
+      .addCase(removeMultipleFromCartAsync.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(changeQuantityAsync.fulfilled, (state, action) => {
+      .addCase(removeMultipleFromCartAsync.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.cart = action.payload;
-        state.message = "Updated successfully.";
+        state.cartItems = action.payload;
+        state.message = "Removed selected items.";
       })
-      .addCase(changeQuantityAsync.rejected, (state, action) => {
+      .addCase(removeMultipleFromCartAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(changeQtyAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(changeQtyAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        let index = state.cartItems.findIndex(
+          (item) => item._id === action.payload._id
+        );
+        state.cartItems[index] = action.payload;
+      })
+      .addCase(changeQtyAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
@@ -151,7 +183,7 @@ export const cartSlice = createSlice({
       .addCase(checkoutAsync.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.cart = action.payload;
+        state.cartItems = action.payload;
         state.message = "Updated successfully.";
       })
       .addCase(checkoutAsync.rejected, (state, action) => {

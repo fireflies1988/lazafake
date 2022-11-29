@@ -58,8 +58,9 @@ function Home() {
       <Spin spinning={categoriesIsLoading}>
         <Card title="Categories" style={{ borderRadius: 0 }}>
           {categories?.length > 0 &&
-            categories.map((c) => (
+            categories.map((c, index) => (
               <Card.Grid
+                key={index}
                 style={gridStyle}
                 onClick={() => navigate("/search?keyword=test")}
               >
@@ -92,8 +93,9 @@ function Home() {
       </Card>
 
       {categories?.length > 0 &&
-        categories.map((c) => (
+        categories.map((c, index) => (
           <Card
+            key={index}
             extra={<Link to="#">More</Link>}
             title={c.name}
             bodyStyle={{

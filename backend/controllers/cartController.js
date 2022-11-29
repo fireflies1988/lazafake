@@ -31,12 +31,26 @@ const addToCart = asyncHandler(async (req, res, next) => {
     throw new Error("This product is already in your cart.");
   }
 
-  await CartItem.create({
+  // check if quantity is valid
+  if (req.body.quantity < 1) {
+    res.status(400);
+    throw new Error("Invalid quantity!");
+  }
+  if (req.body.quantity > product.quantity) {
+    res.status(409);
+    throw new Error(
+      `There are not enough '${product.name}' in stock (remaining ${product.quantity}). Please adjust the quantity of this item.`
+    );
+  }
+
+  let newCartItem = await CartItem.create({
     user: req.user.id,
     product: req.query.productId,
+    quantity: req.body.quantity,
   });
+  newCartItem = await newCartItem.populate("product");
 
-  res.json(await CartItem.find({ user: req.user.id }));
+  res.json(newCartItem);
 });
 
 // @desc    Remove a product from cart
@@ -57,9 +71,9 @@ const removeFromCart = asyncHandler(async (req, res, next) => {
   }
 
   // remove item from cart
-  await CartItem.findByIdAndDelete(req.query.cartItemId);
+  deletedItem = await CartItem.findByIdAndDelete(req.query.cartItemId);
 
-  res.json(await CartItem.find({ user: req.user.id }).populate("product"));
+  res.json(deletedItem);
 });
 
 // @desc    Remove multiple products from cart
@@ -94,35 +108,29 @@ const changeQtyFromCart = asyncHandler(async (req, res, next) => {
     throw new Error("Item not found.");
   }
 
-  if (!req.query.increase || req.query.increase === "true") {
-    if (updatedItem.quantity < updatedItem.product.quantity) {
-      updatedItem.quantity++;
-    } else {
-      res.status(409);
-      throw new Error(
-        `You can only buy maximum ${updatedItem.product.quantity} of this product.`
-      );
-    }
-  } else {
-    if (updatedItem.quantity > 1) {
-      updatedItem.quantity--;
-    } else {
-      res.status(409);
-      throw new Error(
-        "You have reached the minimum 1 in quantity, can't decrease more."
-      );
-    }
+  // check quantity
+  if (req.body.quantity < 1) {
+    res.status(400);
+    throw new Error("Invalid quantity!");
   }
 
+  if (req.body.quantity > updatedItem.product.quantity) {
+    res.status(409);
+    throw new Error(
+      `You can only buy maximum ${updatedItem.product.quantity} of this product.`
+    );
+  }
+
+  updatedItem.quantity = req.body.quantity;
   await updatedItem.save();
 
-  res.json(await CartItem.find({ user: req.user.id }).populate("product"));
+  res.json(updatedItem);
 });
 
 // @desc    View cart
 // @route   GET /api/cart/view
 // @access  Private
-const viewCart = asyncHandler(async (req, res, next) => {
+const getCartItems = asyncHandler(async (req, res, next) => {
   const cartItems = await CartItem.find({ user: req.user.id }).populate(
     "product"
   );
@@ -157,6 +165,6 @@ module.exports = {
   removeFromCart,
   removeMultipleFromCart,
   changeQtyFromCart,
-  viewCart,
+  getCartItems,
   checkOut,
 };
