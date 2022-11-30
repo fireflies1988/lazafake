@@ -36,13 +36,6 @@ const addProduct = asyncHandler(async (req, res, next) => {
   }
   newProduct.images = uploadedImages;
 
-  // console.log(fields.specifications);
-  // if (fields.specifications?.length > 0) {
-  //   for (const spec of fields.specifications) {
-  //     newProduct.specifications.push(spec);
-  //   }
-  // }
-
   await newProduct.save();
   res
     .status(201)

@@ -134,7 +134,22 @@ const getCartItems = asyncHandler(async (req, res, next) => {
   const cartItems = await CartItem.find({ user: req.user.id }).populate(
     "product"
   );
-  res.json(cartItems);
+
+  // automatically update items' quantity if they exceed the maximum quantity of the product.
+  for (const item of cartItems) {
+    if (item.quantity > item.product.quantity) {
+      await CartItem.updateOne(
+        { _id: item._id },
+        {
+          $set: {
+            quantity: item.product.quantity,
+          },
+        }
+      );
+    }
+  }
+
+  res.json(await CartItem.find({ user: req.user.id }).populate("product"));
 });
 
 // @desc    Check out (check again if the quantity of the items you selected is valid)

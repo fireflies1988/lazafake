@@ -37,7 +37,7 @@ async function deleteProductAsync(productId, accessToken) {
 
 // update product
 async function updateProductAsync(productId, formData, accessToken) {
-  const response = await axios.patch(API_URL + `/${productId}`, formData, {
+  const response = await axios.patch(`${API_URL}/${productId}`, formData, {
     headers: {
       Authorization: "Bearer " + accessToken,
       "Content-Type": "multipart/form-data",

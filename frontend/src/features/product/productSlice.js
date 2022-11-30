@@ -51,7 +51,7 @@ export const deleteProductAsync = createAsyncThunk(
 // update product
 export const updateProductAsync = createAsyncThunk(
   "product/update",
-  async ({ categoryId: productId, formData }, thunkAPI) => {
+  async ({ productId, formData }, thunkAPI) => {
     try {
       const accessToken = thunkAPI.getState().auth.user?.accessToken;
       return await productService.updateProductAsync(

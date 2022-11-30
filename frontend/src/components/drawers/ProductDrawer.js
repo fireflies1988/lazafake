@@ -1,28 +1,24 @@
-import {
-  MinusCircleOutlined,
-  PlusOutlined,
-  SkinOutlined,
-} from "@ant-design/icons";
+import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   Button,
   Drawer,
   Form,
   Input,
   InputNumber,
+  message as antMessage,
   Select,
   Space,
-  Upload,
-  message as antMessage,
   Spin,
+  Upload,
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import React, { useState } from "react";
-import { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getCategoriesAsync } from "../../features/category/categorySlice";
 import {
   addProductAsync,
   deleteProductAsync,
+  updateProductAsync,
 } from "../../features/product/productSlice";
 import { checkUploadCondition } from "../../utils";
 const { Option } = Select;
@@ -30,16 +26,22 @@ const { Option } = Select;
 function ProductDrawer({ open, onClose, title, type, productId }) {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
+  const [deletedImages, setDeletedImages] = useState([]); // contain imageIds
   const dispatch = useDispatch();
   const { categories, isLoading: loadingCategories } = useSelector(
     (state) => state.category
   );
-
   const {
     isSuccess,
     isLoading: savingProduct,
     products,
   } = useSelector((state) => state.product);
+
+  function handleClose() {
+    console.log("hi");
+    form.resetFields();
+    onClose();
+  }
 
   useEffect(() => {
     dispatch(getCategoriesAsync());
@@ -47,35 +49,50 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
 
   useEffect(() => {
     if (type === "edit") {
-      const product = products.find((p) => p._id.toString() === productId);
-      console.log(product);
+      const product = products.find((p) => p._id === productId);
+      console.log("product", product);
       if (product) {
-        const { specifications, ...fields } = product;
+        // set initial fields value
+        const { specifications, category, ...fields } = product;
         form.setFieldsValue(fields);
+        form.setFieldValue("category", category?._id);
         if (specifications) {
           form.setFieldValue("specifications", JSON.parse(specifications));
+        } else {
+          form.setFieldValue("specifications", []);
         }
 
         const temp = [];
         for (const image of product?.images) {
           temp.push({
             url: image?.url,
+            imageId: image._id,
           });
         }
         setFileList(temp);
       }
     }
-  }, [productId, open]);
+  }, [productId, open, products]);
 
   useEffect(() => {
     if (isSuccess) {
-      form.resetFields();
-      setFileList([]);
+      if (type === "add") {
+        form.resetFields();
+        setFileList([]);
+      }
+
+      if (type === "edit") {
+      }
     }
   }, [isSuccess]);
 
   const uploadProps = {
     onRemove: (file) => {
+      console.log("Removed file: ", file);
+      if (type === "edit") {
+        setDeletedImages((deletedImages) => [...deletedImages, file.imageId]);
+      }
+
       const index = fileList.indexOf(file);
       const newFileList = fileList.slice();
       newFileList.splice(index, 1);
@@ -104,32 +121,45 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
         console.log("Product drawer: ", values);
         console.log("fileList: ", fileList);
 
-        if (type === "add") {
-          const formData = new FormData();
-          if (fileList.length > 0 && fileList[0].file) {
-            for (const file of fileList) {
-              formData.append("images", file.file);
-            }
-          }
-
-          // convert values to formData
-          formData.append("sku", values.sku);
-          formData.append("name", values.name);
-          formData.append("price", values.price);
-          formData.append("quantity", values.quantity);
-          formData.append("description", values.description);
+        const formData = new FormData();
+        // convert values to formData
+        formData.append("sku", values.sku);
+        formData.append("name", values.name);
+        formData.append("price", values.price);
+        formData.append("quantity", values.quantity);
+        formData.append("description", values.description);
+        if (values.category) {
           formData.append("category", values.category);
-          if (values.specifications) {
-            formData.append(
-              "specifications",
-              JSON.stringify(values.specifications)
-            );
+        }
+        if (values.specifications) {
+          formData.append(
+            "specifications",
+            JSON.stringify(values.specifications)
+          );
+        }
+
+        if (type === "add") {
+          for (const file of fileList) {
+            formData.append("images", file.file);
           }
 
           dispatch(addProductAsync(formData));
         }
 
         if (type === "edit") {
+          // add new images
+          for (const file of fileList) {
+            if (file?.file) {
+              formData.append("images", file.file);
+            }
+          }
+
+          // remove deleted images
+          for (const imageId of deletedImages) {
+            formData.append("deletedImages", imageId);
+          }
+
+          dispatch(updateProductAsync({ productId, formData }));
         }
       })
       .catch((info) => {
@@ -142,7 +172,7 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
       destroyOnClose={true}
       title={title}
       width={720}
-      onClose={onClose}
+      onClose={handleClose}
       open={open}
       placement="left"
       bodyStyle={{
@@ -152,7 +182,7 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
       closable={false}
       extra={
         <Space>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={handleClose}>Cancel</Button>
           {type === "edit" && (
             <Button
               danger

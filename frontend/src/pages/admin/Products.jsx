@@ -12,7 +12,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ProductDrawer from "../../components/drawers/ProductDrawer";
 import { getProductsAsync, reset } from "../../features/product/productSlice";
-import { showError } from "../../utils";
+import { moneyFormatter, showError } from "../../utils";
 
 function Products() {
   const [openAdd, setOpenAdd] = useState(false);
@@ -105,9 +105,9 @@ function Products() {
         _id: products[i]._id,
         sku: products[i].sku,
         name: products[i].name,
-        price: products[i].price,
+        price: moneyFormatter.format(products[i].price),
         quantity: products[i].quantity,
-        category: products[i].category,
+        category: products[i]?.category?.name,
         thumbnail:
           products[i]?.images?.length > 0 ? products[i]?.images[0]?.url : "",
         createdAt: products[i].createdAt,
