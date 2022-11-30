@@ -20,12 +20,14 @@ import Checkout from "./pages/Checkout";
 import SearchPage from "./pages/SearchPage";
 import Orders from "./pages/admin/Orders";
 import { useSelector } from "react-redux";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   const { user } = useSelector((state) => state.auth);
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Layout />}>
           {!user && (
