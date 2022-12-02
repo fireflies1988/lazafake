@@ -1,25 +1,32 @@
 import {
   Button,
   Card,
+  Empty,
   Image,
-  InputNumber,
   Radio,
   Space,
   Table,
   Tag,
   Typography,
+  message as antMessage,
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { ImLocation } from "react-icons/im";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
+import ChooseAddressModal from "../components/modals/ChooseAddressModal";
+import { getAddressesAsync } from "../features/address/addressSlice";
+import { placeOrderAsync, reset } from "../features/order/orderSlice";
+import { moneyFormatter, reverseMoneyFormattedText } from "../utils";
 
 const { Text } = Typography;
+const DEFAULT_SHIPPING_FEE = 30000;
 
 const columns = [
   {
     title: "Thumbnail",
     dataIndex: "thumbnail",
-    render: (_, record) => <Image width={100} src={record.thumbnail} />,
+    render: (_, record) => <Image width={100} src={record?.thumbnail} />,
   },
   {
     title: "Name",
@@ -34,9 +41,6 @@ const columns = [
     title: "Quantity",
     dataIndex: "quantity",
     align: "right",
-    render: (_, record) => (
-      <InputNumber min={1} defaultValue={record.quantity} />
-    ),
   },
   {
     title: "Item Subtotal",
@@ -46,36 +50,128 @@ const columns = [
 ];
 
 function Checkout() {
-  const { cartItems, isLoading } = useSelector((state) => state.cart);
-  const [value, setValue] = useState("Cash");
-  const [data, setData] = useState();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [orderItems, setOrderItems] = useState(location.state);
+  const [data, setData] = useState([]);
+
+  const dispatch = useDispatch();
+  const { addresses } = useSelector((state) => state.address);
+  const { user } = useSelector((state) => state.auth);
+  const { message, isError, isSuccess, isLoading, paypalUrl } = useSelector(
+    (state) => state.order
+  );
+
+  // choose address modal
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState();
+
+  const [address, setAddress] = useState();
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
+  const [subtotal, setSubtotal] = useState(0);
+  const [shippingFee, setShippingFee] = useState(DEFAULT_SHIPPING_FEE);
 
   const onChange = (e) => {
-    console.log("radio checked", e.target.value);
-    setValue(e.target.value);
+    console.log("radio checked: ", e.target.value);
+    if (e.target.value === "Cash") {
+      setShippingFee(DEFAULT_SHIPPING_FEE);
+    } else {
+      setShippingFee(0);
+    }
+    setPaymentMethod(e.target.value);
   };
 
+  console.log("Ordered Products: ", orderItems);
+  useEffect(() => {
+    // clear location state
+    if (location?.state?.message) {
+      window.history.replaceState({}, document.title);
+    }
+
+    // load addresses
+    dispatch(getAddressesAsync());
+  }, []);
+
+  useEffect(() => {
+    if (isError) {
+      antMessage.error(message);
+    }
+
+    if (isSuccess) {
+      if (paymentMethod === "Paypal") {
+        if (paypalUrl) {
+          window.location.href = paypalUrl;
+        }
+      } else {
+        navigate("/result?success");
+      }
+    }
+
+    dispatch(reset());
+  }, [isError, isSuccess]);
+
+  useEffect(() => {
+    const address = addresses.find((a) => a.isDefault === true);
+    setAddress(address);
+    setValue(address?._id);
+  }, [addresses]);
+
+  useEffect(() => {
+    setAddress(addresses.find((a) => a._id === value));
+  }, [value]);
+
+  // load data into table
   useEffect(() => {
     const tempData = [];
-    for (let i = 0; i < cartItems.length; i++) {
+    for (let i = 0; i < orderItems.length; i++) {
       tempData.push({
-        key: cartItems[i]._id,
-        _id: cartItems[i]._id,
+        key: orderItems[i]._id,
+        _id: orderItems[i]._id,
         thumbnail:
-          cartItems[i]?.product?.images?.length > 0
-            ? cartItems[i]?.product?.images[0]?.url
+          orderItems[i]?.product?.images?.length > 0
+            ? orderItems[i]?.product?.images[0]?.url
             : "",
-        name: cartItems[i].product?.name,
-        price: `${cartItems[i].product?.price}`,
-        quantity: cartItems[i].quantity,
-        itemSubtotal: `${cartItems[i].quantity * cartItems[i].product?.price}đ`,
+        name: orderItems[i].product?.name,
+        price: moneyFormatter.format(orderItems[i].product?.price),
+        quantity: orderItems[i].quantity,
+        itemSubtotal: moneyFormatter.format(
+          orderItems[i].quantity * orderItems[i].product?.price
+        ),
       });
     }
     setData(tempData);
-  }, [cartItems]);
+    setSubtotal(
+      tempData?.reduce(
+        (sum, object) => sum + reverseMoneyFormattedText(object.itemSubtotal),
+        0
+      )
+    );
+  }, [orderItems]);
+
+  function handlePlaceOrder() {
+    if (!address) {
+      antMessage.error("Please choose an delivery address!");
+      return;
+    }
+
+    const orderData = {
+      shippingAddress: address._id,
+      orderItems: orderItems.map((item) => item._id),
+      shippingFee: shippingFee,
+      paymentMethod: paymentMethod,
+    };
+
+    dispatch(placeOrderAsync(orderData));
+  }
 
   return (
     <Space direction="vertical" style={{ display: "flex" }} size="large">
+      <ChooseAddressModal
+        open={open}
+        onCancel={() => setOpen(false)}
+        setValue={setValue}
+        defaultValue={value}
+      />
       <Card
         title={
           <Text
@@ -92,7 +188,7 @@ function Checkout() {
           </Text>
         }
         extra={
-          <Button type="primary" ghost>
+          <Button type="primary" ghost onClick={() => setOpen(true)}>
             Change Address
           </Button>
         }
@@ -106,11 +202,23 @@ function Checkout() {
             gap: "0.5rem",
           }}
         >
-          <span>
-            Kiều Huỳnh Thanh Tùng (+84) 965939861 97 Màn Thiện, Phường Hiệp Phú,
-            Thành Phố Thủ Đức, TP. Hồ Chí Minh
-          </span>
-          <Tag color="green">Default</Tag>
+          {address ? (
+            <>
+              <Text style={{ fontSize: "16px" }}>
+                <Text strong style={{ fontSize: "16px" }}>
+                  {address?.fullName} | (+84) {address?.phoneNumber}
+                </Text>{" "}
+                {address?.address}, {address?.ward}, {address?.district},{" "}
+                {address?.province}
+              </Text>
+              {address.isDefault && <Tag color="green">Default</Tag>}
+              {address.label === "Home" && <Tag color="red">Home</Tag>}
+              {address.label === "Work" && <Tag color="blue">Work</Tag>}
+              {address.label === "Other" && <Tag color="gold">Other</Tag>}
+            </>
+          ) : (
+            <Empty />
+          )}
         </Text>
       </Card>
 
@@ -130,15 +238,9 @@ function Checkout() {
               <Space
                 style={{ width: "300px", justifyContent: "space-between" }}
               >
-                <Text>Shipping Fee:</Text>
-                <Text>30000d</Text>
-              </Space>
-              <Space
-                style={{ width: "300px", justifyContent: "space-between" }}
-              >
                 <Text>Order Total:</Text>
                 <Text strong type="danger">
-                  600000d
+                  {moneyFormatter.format(subtotal)}
                 </Text>
               </Space>
             </Space>
@@ -157,7 +259,7 @@ function Checkout() {
       ></Card>
 
       <Card title="Payment Method" style={{ borderRadius: 0 }}>
-        <Radio.Group onChange={onChange} value={value}>
+        <Radio.Group onChange={onChange} value={paymentMethod}>
           <Space direction="vertical">
             <Radio value="Cash">Cash On Delivery</Radio>
             <Radio value="Paypal">Paypal</Radio>
@@ -172,22 +274,22 @@ function Checkout() {
         >
           <Space style={{ width: "300px", justifyContent: "space-between" }}>
             <Text>Merchandise Subtotal:</Text>
-            <Text>30000</Text>
+            <Text>{moneyFormatter.format(subtotal)}</Text>
           </Space>
           <Space style={{ width: "300px", justifyContent: "space-between" }}>
-            <Text>Shipping Total:</Text>
-            <Text>60000</Text>
+            <Text>Shipping Fee:</Text>
+            <Text>{moneyFormatter.format(shippingFee)}</Text>
           </Space>
           <Space style={{ width: "300px", justifyContent: "space-between" }}>
             <Text>Voucher:</Text>
-            <Text>-30000</Text>
+            <Text>0</Text>
           </Space>
           <Space style={{ width: "300px", justifyContent: "space-between" }}>
             <Text strong style={{ fontSize: "18px" }}>
               Total Payment:
             </Text>
             <Text strong type="danger" style={{ fontSize: "18px" }}>
-              30000000
+              {moneyFormatter.format(subtotal + shippingFee)}
             </Text>
           </Space>
 
@@ -195,6 +297,9 @@ function Checkout() {
             type="primary"
             style={{ width: "200px", marginTop: "0.5rem" }}
             size="large"
+            htmlType="button"
+            onClick={handlePlaceOrder}
+            loading={isLoading}
           >
             Place Order
           </Button>

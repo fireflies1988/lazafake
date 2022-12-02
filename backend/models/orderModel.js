@@ -24,7 +24,7 @@ const orderSchema = mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "Voucher",
         required: true,
-      }
+      },
     ],
     taxCode: {
       type: String,
@@ -38,9 +38,12 @@ const orderSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
-    // totalPayment = orderItems * Price + shippingFee
+    // totalPayment = orderItems * Price + shippingFee - discountAmount
     totalPayment: {
       type: Number,
+    },
+    message: {
+      type: String
     },
     status: {
       type: String,
@@ -66,7 +69,7 @@ const orderSchema = mongoose.Schema(
       type: Boolean,
       required: true,
       default: true,
-    }
+    },
   },
   {
     timestamps: true,

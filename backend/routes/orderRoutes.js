@@ -13,9 +13,10 @@ const checkPermission = require("../middlewares/roleMiddleware");
 const Role = require("../data/roles");
 
 router.post("/", auth, validate("placeOrder"), placeOrder);
-router.get("/", auth, checkPermission(Role.Admin), viewOrders);
 router.get("/confirm", confirmPayment);
 router.get("/cancel", cancelPayment);
+
+router.get("/", auth, checkPermission(Role.Admin), viewOrders);
 router.patch("/:id", auth, checkPermission(Role.Admin), updateOrderStatus);
 
 module.exports = router;

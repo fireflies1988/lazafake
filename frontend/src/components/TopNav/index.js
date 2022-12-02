@@ -45,7 +45,7 @@ function TopNav() {
       // to get number of items
       dispatch(getCartItems());
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (isError) {

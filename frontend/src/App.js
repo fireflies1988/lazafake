@@ -1,26 +1,27 @@
 import React from "react";
+import { useSelector } from "react-redux";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import ScrollToTop from "./components/ScrollToTop";
+import AdminLayout from "./pages/admin/AdminLayout";
+import Categories from "./pages/admin/Categories";
+import Dashboard from "./pages/admin/Dashboard";
+import Orders from "./pages/admin/Orders";
+import Products from "./pages/admin/Products";
 import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 import Home from "./pages/Home";
 import Layout from "./pages/Layout";
 import Login from "./pages/Login";
+import ProductDetails from "./pages/ProductDetails";
 import Register from "./pages/Register";
-import UserLayout from "./pages/user/UserLayout";
-import Profile from "./pages/user/account/Profile";
+import ResultPage from "./pages/ResultPage";
+import SearchPage from "./pages/SearchPage";
 import AddressBook from "./pages/user/account/AddressBook";
 import Password from "./pages/user/account/Password";
+import Profile from "./pages/user/account/Profile";
 import MyOrders from "./pages/user/MyOrders";
+import UserLayout from "./pages/user/UserLayout";
 import Vouchers from "./pages/user/Vouchers";
-import AdminLayout from "./pages/admin/AdminLayout";
-import Dashboard from "./pages/admin/Dashboard";
-import Categories from "./pages/admin/Categories";
-import Products from "./pages/admin/Products";
-import ProductDetails from "./pages/ProductDetails";
-import Checkout from "./pages/Checkout";
-import SearchPage from "./pages/SearchPage";
-import Orders from "./pages/admin/Orders";
-import { useSelector } from "react-redux";
-import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   const { user } = useSelector((state) => state.auth);
@@ -61,6 +62,7 @@ function App() {
 
           <Route path="products/:productId" element={<ProductDetails />} />
           <Route path="checkout" element={<Checkout />} />
+          <Route path="result" element={<ResultPage />} />
           <Route path="search" element={<SearchPage />} />
 
           <Route path="*" element={<Navigate to="/" />} />

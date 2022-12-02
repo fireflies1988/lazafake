@@ -7,6 +7,9 @@ const Order = require("../models/orderModel");
 const Product = require("../models/productModel");
 const Voucher = require("../models/voucherModel");
 const voucherHelper = require("../helpers/voucherHelper");
+const puppeteer = require("puppeteer");
+
+const USD_TO_VND = 24600;
 
 // @desc    Place order
 // @route   POST /api/orders
@@ -37,7 +40,7 @@ const placeOrder = asyncHandler(async (req, res, next) => {
 
   // check quantity again
   let errMessages = [];
-  for (let itemId of fields.orderItems) {
+  for (let itemId of fields?.orderItems) {
     const cartItem = await CartItem.findById(itemId).populate("product");
     orderItems.push(cartItem);
     if (cartItem.user.toString() !== req.user.id) {
@@ -55,12 +58,12 @@ const placeOrder = asyncHandler(async (req, res, next) => {
   }
 
   if (errMessages.length > 0) {
-    return res.status(409).json(errMessages);
+    return res.status(409).json({ message: errMessages });
   }
 
   // check applied vouchers
   let discountAmount = 0;
-  if (fields.vouchers) {
+  if (fields?.vouchers) {
     const voucherTypes = new Set();
     for (const voucherId of fields.vouchers) {
       const voucher = await Voucher.findById(voucherId);
@@ -103,10 +106,11 @@ const placeOrder = asyncHandler(async (req, res, next) => {
       orderItems.reduce(
         (acc, obj) =>
           acc +
-          (Math.round((obj.product.price / 23000) * 100) / 100) * obj.quantity,
+          (Math.round((obj.product.price / USD_TO_VND) * 100) / 100) *
+            obj.quantity,
         0
       ) -
-      Math.round((discountAmount / 23000) * 100) / 100;
+      Math.round((discountAmount / USD_TO_VND) * 100) / 100;
 
     var create_payment_json = {
       intent: "sale",
@@ -123,15 +127,16 @@ const placeOrder = asyncHandler(async (req, res, next) => {
             items: [
               ...orderItems.map((item) => ({
                 name: item.product.name,
-                sku: item.product.sku,
-                price: Math.round((item.product.price / 23000) * 100) / 100, // convert vnd to usd
+                sku: item.product?.sku,
+                price:
+                  Math.round((item.product.price / USD_TO_VND) * 100) / 100, // convert vnd to usd
                 currency: "USD",
                 quantity: item.quantity,
               })),
               {
                 name: "Voucher discount",
                 sku: "9999",
-                price: -Math.round((discountAmount / 23000) * 100) / 100, // convert vnd to usd
+                price: -Math.round((discountAmount / USD_TO_VND) * 100) / 100, // convert vnd to usd
                 currency: "USD",
                 quantity: 1,
               },
@@ -153,7 +158,7 @@ const placeOrder = asyncHandler(async (req, res, next) => {
         console.log(payment);
         for (const link of payment.links) {
           if (link.rel === "approval_url") {
-            return res.redirect(link.href);
+            return res.json(link.href);
           }
         }
       }
@@ -164,6 +169,16 @@ const placeOrder = asyncHandler(async (req, res, next) => {
       user: req.user.id,
       totalPayment: payment,
     });
+
+    // update products' quantity after purchasing
+    for (const item of orderItems) {
+      await Product.findByIdAndUpdate(item.product, {
+        $inc: {
+          quantity: -item.quantity,
+        },
+      });
+    }
+
     res.status(201).json(order);
   }
 });
@@ -217,7 +232,7 @@ const confirmPayment = asyncHandler(async (req, res, next) => {
         // this order become valid now
         order.isValid = true;
         await order.save();
-        res.json(order);
+        res.redirect("http://localhost:3000/result?success");
       }
     }
   );
@@ -228,7 +243,7 @@ const confirmPayment = asyncHandler(async (req, res, next) => {
 // @access  Private (redirect)
 const cancelPayment = asyncHandler(async (req, res, next) => {
   await Order.findByIdAndDelete(req.query.orderId);
-  res.json("Payment canceled.");
+  res.redirect("http://localhost:3000/result?error");
 });
 
 // @desc    Update order status

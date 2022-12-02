@@ -4,6 +4,7 @@ import orderService from "./orderService";
 
 const initialState = {
   orders: [],
+  paypalUrl: "",
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -28,6 +29,7 @@ export const orderSlice = createSlice({
   initialState,
   reducers: {
     reset: (state) => {
+      state.paypalUrl = "";
       state.isLoading = false;
       state.isError = false;
       state.isSuccess = false;
@@ -42,7 +44,8 @@ export const orderSlice = createSlice({
       .addCase(placeOrderAsync.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.message = "Your order has been placed.";
+        state.paypalUrl = action.payload;
+        state.message = "Your order has been placed successfully.";
       })
       .addCase(placeOrderAsync.rejected, (state, action) => {
         state.isLoading = false;

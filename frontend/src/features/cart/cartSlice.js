@@ -81,6 +81,7 @@ export const changeQtyAsync = createAsyncThunk(
 );
 
 // check out 
+// not used
 export const checkoutAsync = createAsyncThunk(
   "cart/checkout",
   async (cartItems, thunkAPI) => {

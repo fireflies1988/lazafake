@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
   changeQtyAsync,
+  getCartItems,
   removeFromCartAsync,
   removeMultipleFromCartAsync,
 } from "../features/cart/cartSlice";
@@ -25,6 +26,7 @@ function Cart() {
   const navigate = useNavigate();
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [disabled, setDisabled] = useState(true);
+
   const onSelectChange = (newSelectedRowKeys) => {
     console.log("selectedRowKeys changed: ", newSelectedRowKeys);
     setSelectedRowKeys(newSelectedRowKeys);
@@ -36,6 +38,18 @@ function Cart() {
     }
   };
 
+  function onCheckout() {
+    const products = selectedRowKeys.map((key) =>
+      cartItems.find((item) => item._id === key)
+    );
+    console.log("Ordered products: ", products);
+
+    navigate("/checkout", {
+      state: products,
+    });
+  }
+
+  // onClick Remove Selected Items
   function removeSelectedItems() {
     dispatch(removeMultipleFromCartAsync(selectedRowKeys));
     setSelectedRowKeys([]);
@@ -98,6 +112,11 @@ function Cart() {
   const [data, setData] = useState();
 
   useEffect(() => {
+    dispatch(getCartItems());
+  }, []);
+
+  // load data into table
+  useEffect(() => {
     const tempData = [];
     for (let i = 0; i < cartItems.length; i++) {
       tempData.push({
@@ -134,22 +153,18 @@ function Cart() {
           {selectedRowKeys?.length > 0 && (
             <Text strong type="danger" style={{ fontSize: "16px" }}>
               Total ({selectedRowKeys.length} items):{" "}
-              {data.reduce((sum, object) => {
-                if (selectedRowKeys.includes(object.key)) {
-                  sum += reverseMoneyFormattedText(object.totalPrice);
-                }
-                return sum;
-              }, 0)}
-              đ{" "}
+              {moneyFormatter.format(
+                data.reduce((sum, object) => {
+                  if (selectedRowKeys.includes(object.key)) {
+                    sum += reverseMoneyFormattedText(object.totalPrice);
+                  }
+                  return sum;
+                }, 0)
+              )}
             </Text>
           )}
 
-          <Button
-            type="primary"
-            ghost
-            disabled={disabled}
-            onClick={() => navigate("/checkout")}
-          >
+          <Button type="primary" ghost disabled={disabled} onClick={onCheckout}>
             Check Out
           </Button>
         </Space>
