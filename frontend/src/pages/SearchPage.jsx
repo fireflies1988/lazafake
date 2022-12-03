@@ -1,29 +1,92 @@
 import {
-    Button,
-    Card,
-    Checkbox,
-    Col,
-    Divider,
-    Form,
-    InputNumber,
-    Radio,
-    Row,
-    Select,
-    Space,
-    Typography
+  Button,
+  Card,
+  Checkbox,
+  Col,
+  Divider,
+  Form,
+  InputNumber,
+  Radio,
+  Row,
+  Select,
+  Space,
+  Typography,
 } from "antd";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import ProductList from "../components/ProductList";
+import { getCategoriesAsync } from "../features/category/categorySlice";
+import { getProductsAsync } from "../features/product/productSlice";
+import { moneyFormatter } from "../utils";
 const { Text } = Typography;
 
 function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [value, setValue] = useState();
-  const onChange = (e) => {
-    console.log("radio checked", e.target.value);
-    setValue(e.target.value);
+
+  // sort by
+  const [radioValue, setRadioValue] = useState(searchParams.get("sortBy"));
+  const [priceOrder, setPriceOrder] = useState(searchParams.get("order"));
+
+  const dispatch = useDispatch();
+  const { categories } = useSelector((state) => state.category);
+  const { products } = useSelector((state) => state.product);
+
+  useEffect(() => {
+    dispatch(getCategoriesAsync());
+  }, []);
+
+  useEffect(() => {
+    let params = {};
+    searchParams.forEach((value, key) => {
+      params[key] = value;
+    });
+
+    dispatch(getProductsAsync(params));
+  }, [searchParams]);
+
+  const onChangeRadio = (e) => {
+    setRadioValue(e.target.value);
+    setPriceOrder(null);
+
+    searchParams.delete("order");
+    searchParams.set("sortBy", e.target.value);
+    setSearchParams(searchParams);
   };
+
+  function onChangeSortByPrice(value) {
+    setRadioValue(null);
+    setPriceOrder(value);
+
+    searchParams.set("sortBy", "price");
+    searchParams.set("order", value);
+    setSearchParams(searchParams);
+  }
+
+  function onFinish(values) {
+    if (values.minPrice) {
+      searchParams.set("minPrice", values.minPrice);
+    } else {
+      searchParams.delete("minPrice");
+    }
+
+    if (values.maxPrice) {
+      searchParams.set("maxPrice", values.maxPrice);
+    } else {
+      searchParams.delete("maxPrice");
+    }
+
+    setSearchParams(searchParams);
+  }
+
+  function handleChangeCategory(value) {
+    if (value) {
+      searchParams.set("category", value);
+    } else {
+      searchParams.delete("category");
+    }
+    setSearchParams(searchParams);
+  }
 
   return (
     <Row gutter={16}>
@@ -34,22 +97,27 @@ function SearchPage() {
         >
           <Text strong>Categories</Text>
           <Select
-            defaultValue="lucy"
+            placeholder="Select a category"
+            defaultValue={
+              searchParams.get("category")
+                ? {
+                    label: searchParams.get("category"),
+                    value: searchParams.get("category"),
+                  }
+                : null
+            }
+            allowClear
+            onChange={handleChangeCategory}
             style={{ width: "100%" }}
-            options={[
-              {
-                value: "jack",
-                label: "Jack",
-              },
-              {
-                value: "lucy",
-                label: "Lucy",
-              },
-              {
-                value: "Yiminghe",
-                label: "yiminghe",
-              },
-            ]}
+            showSearch
+            optionFilterProp="label"
+            filterOption={(input, option) =>
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            }
+            options={categories.map((c, index) => ({
+              label: c.name,
+              value: c.name,
+            }))}
           />
           <Divider style={{ margin: "0.5rem 0" }} />
           <Text strong>Brands</Text>
@@ -59,7 +127,7 @@ function SearchPage() {
           <Checkbox defaultChecked={false}>Brand 2</Checkbox>
           <Divider style={{ margin: "0.5rem 0" }} />
           <Text strong>Price Range</Text>
-          <Form layout="vertical">
+          <Form layout="vertical" onFinish={onFinish}>
             <Form.Item
               style={{
                 marginBottom: 0,
@@ -67,18 +135,16 @@ function SearchPage() {
             >
               <Form.Item
                 name="minPrice"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please input min price!",
-                  },
-                ]}
                 style={{
                   display: "inline-block",
                   width: "calc(50% - 8px)",
                 }}
               >
-                <InputNumber placeholder="Min" min={1} />
+                <InputNumber
+                  placeholder="Min"
+                  min={1}
+                  defaultValue={searchParams.get("minPrice")}
+                />
               </Form.Item>
               <Form.Item
                 name="maxPrice"
@@ -89,10 +155,6 @@ function SearchPage() {
                   margin: "0 8px",
                 }}
                 rules={[
-                  {
-                    required: true,
-                    message: "Please input max price!",
-                  },
                   ({ getFieldValue }) => ({
                     validator(_, value) {
                       if (!value || value > getFieldValue("minPrice")) {
@@ -105,7 +167,11 @@ function SearchPage() {
                   }),
                 ]}
               >
-                <InputNumber placeholder="Max" min={1} />
+                <InputNumber
+                  placeholder="Max"
+                  min={1}
+                  defaultValue={searchParams.get("maxPrice")}
+                />
               </Form.Item>
             </Form.Item>
 
@@ -122,27 +188,33 @@ function SearchPage() {
           extra={
             <Space size="middle">
               <Text>Sort By</Text>
-              <Radio.Group onChange={onChange} value={value}>
-                <Radio value={1}>Top Sales</Radio>
-                <Radio value={2}>Newest</Radio>
+              <Radio.Group onChange={onChangeRadio} value={radioValue}>
+                <Radio value="sales">Top Sales</Radio>
+                <Radio value="newest">Newest</Radio>
               </Radio.Group>
               <Select
                 placeholder="Price"
-                style={{ width: 120 }}
+                style={{ width: 180 }}
+                value={priceOrder}
+                onChange={onChangeSortByPrice}
                 options={[
                   {
-                    value: "lowToHigh",
-                    label: "Low To High",
+                    value: "asc",
+                    label: "Price: Low To High",
                   },
                   {
-                    value: "hightToLow",
-                    label: "High To Low",
+                    value: "desc",
+                    label: "Price: High To Low",
                   },
                 ]}
               />
             </Space>
           }
-          title="Search result for 'Something'"
+          title={
+            searchParams.get("keyword")
+              ? `Search result for "${searchParams.get("keyword")}"`
+              : "Products"
+          }
           bodyStyle={{
             backgroundColor: "#efefef",
             padding: "0.5rem 0",
@@ -151,64 +223,14 @@ function SearchPage() {
         >
           <ProductList
             columns={4}
-            items={[
-              {
-                url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-                name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-                price: "1.000.000đ",
-                rating: "4.0",
-                sold: 100,
-              },
-              {
-                url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-                name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-                price: "1.000.000đ",
-                rating: "4.0",
-                sold: 100,
-              },
-              {
-                url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-                name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-                price: "1.000.000đ",
-                rating: "4.0",
-                sold: 100,
-              },
-              {
-                url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-                name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-                price: "1.000.000đ",
-                rating: "4.0",
-                sold: 100,
-              },
-              {
-                url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-                name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-                price: "1.000.000đ",
-                rating: "4.0",
-                sold: 100,
-              },
-              {
-                url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-                name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-                price: "1.000.000đ",
-                rating: "4.0",
-                sold: 100,
-              },
-              {
-                url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-                name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-                price: "1.000.000đ",
-                rating: "4.0",
-                sold: 100,
-              },
-              {
-                url: "https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png",
-                name: "Mainboard Asus Prime B560M-A ( LGA1200 - m-ATX Form Factor - DDR4 )",
-                price: "1.000.000đ",
-                rating: "4.0",
-                sold: 100,
-              },
-            ]}
+            items={products.map((p) => ({
+              _id: p._id,
+              url: p?.images[0]?.url,
+              name: p.name,
+              price: moneyFormatter.format(p.price),
+              rating: "4.0",
+              sold: 100,
+            }))}
           />
         </Card>
       </Col>

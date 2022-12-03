@@ -16,8 +16,10 @@ async function addProductAsync(formData, accessToken) {
 }
 
 // get products
-async function getProductsAsync() {
-  const response = await axios.get(API_URL);
+async function getProductsAsync(queryParams = null) {
+  const response = await axios.get(API_URL, {
+    params: queryParams,
+  });
   console.log("getProductsAsync", response);
 
   return response.data;

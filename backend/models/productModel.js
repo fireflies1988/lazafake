@@ -80,6 +80,11 @@ const productSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
+    sold: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
     reviews: [reviewSchema],
     category: {
       type: mongoose.Schema.Types.ObjectId,

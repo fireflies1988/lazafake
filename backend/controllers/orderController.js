@@ -170,11 +170,12 @@ const placeOrder = asyncHandler(async (req, res, next) => {
       totalPayment: payment,
     });
 
-    // update products' quantity after purchasing
+    // update products' quantity and sold after purchasing
     for (const item of orderItems) {
       await Product.findByIdAndUpdate(item.product, {
         $inc: {
           quantity: -item.quantity,
+          sold: item.quantity,
         },
       });
     }
@@ -213,6 +214,7 @@ const confirmPayment = asyncHandler(async (req, res, next) => {
           await Product.findByIdAndUpdate(item.product, {
             $inc: {
               quantity: -item.quantity,
+              sold: item.quantity,
             },
           });
         }

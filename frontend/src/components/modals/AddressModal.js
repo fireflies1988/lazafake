@@ -111,13 +111,16 @@ function AddressModal({ title, open, handleCancel, handleOk, form }) {
           <Select
             placeholder="Select your City/Province"
             onChange={handleChangeCity}
-          >
-            {vietnamProvinces.map((p) => (
-              <Option value={p.Name} key={p.Id}>
-                {p.Name}
-              </Option>
-            ))}
-          </Select>
+            showSearch
+            optionFilterProp="label"
+            filterOption={(input, option) =>
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            }
+            options={vietnamProvinces.map((p) => ({
+              label: p.Name,
+              value: p.Name,
+            }))}
+          />
         </Form.Item>
 
         <Form.Item
@@ -129,6 +132,11 @@ function AddressModal({ title, open, handleCancel, handleOk, form }) {
             placeholder="Select your District"
             options={districts}
             onChange={handleChangeDistrict}
+            showSearch
+            optionFilterProp="label"
+            filterOption={(input, option) =>
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            }
           />
         </Form.Item>
 
@@ -137,7 +145,15 @@ function AddressModal({ title, open, handleCancel, handleOk, form }) {
           label="Ward"
           rules={[{ required: true, message: "Please select your Ward!" }]}
         >
-          <Select placeholder="Select your Ward" options={wards} />
+          <Select
+            placeholder="Select your Ward"
+            options={wards}
+            showSearch
+            optionFilterProp="label"
+            filterOption={(input, option) =>
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            }
+          />
         </Form.Item>
 
         <Form.Item

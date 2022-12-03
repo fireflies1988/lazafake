@@ -26,9 +26,9 @@ export const addProductAsync = createAsyncThunk(
 // get categories
 export const getProductsAsync = createAsyncThunk(
   "product/getAll",
-  async (_, thunkAPI) => {
+  async (queryParams, thunkAPI) => {
     try {
-      return await productService.getProductsAsync();
+      return await productService.getProductsAsync(queryParams);
     } catch (err) {
       return handleError(err, thunkAPI, "getProductsAsync", false);
     }

@@ -23,6 +23,7 @@ import { useParams } from "react-router-dom";
 import ProductList from "../components/ProductList";
 import { addToCartAsync } from "../features/cart/cartSlice";
 import { getProductsAsync } from "../features/product/productSlice";
+import { moneyFormatter } from "../utils";
 const { Text, Link } = Typography;
 
 const tabListNoTitle = [
@@ -136,7 +137,7 @@ function ProductDetails() {
               3.1k Sold
             </Text>
             <Text type="warning" style={{ fontSize: "20px" }}>
-              {product?.price}đ
+              {moneyFormatter.format(product?.price)}
             </Text>
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
               <InputNumber

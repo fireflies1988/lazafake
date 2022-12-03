@@ -1,4 +1,11 @@
-import { Avatar, Card, Carousel, Space, Spin } from "antd";
+import {
+  Avatar,
+  Card,
+  Carousel,
+  Space,
+  Spin,
+  message as antMessage,
+} from "antd";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ProductList from "../components/ProductList";
@@ -6,6 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { getCategoriesAsync } from "../features/category/categorySlice";
 import { getProductsAsync } from "../features/product/productSlice";
+import { moneyFormatter } from "../utils";
 
 const gridStyle = {
   width: "10%",
@@ -17,12 +25,22 @@ const gridStyle = {
 };
 
 function Home() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { categories, isLoading: categoriesIsLoading } = useSelector(
-    (state) => state.category
-  );
-  const { products } = useSelector((state) => state.product);
+
+  const dispatch = useDispatch();
+  const {
+    categories,
+    isLoading: loadingCategories,
+    isError: categoryError,
+    message: categoryMessage,
+  } = useSelector((state) => state.category);
+  const {
+    products,
+    isError: productError,
+    isLoading: loadingProducts,
+    message: productMessage,
+  } = useSelector((state) => state.product);
+
   const onChange = (currentSlide) => {
     console.log(currentSlide);
   };
@@ -31,6 +49,16 @@ function Home() {
     dispatch(getCategoriesAsync());
     dispatch(getProductsAsync());
   }, []);
+
+  useEffect(() => {
+    if (categoryError) {
+      antMessage.error(categoryMessage);
+    }
+
+    if (productError) {
+      antMessage.error(productMessage);
+    }
+  }, [categoryError, productError]);
 
   return (
     <Space
@@ -55,14 +83,14 @@ function Home() {
         ></img>
       </Carousel>
 
-      <Spin spinning={categoriesIsLoading}>
+      <Spin spinning={loadingCategories}>
         <Card title="Categories" style={{ borderRadius: 0 }}>
           {categories?.length > 0 &&
             categories.map((c, index) => (
               <Card.Grid
                 key={index}
                 style={gridStyle}
-                onClick={() => navigate("/search?keyword=test")}
+                onClick={() => navigate(`/search?category=${c.name}`)}
               >
                 <Avatar src={c?.thumbnail?.url} size={64} />
                 <div>{c.name}</div>
@@ -81,11 +109,11 @@ function Home() {
       >
         <ProductList
           columns={6}
-          items={products.map((p) => ({
+          items={products.slice(0, 12).map((p) => ({
             _id: p._id,
             url: p?.images[0]?.url,
             name: p.name,
-            price: `${p.price}đ`,
+            price: moneyFormatter.format(p.price),
             rating: "4.0",
             sold: 100,
           }))}
@@ -112,7 +140,7 @@ function Home() {
                   _id: p._id,
                   url: p?.images[0]?.url,
                   name: p.name,
-                  price: `${p.price}đ`,
+                  price: moneyFormatter.format(p.price),
                   rating: "4.0",
                   sold: 100,
                 }))}

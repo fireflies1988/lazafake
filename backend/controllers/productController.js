@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const { validationResult } = require("express-validator");
 const Product = require("../models/productModel");
 const cloudinary = require("../configs/cloudinary");
+const { removeAccents, containsAccents } = require("../utils/accentUtils");
 
 // @desc    Add a new product
 // @route   POST /api/products
@@ -91,10 +92,78 @@ const removeProductImage = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Get product list
-// @route   GET /api/products
+// @route   GET /api/products?category=&limit=&
 // @access  Public
 const getProducts = asyncHandler(async (req, res, next) => {
-  res.status(200).json(await Product.find({}).populate("category"));
+  // let products = await Product.find({
+  //   $or: [
+  //     {
+  //       name: { $regex: keyword, $options: "i" },
+  //     },
+  //     {
+  //       description: { $regex: keyword, $options: "i" },
+  //     },
+  //     {
+  //       specifications: {
+  //         $regex: keyword,
+  //         $options: "i",
+  //       },
+  //     },
+  //   ],
+  // })
+  //   .populate("category")
+  //   .limit(req.query.limit);
+
+  let products = await Product.find({})
+    .populate("category")
+    .limit(req.query.limit);
+
+  const keyword = removeAccents(req.query.keyword ?? "").toLowerCase();
+  if (keyword) {
+    products = products.filter(
+      (p) =>
+        removeAccents(p.name).toLowerCase().includes(keyword) ||
+        removeAccents(p.description).toLowerCase().includes(keyword) ||
+        removeAccents(p?.specifications ?? "")
+          .toLowerCase()
+          .includes(keyword) ||
+        removeAccents(p?.category.name).toLowerCase().includes(keyword)
+    );
+  }
+
+  if (req.query.category) {
+    products = products.filter((p) => p?.category.name === req.query.category);
+  }
+
+  if (req.query.minPrice) {
+    products = products.filter((p) => p.price >= req.query.minPrice);
+  }
+
+  if (req.query.maxPrice) {
+    products = products.filter((p) => p.price <= req.query.maxPrice);
+  }
+
+  if (req.query.sortBy === "price") {
+    if (req.query.order === "asc") {
+      products.sort((a, b) => a.price - b.price);
+    }
+
+    if (req.query.order === "desc") {
+      products.sort((a, b) => b.price - a.price);
+    }
+  }
+
+  if (req.query.sortBy === "sales") {
+    products.sort((a, b) => b.sold - a.sold);
+  }
+
+  if (req.query.sortBy === "newest") {
+    products.sort((a, b) =>
+      a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0
+    );
+  }
+
+  res.status(200).json(products);
 });
 
 // @desc    Delete product
