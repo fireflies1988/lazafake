@@ -13,7 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { getCategoriesAsync } from "../features/category/categorySlice";
 import { getProductsAsync } from "../features/product/productSlice";
-import { moneyFormatter } from "../utils";
+import { moneyFormatter, showError } from "../utils";
 
 const gridStyle = {
   width: "10%",
@@ -52,11 +52,11 @@ function Home() {
 
   useEffect(() => {
     if (categoryError) {
-      antMessage.error(categoryMessage);
+      showError(antMessage, categoryMessage);
     }
 
     if (productError) {
-      antMessage.error(productMessage);
+      showError(antMessage, productMessage);
     }
   }, [categoryError, productError]);
 

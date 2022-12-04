@@ -17,7 +17,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ChooseAddressModal from "../components/modals/ChooseAddressModal";
 import { getAddressesAsync } from "../features/address/addressSlice";
 import { placeOrderAsync, reset } from "../features/order/orderSlice";
-import { moneyFormatter, reverseMoneyFormattedText } from "../utils";
+import { moneyFormatter, reverseMoneyFormattedText, showError } from "../utils";
 
 const { Text } = Typography;
 const DEFAULT_SHIPPING_FEE = 30000;
@@ -94,7 +94,7 @@ function Checkout() {
 
   useEffect(() => {
     if (isError) {
-      antMessage.error(message);
+      showError(antMessage, message);
     }
 
     if (isSuccess) {

@@ -10,6 +10,7 @@ function saveUser(data) {
 
 const initialState = {
   user: user ?? null,
+  orders: [],
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -62,6 +63,19 @@ export const changePasswordAsync = createAsyncThunk(
       return await authService.changePasswordAsync(data, accessToken);
     } catch (err) {
       return handleError(err, thunkAPI, "changePasswordAsync", false);
+    }
+  }
+);
+
+// get my orders
+export const getMyOrdersAsync = createAsyncThunk(
+  "auth/orders",
+  async (_, thunkAPI) => {
+    try {
+      const accessToken = thunkAPI.getState().auth.user?.accessToken;
+      return await authService.getMyOrdersAsync(accessToken);
+    } catch (err) {
+      return handleError(err, thunkAPI, "getMyOrdersAsync", false);
     }
   }
 );
@@ -133,6 +147,19 @@ export const authSlice = createSlice({
         state.message = action.payload?.message;
       })
       .addCase(changePasswordAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(getMyOrdersAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getMyOrdersAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.orders = action.payload;
+      })
+      .addCase(getMyOrdersAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

@@ -41,11 +41,24 @@ async function changePasswordAsync(data, accessToken) {
   return response.data;
 }
 
+// view my orders
+async function getMyOrdersAsync(accessToken) {
+  const response = await axios.get(`${API_URL}/me/orders`, {
+    headers: {
+      Authorization: "Bearer " + accessToken,
+    },
+  });
+  console.log("getMyOrdersAsync", response);
+
+  return response.data;
+}
+
 const authService = {
   registerAsync,
   loginAsync,
   updateProfileAsync,
-  changePasswordAsync
+  changePasswordAsync,
+  getMyOrdersAsync,
 };
 
 export default authService;

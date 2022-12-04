@@ -43,7 +43,7 @@ const orderSchema = mongoose.Schema(
       type: Number,
     },
     message: {
-      type: String
+      type: String,
     },
     status: {
       type: String,

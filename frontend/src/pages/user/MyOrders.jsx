@@ -1,6 +1,11 @@
-import { Card, Empty, Image, Table, Tag } from "antd";
+import { Card, Empty, Image, Table, Tag, message as antMessage } from "antd";
 import React, { useState } from "react";
 import CardTitle from "../../components/CartTitle";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { getMyOrdersAsync, reset } from "../../features/auth/authSlice";
+import { moneyFormatter, showError } from "../../utils";
+import { useSearchParams } from "react-router-dom";
 
 const tabList = [
   {
@@ -34,13 +39,48 @@ const tabList = [
 ];
 
 function MyOrders() {
-  const [activeTabKey1, setActiveTabKey1] = useState("all");
+  const [activeTabKey, setActiveTabKey] = useState("all");
+  const [outerData, setOuterData] = useState([]);
 
-  const onTab1Change = (key) => {
-    setActiveTabKey1(key);
+  const dispatch = useDispatch();
+  const { orders, message, isError } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    dispatch(getMyOrdersAsync());
+  }, []);
+
+  useEffect(() => {
+    if (isError) {
+      showError(antMessage, message);
+    }
+
+    dispatch(reset());
+  }, [isError]);
+
+  useEffect(() => {
+    const tempOuterData = [];
+    for (let i = 0; i < orders.length; i++) {
+      tempOuterData.push({
+        key: i.toString(),
+        id: orders[i]._id,
+        orderItems: orders[i].orderItems,
+        orderedAt: orders[i].createdAt,
+        finishedAt: orders[i].status === "Completed" ? orders[i].updatedAt : "",
+        paymentMethod:
+          orders[i].paymentMethod === "Cash" ? "Cash On Delivery" : "Paypal",
+        shippingFee: moneyFormatter.format(orders[i].shippingFee),
+        orderTotal: moneyFormatter.format(orders[i].totalPayment),
+        status: orders[i].status,
+      });
+    }
+    setOuterData(tempOuterData);
+  }, [orders]);
+
+  const onTabChange = (key) => {
+    setActiveTabKey(key);
   };
 
-  const expandedRowRender = () => {
+  const expandedRowRender = (record, index) => {
     const columns = [
       {
         title: "Thumbnail",
@@ -57,29 +97,38 @@ function MyOrders() {
         title: "Unit Price",
         key: "price",
         dataIndex: "price",
+        align: "right",
       },
       {
         title: "Quantity",
         dataIndex: "quantity",
         key: "quantity",
+        align: "right",
       },
       {
         title: "Item Subtotal",
         dataIndex: "itemSubtotal",
         key: "itemSubtotal",
+        align: "right",
       },
     ];
 
     const data = [];
-    for (let i = 0; i < 3; ++i) {
+    const orderItems = outerData[index].orderItems;
+    console.log(orderItems);
+    for (let i = 0; i < orderItems.length; i++) {
       data.push({
         key: i.toString(),
         thumbnail:
-          "https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png",
-        productName: "Product Name",
-        price: "100000",
-        quantity: "10",
-        itemSubtotal: "1000000",
+          orderItems[i]?.product?.images?.length > 0
+            ? orderItems[i]?.product?.images[0]?.url
+            : "",
+        productName: orderItems[i].product?.name,
+        price: moneyFormatter.format(orderItems[i].product?.price),
+        quantity: orderItems[i].quantity,
+        itemSubtotal: moneyFormatter.format(
+          orderItems[i].quantity * orderItems[i].product?.price
+        ),
       });
     }
     return <Table columns={columns} dataSource={data} pagination={false} />;
@@ -95,6 +144,11 @@ function MyOrders() {
       title: "Finished At",
       dataIndex: "finishedAt",
       key: "finishedAt",
+    },
+    {
+      title: "Payment Method",
+      dataIndex: "paymentMethod",
+      key: "paymentMethod",
     },
     {
       title: "Shipping Fee",
@@ -133,18 +187,6 @@ function MyOrders() {
     // },
   ];
 
-  const outerData = [];
-  for (let i = 0; i < 3; ++i) {
-    outerData.push({
-      key: i.toString(),
-      orderedAt: "11/26/2022",
-      finishedAt: "",
-      shippingFee: "15000",
-      orderTotal: "1000000",
-      status: "To Pay",
-    });
-  }
-
   const contentList = {
     all: (
       <Table
@@ -153,24 +195,62 @@ function MyOrders() {
         dataSource={outerData}
       />
     ),
-    toPay: <Empty />,
-    toShip: <Empty />,
-    toReceive: <Empty />,
-    completed: <Empty />,
-    canceled: <Empty />,
-    return: <Empty />,
+    toPay: (
+      <Table
+        columns={outerColumns}
+        expandable={{ expandedRowRender }}
+        dataSource={outerData.filter((order) => order.status === "To Pay")}
+      />
+    ),
+    toShip: (
+      <Table
+        columns={outerColumns}
+        expandable={{ expandedRowRender }}
+        dataSource={outerData.filter((order) => order.status === "To Ship")}
+      />
+    ),
+    toReceive: (
+      <Table
+        columns={outerColumns}
+        expandable={{ expandedRowRender }}
+        dataSource={outerData.filter((order) => order.status === "To Receive")}
+      />
+    ),
+    completed: (
+      <Table
+        columns={outerColumns}
+        expandable={{ expandedRowRender }}
+        dataSource={outerData.filter((order) => order.status === "Completed")}
+      />
+    ),
+    canceled: (
+      <Table
+        columns={outerColumns}
+        expandable={{ expandedRowRender }}
+        dataSource={outerData.filter((order) => order.status === "Canceled")}
+      />
+    ),
+    return: (
+      <Table
+        columns={outerColumns}
+        expandable={{ expandedRowRender }}
+        dataSource={outerData.filter(
+          (order) => order.status === "Return/Refund"
+        )}
+      />
+    ),
   };
 
   return (
     <Card
       title={<CardTitle title="My Orders" />}
       tabList={tabList}
-      activeTabKey={activeTabKey1}
+      activeTabKey={activeTabKey}
       onTabChange={(key) => {
-        onTab1Change(key);
+        onTabChange(key);
       }}
     >
-      {contentList[activeTabKey1]}
+      {contentList[activeTabKey]}
     </Card>
   );
 }

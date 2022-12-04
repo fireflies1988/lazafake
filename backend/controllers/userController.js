@@ -220,12 +220,16 @@ const viewMyVouchers = asyncHandler(async (req, res, next) => {
 // @access  Private
 const viewMyOrders = asyncHandler(async (req, res, next) => {
   res.json(
-    await Order.find({ user: req.user.id }).populate({
-      path: "orderItems",
-      populate: {
-        path: "product",
-      },
-    })
+    await Order.find({ user: req.user.id, isValid: true })
+      .populate({
+        path: "orderItems",
+        populate: {
+          path: "product",
+        },
+      })
+      .sort({
+        createdAt: -1,
+      })
   );
 });
 
