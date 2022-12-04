@@ -8,6 +8,7 @@ const { validationResult } = require("express-validator");
 const cloudinary = require("../configs/cloudinary");
 const Voucher = require("../models/voucherModel");
 const Order = require("../models/orderModel");
+const Notification = require("../models/notificationModel");
 
 // @desc    Register
 // @route   POST /api/users
@@ -257,6 +258,17 @@ const cancelOrder = asyncHandler(async (req, res, next) => {
   res.json(order);
 });
 
+// @desc    Get my notifications
+// @route   GET /api/users/me/notifications
+// @access  Private
+const getMyNotifications = asyncHandler(async (req, res, next) => {
+  res.json(
+    await Notification.find({ user: req.user.id }).limit(req.query.limit).sort({
+      createdAt: 1,
+    })
+  );
+});
+
 module.exports = {
   register,
   login,
@@ -267,4 +279,5 @@ module.exports = {
   viewMyVouchers,
   viewMyOrders,
   cancelOrder,
+  getMyNotifications
 };

@@ -11,6 +11,7 @@ function saveUser(data) {
 const initialState = {
   user: user ?? null,
   orders: [],
+  notifications: [],
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -76,6 +77,19 @@ export const getMyOrdersAsync = createAsyncThunk(
       return await authService.getMyOrdersAsync(accessToken);
     } catch (err) {
       return handleError(err, thunkAPI, "getMyOrdersAsync", false);
+    }
+  }
+);
+
+// get my notifications
+export const getMyNotificationsAsync = createAsyncThunk(
+  "auth/notifications",
+  async (params, thunkAPI) => {
+    try {
+      const accessToken = thunkAPI.getState().auth.user?.accessToken;
+      return await authService.getMyNotificationsAsync(params, accessToken);
+    } catch (err) {
+      return handleError(err, thunkAPI, "getMyNotificationsAsync", false);
     }
   }
 );
@@ -160,6 +174,19 @@ export const authSlice = createSlice({
         state.orders = action.payload;
       })
       .addCase(getMyOrdersAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(getMyNotificationsAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getMyNotificationsAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.notifications = action.payload;
+      })
+      .addCase(getMyNotificationsAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

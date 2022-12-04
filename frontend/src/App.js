@@ -20,6 +20,7 @@ import AddressBook from "./pages/user/account/AddressBook";
 import Password from "./pages/user/account/Password";
 import Profile from "./pages/user/account/Profile";
 import MyOrders from "./pages/user/MyOrders";
+import Notifications from "./pages/user/Notifications";
 import UserLayout from "./pages/user/UserLayout";
 import Vouchers from "./pages/user/Vouchers";
 
@@ -52,6 +53,7 @@ function App() {
                 </Route>
 
                 <Route path="orders" element={<MyOrders />} />
+                <Route path="notifications" element={<Notifications />} />
                 <Route path="vouchers" element={<Vouchers />} />
 
                 <Route path="*" element={<Navigate to="account/profile" />} />

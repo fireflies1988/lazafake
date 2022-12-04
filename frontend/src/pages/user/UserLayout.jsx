@@ -1,4 +1,4 @@
-import { UserOutlined } from "@ant-design/icons";
+import { BellOutlined, UserOutlined } from "@ant-design/icons";
 import { Avatar, Card, Col, Menu, Row } from "antd";
 import React, { useState } from "react";
 import { BsInboxes } from "react-icons/bs";
@@ -32,6 +32,11 @@ const items = [
     icon: <BsInboxes />,
   },
   {
+    label: <a href="/user/notifications">Notifications</a>,
+    key: "notifications",
+    icon: <BellOutlined />,
+  },
+  {
     label: <a href="/user/vouchers">My Vouchers</a>,
     key: "vouchers",
     icon: <RiCoupon3Line />,
@@ -39,7 +44,7 @@ const items = [
 ];
 
 function UserLayout() {
-  const { user } = useSelector(state => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const location = useLocation();
   const segments = location.pathname.split("/").filter(Boolean);
   const [currentKey, setCurrentKey] = useState(segments[segments.length - 1]);

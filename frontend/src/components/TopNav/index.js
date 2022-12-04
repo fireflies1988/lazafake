@@ -12,23 +12,25 @@ import {
   Col,
   Dropdown,
   Input,
+  List,
   message as antMessage,
   Row,
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { BsInboxes } from "react-icons/bs";
+import { GiSoundWaves } from "react-icons/gi";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 import logo from "../../assets/logo.png";
-import { logout } from "../../features/auth/authSlice";
+import { getMyNotificationsAsync, logout } from "../../features/auth/authSlice";
 import { getCartItems, reset } from "../../features/cart/cartSlice";
 import { showError } from "../../utils";
 import Container from "../Container";
 import { StyledTopNav } from "./styled";
-import { GiSoundWaves } from "react-icons/gi";
-import SpeechRecognition, {
-  useSpeechRecognition,
-} from "react-speech-recognition";
+import { BsBoxSeam } from "react-icons/bs";
 
 const { Search } = Input;
 
@@ -48,6 +50,8 @@ function TopNav() {
     (state) => state.cart
   );
 
+  const { notifications } = useSelector((state) => state.auth);
+
   const onSearch = (value) => {
     console.log(value);
     if (value.trim()) {
@@ -60,6 +64,7 @@ function TopNav() {
     if (user) {
       // to get number of items
       dispatch(getCartItems());
+      dispatch(getMyNotificationsAsync());
     }
   }, [user]);
 
@@ -205,9 +210,53 @@ function TopNav() {
 
             {user ? (
               <>
-                <Badge count={1} overflowCount={99}>
-                  <BellOutlined style={{ color: "white", fontSize: "24px" }} />
-                </Badge>
+                <Dropdown
+                  placement="topRight"
+                  dropdownRender={() => (
+                    <List
+                      style={{
+                        width: 400,
+                        backgroundColor: "white",
+                        boxShadow: "rgba(99, 99, 99, 0.2) 0px 2px 8px 0px",
+                        borderRadius: "0.75rem",
+                      }}
+                      itemLayout="horizontal"
+                      dataSource={notifications.slice(0, 6)}
+                      loadMore={
+                        <div
+                          style={{
+                            textAlign: "center",
+                            height: 32,
+                            lineHeight: "32px",
+                          }}
+                        >
+                          <Button type="link">View All</Button>
+                        </div>
+                      }
+                      renderItem={(item) => (
+                        <List.Item style={{ backgroundColor: "#f6ffed" }}>
+                          <List.Item.Meta
+                            avatar={<Avatar icon={<BsBoxSeam />} />}
+                            title="Order Updates"
+                            description={item?.message}
+                          />
+                        </List.Item>
+                      )}
+                    />
+                  )}
+                >
+                  <Badge
+                    count={
+                      notifications.filter((n) => n.glanced === false).length
+                    }
+                    overflowCount={99}
+                  >
+                    <BellOutlined
+                      style={{ color: "white", fontSize: "24px" }}
+                    />
+                  </Badge>
+                </Dropdown>
+
                 <Dropdown
                   menu={{
                     items,

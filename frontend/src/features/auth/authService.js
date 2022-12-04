@@ -53,12 +53,26 @@ async function getMyOrdersAsync(accessToken) {
   return response.data;
 }
 
+// get my notifications
+async function getMyNotificationsAsync(params, accessToken) {
+  const response = await axios.get(`${API_URL}/me/notifications`, {
+    headers: {
+      Authorization: "Bearer " + accessToken,
+    },
+    params: params,
+  });
+  console.log("getMyNotificationsAsync", response);
+
+  return response.data;
+}
+
 const authService = {
   registerAsync,
   loginAsync,
   updateProfileAsync,
   changePasswordAsync,
   getMyOrdersAsync,
+  getMyNotificationsAsync,
 };
 
 export default authService;

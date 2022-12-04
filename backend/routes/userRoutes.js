@@ -7,14 +7,10 @@ const {
   refreshToken,
   updateMe,
   changePassword,
-  addToCart,
-  removeFromCart,
-  removeMultipleFromCart,
-  changeQtyFromCart,
-  viewCart,
   viewMyVouchers,
   viewMyOrders,
   cancelOrder,
+  getMyNotifications,
 } = require("../controllers/userController");
 const { auth } = require("../middlewares/authMiddleware");
 const { validate } = require("../utils/validator");
@@ -36,5 +32,6 @@ router.patch(
 router.get("/me/vouchers", auth, viewMyVouchers);
 router.get("/me/orders", auth, viewMyOrders);
 router.patch("/me/orders/:id", auth, cancelOrder);
+router.get("/me/notifications", auth, getMyNotifications);
 
 module.exports = router;
