@@ -1,11 +1,18 @@
-import { Card, Empty, Image, Table, Tag, message as antMessage } from "antd";
-import React, { useState } from "react";
-import CardTitle from "../../components/CartTitle";
+import {
+  Button,
+  Card,
+  Image,
+  message as antMessage,
+  Spin,
+  Table,
+  Tag,
+} from "antd";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
+import CardTitle from "../../components/CartTitle";
+import OrderDrawer from "../../components/drawers/OrderDrawer";
 import { getMyOrdersAsync, reset } from "../../features/auth/authSlice";
 import { moneyFormatter, showError } from "../../utils";
-import { useSearchParams } from "react-router-dom";
 
 const tabList = [
   {
@@ -41,9 +48,13 @@ const tabList = [
 function MyOrders() {
   const [activeTabKey, setActiveTabKey] = useState("all");
   const [outerData, setOuterData] = useState([]);
+  const [orderId, setOrderId] = useState();
+  const [open, setOpen] = useState(false);
 
   const dispatch = useDispatch();
-  const { orders, message, isError } = useSelector((state) => state.auth);
+  const { orders, message, isError, isLoading } = useSelector(
+    (state) => state.auth
+  );
 
   useEffect(() => {
     dispatch(getMyOrdersAsync());
@@ -63,9 +74,10 @@ function MyOrders() {
       tempOuterData.push({
         key: i.toString(),
         id: orders[i]._id,
+        orderDetails: orders[i],
         orderItems: orders[i].orderItems,
         orderedAt: orders[i].createdAt,
-        finishedAt: orders[i].status === "Completed" ? orders[i].updatedAt : "",
+        finishedAt: orders[i]?.completedAt ?? "",
         paymentMethod:
           orders[i].paymentMethod === "Cash" ? "Cash On Delivery" : "Paypal",
         shippingFee: moneyFormatter.format(orders[i].shippingFee),
@@ -97,19 +109,16 @@ function MyOrders() {
         title: "Unit Price",
         key: "price",
         dataIndex: "price",
-        align: "right",
       },
       {
         title: "Quantity",
         dataIndex: "quantity",
         key: "quantity",
-        align: "right",
       },
       {
         title: "Item Subtotal",
         dataIndex: "itemSubtotal",
         key: "itemSubtotal",
-        align: "right",
       },
     ];
 
@@ -180,11 +189,22 @@ function MyOrders() {
         return <Tag color={color}>{status}</Tag>;
       },
     },
-    // {
-    //   title: "Action",
-    //   key: "operation",
-    //   render: () => <Link to="#">See Details</Link>,
-    // },
+    {
+      title: "Action",
+      key: "operation",
+      render: (_, record) => (
+        <Button
+          type="link"
+          size="small"
+          onClick={() => {
+            setOrderId(record.id);
+            setOpen(true);
+          }}
+        >
+          View Details
+        </Button>
+      ),
+    },
   ];
 
   const contentList = {
@@ -250,7 +270,13 @@ function MyOrders() {
         onTabChange(key);
       }}
     >
-      {contentList[activeTabKey]}
+      <Spin spinning={isLoading}>{contentList[activeTabKey]}</Spin>
+      <OrderDrawer
+        orderId={orderId}
+        open={open}
+        onClose={() => setOpen(false)}
+        type="user"
+      />
     </Card>
   );
 }

@@ -8,6 +8,7 @@ const Product = require("../models/productModel");
 const Voucher = require("../models/voucherModel");
 const voucherHelper = require("../helpers/voucherHelper");
 const puppeteer = require("puppeteer");
+const Notification = require("../models/notificationModel");
 
 const USD_TO_VND = 24600;
 
@@ -264,34 +265,100 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
     throw new Error("Order not found.");
   }
 
-  if (order.status === "Canceled" || order.status === "Completed") {
+  if (
+    order.status === "Canceled" ||
+    order.status === "Completed" ||
+    order.status === "Return/Refund"
+  ) {
     res.status(403);
     throw new Error("Unable to update the order status.");
+  } else {
+    if (req.body.status === "Canceled") {
+      if (order.paymentMethod === "Cash") {
+        order.canceledAt = new Date().toISOString();
+        order.status = req.body.status;
+
+        await Notification.create({
+          user: order.user,
+          message: `Your order ${order.id} has been canceled.`,
+        });
+      } else if (order.paymentMethod === "Paypal") {
+        order.returnAt = new Date().toISOString();
+        order.status = "Return/Refund";
+
+        await Notification.create({
+          user: order.user,
+          message: `Your order ${order.id} has been canceled and is being refunded.`,
+        });
+      }
+    }
   }
-  order.status = req.body.status;
+
+  if (order.status === "To Pay" && req.body.status === "To Ship") {
+    order.confirmedAt = new Date().toISOString();
+    order.status = req.body.status;
+
+    await Notification.create({
+      user: order.user,
+      message: `Your order ${order.id} has been confirmed and packed.`,
+    });
+  }
+
+  if (order.status === "To Ship" && req.body.status === "To Receive") {
+    order.shippedOutAt = new Date().toISOString();
+    order.status = req.body.status;
+
+    await Notification.create({
+      user: order.user,
+      message: `Your order ${order.id} has been shipped out.`,
+    });
+  }
+
+  if (order.status === "To Receive" && req.body.status === "Completed") {
+    order.completedAt = new Date().toISOString();
+    order.status = req.body.status;
+
+    await Notification.create({
+      user: order.user,
+      message: `Your order ${order.id} has been delivered.`,
+    });
+  }
+
   await order.save();
 
   res.json(order);
 });
 
 // @desc    Get all orders
-// @route   GET /api/orders?status=
+// @route   GET /api/orders
 // @access  Private (admin)
 const viewOrders = asyncHandler(async (req, res, next) => {
-  const statuses = [
-    "To Pay",
-    "To Ship",
-    "To Receive",
-    "Completed",
-    "Canceled",
-    "Return/Refund",
-  ];
-  const index = Number(req.query.status);
-  if (index < statuses.length && index >= 0) {
-    res.json(await Order.find({ status: statuses[index] }));
-  } else {
-    res.json(await Order.find({}));
-  }
+  // const statuses = [
+  //   "To Pay",
+  //   "To Ship",
+  //   "To Receive",
+  //   "Completed",
+  //   "Canceled",
+  //   "Return/Refund",
+  // ];
+  // const index = Number(req.query.status);
+  // if (index < statuses.length && index >= 0) {
+  //   res.json(await Order.find({ status: statuses[index] }));
+  // } else {
+  //   res.json(await Order.find({}));
+  // }
+  res.json(
+    await Order.find({ isValid: true })
+      .populate({
+        path: "orderItems",
+        populate: {
+          path: "product",
+        },
+      })
+      .sort({
+        createdAt: 1,
+      })
+  );
 });
 
 module.exports = {

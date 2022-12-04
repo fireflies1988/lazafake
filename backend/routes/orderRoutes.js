@@ -17,6 +17,12 @@ router.get("/confirm", confirmPayment);
 router.get("/cancel", cancelPayment);
 
 router.get("/", auth, checkPermission(Role.Admin), viewOrders);
-router.patch("/:id", auth, checkPermission(Role.Admin), updateOrderStatus);
+router.patch(
+  "/:id",
+  auth,
+  checkPermission(Role.Admin),
+  validate("updateOrderStatus"),
+  updateOrderStatus
+);
 
 module.exports = router;

@@ -10,7 +10,7 @@ const initialState = {
   message: "",
 };
 
-// add product
+// add product (admin)
 export const addProductAsync = createAsyncThunk(
   "product/add",
   async (formData, thunkAPI) => {
@@ -35,7 +35,7 @@ export const getProductsAsync = createAsyncThunk(
   }
 );
 
-// delete product
+// delete product (admin)
 export const deleteProductAsync = createAsyncThunk(
   "product/delete",
   async (productId, thunkAPI) => {
@@ -48,7 +48,7 @@ export const deleteProductAsync = createAsyncThunk(
   }
 );
 
-// update product
+// update product (admin)
 export const updateProductAsync = createAsyncThunk(
   "product/update",
   async ({ productId, formData }, thunkAPI) => {

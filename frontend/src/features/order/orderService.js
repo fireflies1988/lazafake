@@ -14,8 +14,40 @@ async function placeOrderAsync(oderData, accessToken) {
   return response.data;
 }
 
+// get all orders
+async function getAllOrdersAsync(accessToken) {
+  const response = await axios.get(API_URL, {
+    headers: {
+      Authorization: "Bearer " + accessToken,
+    },
+  });
+  console.log("getAllOrdersAsync", response);
+
+  return response.data;
+}
+
+// update order status
+async function updateOrderStatusAsync(orderId, status, accessToken) {
+  const response = await axios.patch(
+    `${API_URL}/${orderId}`,
+    {
+      status,
+    },
+    {
+      headers: {
+        Authorization: "Bearer " + accessToken,
+      },
+    }
+  );
+  console.log("updateOrderStatusAsync", response);
+
+  return response.data;
+}
+
 const orderService = {
   placeOrderAsync,
+  getAllOrdersAsync,
+  updateOrderStatusAsync,
 };
 
 export default orderService;

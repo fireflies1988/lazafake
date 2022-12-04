@@ -159,5 +159,9 @@ exports.validate = (method) => {
           .isNumeric({ no_symbols: true }),
       ];
     }
+
+    case "createNotification": {
+      return [body("message", "Message is required.").trim().notEmpty()];
+    }
   }
 };

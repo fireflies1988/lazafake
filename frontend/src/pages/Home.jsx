@@ -115,7 +115,7 @@ function Home() {
             name: p.name,
             price: moneyFormatter.format(p.price),
             rating: "4.0",
-            sold: 100,
+            sold: p.sold,
           }))}
         />
       </Card>
@@ -142,7 +142,7 @@ function Home() {
                   name: p.name,
                   price: moneyFormatter.format(p.price),
                   rating: "4.0",
-                  sold: 100,
+                  sold: p.sold,
                 }))}
             />
           </Card>

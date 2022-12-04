@@ -157,18 +157,18 @@ function SearchPage() {
                   width: "calc(50% - 8px)",
                   margin: "0 8px",
                 }}
-                rules={[
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      if (!value || value > getFieldValue("minPrice")) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(
-                        new Error("Max price must be greater than min price!")
-                      );
-                    },
-                  }),
-                ]}
+                // rules={[
+                //   ({ getFieldValue }) => ({
+                //     validator(_, value) {
+                //       if (!value || value > getFieldValue("minPrice")) {
+                //         return Promise.resolve();
+                //       }
+                //       return Promise.reject(
+                //         new Error("Max price must be greater than min price!")
+                //       );
+                //     },
+                //   }),
+                // ]}
               >
                 <InputNumber
                   placeholder="Max"
@@ -233,7 +233,7 @@ function SearchPage() {
                 name: p.name,
                 price: moneyFormatter.format(p.price),
                 rating: "4.0",
-                sold: 100,
+                sold: p.sold,
               }))}
             />
           </Spin>

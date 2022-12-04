@@ -57,6 +57,24 @@ const orderSchema = mongoose.Schema(
       ],
       default: "To Pay",
     },
+    // done to pay
+    confirmedAt: {
+      type: Date,
+    },
+    // done to ship
+    shippedOutAt: {
+      type: Date,
+    },
+    // done to receive
+    completedAt: {
+      type: Date,
+    },
+    canceledAt: {
+      type: Date,
+    },
+    returnAt: {
+      type: Date,
+    },
     cancellationReason: {
       type: String,
     },
