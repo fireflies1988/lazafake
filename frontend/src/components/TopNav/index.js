@@ -1,4 +1,5 @@
 import {
+  AudioOutlined,
   BellOutlined,
   LogoutOutlined,
   ShoppingCartOutlined,
@@ -14,7 +15,7 @@ import {
   message as antMessage,
   Row,
 } from "antd";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { BsInboxes } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -24,19 +25,34 @@ import { getCartItems, reset } from "../../features/cart/cartSlice";
 import { showError } from "../../utils";
 import Container from "../Container";
 import { StyledTopNav } from "./styled";
+import { GiSoundWaves } from "react-icons/gi";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 
 const { Search } = Input;
 
 function TopNav() {
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
+  const [searchTerm, setSearchTerm] = useState();
+
+  const navigate = useNavigate();
+
   const { user } = useSelector((state) => state.auth);
   const { cartItems, isSuccess, isError, message } = useSelector(
     (state) => state.cart
   );
-  const navigate = useNavigate();
 
   const onSearch = (value) => {
     console.log(value);
-    navigate(`/search?keyword=${value}`);
+    if (value.trim()) {
+      navigate(`/search?keyword=${value}`);
+    }
   };
   const dispatch = useDispatch();
 
@@ -46,6 +62,16 @@ function TopNav() {
       dispatch(getCartItems());
     }
   }, [user]);
+
+  useEffect(() => {
+    setSearchTerm(transcript);
+  }, [transcript]);
+
+  useEffect(() => {
+    if (!listening && searchTerm) {
+      navigate(`/search?keyword=${searchTerm}`);
+    }
+  }, [listening]);
 
   useEffect(() => {
     if (isError) {
@@ -96,6 +122,23 @@ function TopNav() {
     },
   ];
 
+  function onListening() {
+    if (!browserSupportsSpeechRecognition) {
+      antMessage.error("Browser doesn't support speech recognition.");
+      return;
+    }
+
+    if (listening) {
+      SpeechRecognition.stopListening();
+    } else {
+      resetTranscript();
+      SpeechRecognition.startListening({
+        language: "vi-VN",
+        // continuous: true,
+      });
+    }
+  }
+
   return (
     <StyledTopNav>
       <Container>
@@ -123,7 +166,30 @@ function TopNav() {
             <Search
               placeholder="What do you want to buy?"
               onSearch={onSearch}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               enterButton
+              suffix={
+                <Button type="text" size="small" onClick={onListening}>
+                  {listening ? (
+                    <GiSoundWaves
+                      style={{
+                        fontSize: 18,
+                        color: "#1890ff",
+                        cursor: "pointer",
+                      }}
+                    />
+                  ) : (
+                    <AudioOutlined
+                      style={{
+                        fontSize: 18,
+                        color: "#1890ff",
+                        cursor: "pointer",
+                      }}
+                    />
+                  )}
+                </Button>
+              }
               allowClear
               size="large"
               style={{ flex: 1 }}

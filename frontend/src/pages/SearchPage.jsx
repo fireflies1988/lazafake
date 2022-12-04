@@ -10,6 +10,7 @@ import {
   Row,
   Select,
   Space,
+  Spin,
   Typography,
 } from "antd";
 import React, { useEffect, useState } from "react";
@@ -30,7 +31,9 @@ function SearchPage() {
 
   const dispatch = useDispatch();
   const { categories } = useSelector((state) => state.category);
-  const { products } = useSelector((state) => state.product);
+  const { products, isLoading: loadingProducts } = useSelector(
+    (state) => state.product
+  );
 
   useEffect(() => {
     dispatch(getCategoriesAsync());
@@ -221,17 +224,19 @@ function SearchPage() {
           }}
           style={{ borderRadius: 0, border: 0 }}
         >
-          <ProductList
-            columns={4}
-            items={products.map((p) => ({
-              _id: p._id,
-              url: p?.images[0]?.url,
-              name: p.name,
-              price: moneyFormatter.format(p.price),
-              rating: "4.0",
-              sold: 100,
-            }))}
-          />
+          <Spin spinning={loadingProducts}>
+            <ProductList
+              columns={4}
+              items={products.map((p) => ({
+                _id: p._id,
+                url: p?.images[0]?.url,
+                name: p.name,
+                price: moneyFormatter.format(p.price),
+                rating: "4.0",
+                sold: 100,
+              }))}
+            />
+          </Spin>
         </Card>
       </Col>
     </Row>
