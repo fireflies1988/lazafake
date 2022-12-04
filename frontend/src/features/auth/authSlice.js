@@ -12,6 +12,7 @@ const initialState = {
   user: user ?? null,
   orders: [],
   notifications: [],
+  users: [],
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -90,6 +91,19 @@ export const getMyNotificationsAsync = createAsyncThunk(
       return await authService.getMyNotificationsAsync(params, accessToken);
     } catch (err) {
       return handleError(err, thunkAPI, "getMyNotificationsAsync", false);
+    }
+  }
+);
+
+// get users (admin)
+export const getUsersAsync = createAsyncThunk(
+  "auth/users",
+  async (_, thunkAPI) => {
+    try {
+      const accessToken = thunkAPI.getState().auth.user?.accessToken;
+      return await authService.getUsersAsync(accessToken);
+    } catch (err) {
+      return handleError(err, thunkAPI, "getUsersAsync", false);
     }
   }
 );
@@ -187,6 +201,18 @@ export const authSlice = createSlice({
         state.notifications = action.payload;
       })
       .addCase(getMyNotificationsAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(getUsersAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getUsersAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.users = action.payload;
+      })
+      .addCase(getUsersAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

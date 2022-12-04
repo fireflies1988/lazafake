@@ -230,7 +230,9 @@ function TopNav() {
                             lineHeight: "32px",
                           }}
                         >
-                          <Button type="link">View All</Button>
+                          <Button type="link" href="/user/notifications">
+                            View All
+                          </Button>
                         </div>
                       }
                       renderItem={(item) => (

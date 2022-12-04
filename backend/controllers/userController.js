@@ -269,6 +269,13 @@ const getMyNotifications = asyncHandler(async (req, res, next) => {
   );
 });
 
+// @desc    Get all users
+// @route   GET /api/users
+// @access  Private (Admin)
+const getUsers = asyncHandler(async (req, res, next) => {
+  res.json(await User.find({}));
+});
+
 module.exports = {
   register,
   login,
@@ -279,5 +286,6 @@ module.exports = {
   viewMyVouchers,
   viewMyOrders,
   cancelOrder,
-  getMyNotifications
+  getMyNotifications,
+  getUsers
 };

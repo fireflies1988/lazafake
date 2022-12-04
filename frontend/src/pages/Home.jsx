@@ -124,7 +124,7 @@ function Home() {
         categories.map((c, index) => (
           <Card
             key={index}
-            extra={<Link to={`search?category=${c.name}`}>More</Link>}
+            extra={<Link to={`/search?category=${c.name}`}>More</Link>}
             title={c.name}
             bodyStyle={{
               backgroundColor: "#efefef",

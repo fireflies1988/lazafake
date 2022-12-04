@@ -19,12 +19,12 @@ import {
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import ProductList from "../components/ProductList";
 import { addToCartAsync } from "../features/cart/cartSlice";
 import { getProductsAsync } from "../features/product/productSlice";
 import { moneyFormatter } from "../utils";
-const { Text, Link } = Typography;
+const { Text } = Typography;
 
 const tabListNoTitle = [
   {
@@ -63,6 +63,7 @@ function ProductDetails() {
   const [sepcificationsData, setSepcificationsData] = useState();
   const dispatch = useDispatch();
   const [activeTabKey, setActiveTabKey] = useState("description");
+  console.log(product);
 
   useEffect(() => {
     setQuantity(1);
@@ -243,7 +244,9 @@ function ProductDetails() {
       </Card>
 
       <Card
-        extra={<Link to="#">More</Link>}
+        extra={
+          <Link to={`/search?category=${product?.category?.name}`}>More</Link>
+        }
         title="Related Products"
         bodyStyle={{
           backgroundColor: "#efefef",
@@ -253,14 +256,18 @@ function ProductDetails() {
       >
         <ProductList
           columns={6}
-          items={products.map((p) => ({
-            _id: p._id,
-            url: p?.images[0]?.url,
-            name: p.name,
-            price: `${p.price}đ`,
-            rating: "4.0",
-            sold: 100,
-          }))}
+          items={products
+            .filter(
+              (p) => p?.category?._id.toString() === product?.category?._id
+            )
+            .map((p) => ({
+              _id: p._id,
+              url: p?.images[0]?.url,
+              name: p.name,
+              price: `${p.price}đ`,
+              rating: "4.0",
+              sold: p.sold,
+            }))}
         />
       </Card>
     </Space>

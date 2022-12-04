@@ -23,7 +23,7 @@ export const addProductAsync = createAsyncThunk(
   }
 );
 
-// get categories
+// get product
 export const getProductsAsync = createAsyncThunk(
   "product/getAll",
   async (queryParams, thunkAPI) => {
