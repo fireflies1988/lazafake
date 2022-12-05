@@ -20,6 +20,7 @@ import SearchPage from "./pages/SearchPage";
 import AddressBook from "./pages/user/account/AddressBook";
 import Password from "./pages/user/account/Password";
 import Profile from "./pages/user/account/Profile";
+import VerifyEmail from "./pages/user/account/VerifyEmail";
 import MyOrders from "./pages/user/MyOrders";
 import Notifications from "./pages/user/Notifications";
 import UserLayout from "./pages/user/UserLayout";
@@ -50,6 +51,7 @@ function App() {
                   <Route path="profile" element={<Profile />} />
                   <Route path="address-book" element={<AddressBook />} />
                   <Route path="password" element={<Password />} />
+                  <Route path="verify" element={<VerifyEmail />} />
                   <Route path="*" element={<Navigate to="profile" />} />
                 </Route>
 
@@ -60,11 +62,11 @@ function App() {
                 <Route path="*" element={<Navigate to="account/profile" />} />
               </Route>
               <Route path="cart" element={<Cart />} />
+              <Route path="checkout" element={<Checkout />} />
             </>
           )}
 
           <Route path="products/:productId" element={<ProductDetails />} />
-          <Route path="checkout" element={<Checkout />} />
           <Route path="result" element={<ResultPage />} />
           <Route path="search" element={<SearchPage />} />
 

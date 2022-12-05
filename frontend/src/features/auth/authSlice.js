@@ -108,6 +108,32 @@ export const getUsersAsync = createAsyncThunk(
   }
 );
 
+// get verification code
+export const sendVerificationCodeAsync = createAsyncThunk(
+  "auth/sendVerificationCode",
+  async (_, thunkAPI) => {
+    try {
+      const accessToken = thunkAPI.getState().auth.user?.accessToken;
+      return await authService.sendVerificationCodeAsync(accessToken);
+    } catch (err) {
+      return handleError(err, thunkAPI, "sendVerificationCodeAsync", false);
+    }
+  }
+);
+
+// verify email
+export const verifyEmailAddressAsync = createAsyncThunk(
+  "auth/verify",
+  async ({ code }, thunkAPI) => {
+    try {
+      const accessToken = thunkAPI.getState().auth.user?.accessToken;
+      return await authService.verifyEmailAddressAsync(code, accessToken);
+    } catch (err) {
+      return handleError(err, thunkAPI, "verifyEmailAddressAsync", false);
+    }
+  }
+);
+
 export const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -128,9 +154,11 @@ export const authSlice = createSlice({
       .addCase(registerAsync.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(registerAsync.fulfilled, (state) => {
+      .addCase(registerAsync.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
+        state.user = action.payload;
+        saveUser(action.payload);
       })
       .addCase(registerAsync.rejected, (state, action) => {
         state.isLoading = false;
@@ -197,7 +225,6 @@ export const authSlice = createSlice({
       })
       .addCase(getMyNotificationsAsync.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.isSuccess = true;
         state.notifications = action.payload;
       })
       .addCase(getMyNotificationsAsync.rejected, (state, action) => {
@@ -213,6 +240,37 @@ export const authSlice = createSlice({
         state.users = action.payload;
       })
       .addCase(getUsersAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(sendVerificationCodeAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(sendVerificationCodeAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.user.verificationCodeExpiresAt =
+          action.payload.verificationCodeExpiresAt;
+        state.message = action.payload.message;
+        saveUser(state.user);
+      })
+      .addCase(sendVerificationCodeAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(verifyEmailAddressAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(verifyEmailAddressAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.user.verified = action.payload.verified;
+        state.message = action.payload.message;
+        saveUser(state.user);
+      })
+      .addCase(verifyEmailAddressAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

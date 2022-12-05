@@ -78,6 +78,40 @@ async function getUsersAsync(accessToken) {
   return response.data;
 }
 
+// send verification code
+async function sendVerificationCodeAsync(accessToken) {
+  const response = await axios.post(
+    `${API_URL}/me/mail/send-verification-code`,
+    null,
+    {
+      headers: {
+        Authorization: "Bearer " + accessToken,
+      },
+    }
+  );
+  console.log("sendVerificationCodeAsync", response);
+
+  return response.data;
+}
+
+// verify email address
+async function verifyEmailAddressAsync(code, accessToken) {
+  const response = await axios.post(
+    `${API_URL}/me/mail/verify`,
+    {
+      code,
+    },
+    {
+      headers: {
+        Authorization: "Bearer " + accessToken,
+      },
+    }
+  );
+  console.log("verifyEmailAddressAsync", response);
+
+  return response.data;
+}
+
 const authService = {
   registerAsync,
   loginAsync,
@@ -86,6 +120,8 @@ const authService = {
   getMyOrdersAsync,
   getMyNotificationsAsync,
   getUsersAsync,
+  sendVerificationCodeAsync,
+  verifyEmailAddressAsync,
 };
 
 export default authService;

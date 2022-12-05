@@ -3,12 +3,13 @@ const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const Product = require("../models/productModel");
-const { generateTokens } = require("../utils/jwt");
+const { generateTokens, generateRandomSixDigits } = require("../utils/jwt");
 const { validationResult } = require("express-validator");
 const cloudinary = require("../configs/cloudinary");
 const Voucher = require("../models/voucherModel");
 const Order = require("../models/orderModel");
 const Notification = require("../models/notificationModel");
+const mailService = require("../services/mailService");
 
 // @desc    Register
 // @route   POST /api/users
@@ -42,8 +43,20 @@ const register = asyncHandler(async (req, res, next) => {
   });
 
   if (user) {
+    // login after registration
+    const { accessToken, refreshToken } = generateTokens(user.id, user.role);
+
+    // save refresh token
+    const salt = await bcrypt.genSalt(10);
+    user.refreshTokenHash = await bcrypt.hash(refreshToken, salt);
+    await user.save();
+
+    const { passwordHash, refreshTokenHash, ...publicFields } = user.toObject();
+
     res.status(201).json({
-      email: user.email,
+      ...publicFields,
+      accessToken,
+      refreshToken,
     });
   }
 });
@@ -276,6 +289,63 @@ const getUsers = asyncHandler(async (req, res, next) => {
   res.json(await User.find({}));
 });
 
+// @desc    Send verification code
+// @route   POST /api/users/me/mail/send-verification-code
+// @access  Private
+const sendVerificationCode = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  const verificationCode = generateRandomSixDigits();
+  user.verificationCodeHash = await bcrypt.hash(
+    verificationCode,
+    await bcrypt.genSalt(10)
+  );
+  user.verificationCodeExpiresAt = Date.now() + 5 * 60000;
+
+  await user.save();
+
+  mailService.sendVerificationCode(
+    user.email,
+    verificationCode,
+    (err, info) => {
+      if (err) {
+        res.json(500);
+        throw err;
+      } else {
+        res.json({
+          message: `An email with a verification code was just sent to ${user?.email}. Please check your inbox and enter it below to verify your email address.`,
+          verificationCodeExpiresAt: user.verificationCodeExpiresAt,
+        });
+      }
+    }
+  );
+});
+
+// @desc    Verify email address
+// @route   POST /api/users/me/mail/verify
+// @access  Private
+const verifyEmailAddress = asyncHandler(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+
+  if (await bcrypt.compare(req.body.code, user?.verificationCodeHash)) {
+    if (user?.verificationCodeExpiresAt < Date.now()) {
+      res.status(422);
+      throw new Error(
+        "The verification code has expired. Please click 'Get Verification Code' to get a new one."
+      );
+    } else {
+      user.verified = true;
+      await user.save();
+      return res.status(200).json({
+        message: "Your email has been verified.",
+        verified: user.verified,
+      });
+    }
+  }
+
+  res.status(422);
+  throw new Error("Invalid verification code.");
+});
+
 module.exports = {
   register,
   login,
@@ -287,5 +357,7 @@ module.exports = {
   viewMyOrders,
   cancelOrder,
   getMyNotifications,
-  getUsers
+  getUsers,
+  sendVerificationCode,
+  verifyEmailAddress,
 };

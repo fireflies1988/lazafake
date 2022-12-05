@@ -12,6 +12,8 @@ const {
   cancelOrder,
   getMyNotifications,
   getUsers,
+  sendVerificationCode,
+  verifyEmailAddress,
 } = require("../controllers/userController");
 const { auth } = require("../middlewares/authMiddleware");
 const { validate } = require("../utils/validator");
@@ -37,5 +39,7 @@ router.get("/me/orders", auth, viewMyOrders);
 router.patch("/me/orders/:id", auth, cancelOrder);
 router.get("/me/notifications", auth, getMyNotifications);
 router.get("/", auth, checkPermission(Role.Admin), getUsers);
+router.post("/me/mail/send-verification-code", auth, sendVerificationCode);
+router.post("/me/mail/verify", auth, verifyEmailAddress);
 
 module.exports = router;

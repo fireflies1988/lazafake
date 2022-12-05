@@ -24,6 +24,10 @@ const items = [
         label: <a href="/user/account/password">Change Password</a>,
         key: "password",
       },
+      {
+        label: <a href="/user/account/verify">Verify Email Address</a>,
+        key: "verify",
+      },
     ],
   },
   {

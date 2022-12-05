@@ -1,9 +1,8 @@
 import { Button, Card, Form, Input, message as antMessage } from "antd";
-import React, { useEffect } from "react";
-import { registerAsync, reset } from "../features/auth/authSlice";
+import React, { useEffect, useRef } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { registerAsync, reset } from "../features/auth/authSlice";
 import { showError } from "../utils";
 
 const formItemLayout = {
@@ -40,11 +39,16 @@ const tailFormItemLayout = {
 
 function Register() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [credentials, setCredentials] = useState();
+  const recaptchaRef = useRef();
+  const [form] = Form.useForm();
   const { isError, message, isSuccess, isLoading } = useSelector(
     (state) => state.auth
   );
+
+  function onChange(value) {
+    console.log("Captcha value:", value);
+    form.captcha = true;
+  }
 
   useEffect(() => {
     if (isError) {
@@ -52,13 +56,10 @@ function Register() {
     }
 
     if (isSuccess) {
-      navigate("/login", {
-        state: {
-          email: credentials.email,
-          password: credentials.password,
-          message: "Your account has been successfully created. Login now.",
-        },
-      });
+      antMessage.success(
+        "A verification code has been sent your email address. Please check your inbox, get the code and enter here to verify your email.",
+        5
+      );
     }
 
     return () => dispatch(reset());
@@ -66,8 +67,11 @@ function Register() {
 
   const onFinish = (values) => {
     console.log("Received values of Sign Up form: ", values);
-    setCredentials(values);
-    dispatch(registerAsync(values));
+    if (values.captcha === false) {
+      antMessage.error("Please complete the reCaptcha!");
+    } else {
+      dispatch(registerAsync(values));
+    }
   };
 
   return (
@@ -78,6 +82,10 @@ function Register() {
       <Form
         {...formItemLayout}
         name="register"
+        form={form}
+        initialValues={{
+          captcha: false,
+        }}
         onFinish={onFinish}
         scrollToFirstError
       >
@@ -97,7 +105,6 @@ function Register() {
         >
           <Input />
         </Form.Item>
-
         <Form.Item
           name="password"
           label="Password"
@@ -115,7 +122,6 @@ function Register() {
         >
           <Input.Password />
         </Form.Item>
-
         <Form.Item
           name="confirmPassword"
           label="Confirm Password"
@@ -144,7 +150,6 @@ function Register() {
         >
           <Input.Password />
         </Form.Item>
-
         <Form.Item
           name="fullName"
           label="Full Name"
@@ -159,12 +164,20 @@ function Register() {
           <Input />
         </Form.Item>
 
+        <Form.Item {...tailFormItemLayout} name="captcha">
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            onExpired={() => recaptchaRef.current.reset()}
+            sitekey="6LeC5lgjAAAAAAb-VRfMLnYcN7lmC6TUH8fk1cLJ"
+            onChange={onChange}
+          />
+        </Form.Item>
+
         <Form.Item {...tailFormItemLayout}>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" loading={isLoading}>
             Sign Up
           </Button>
         </Form.Item>
-
         <div
           style={{
             display: "flex",
@@ -173,7 +186,7 @@ function Register() {
           }}
         >
           <span>Already have an account?</span>
-          <Button type="link" href="/login" loading={isLoading}>
+          <Button type="link" href="/login">
             Login
           </Button>
         </div>

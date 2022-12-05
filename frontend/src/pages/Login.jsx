@@ -7,46 +7,23 @@ import {
   Input,
   message as antMessage,
 } from "antd";
-import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import "../scss/Login.scss";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginAsync, reset } from "../features/auth/authSlice";
+import "../scss/Login.scss";
 import { showError } from "../utils";
 
 function Login() {
-  const navigate = useNavigate();
-  const location = useLocation();
   const dispatch = useDispatch();
-  const [initialValues] = useState({
-    email: location?.state?.email,
-    password: location?.state?.password,
-    remember: true,
-  });
-  const { isLoading, isError, isSuccess, message } = useSelector(
-    (state) => state.auth
-  );
-
-  useEffect(() => {
-    if (location?.state?.message) {
-      antMessage.success(location?.state?.message);
-
-      // clear location state
-      window.history.replaceState({}, document.title);
-    }
-  }, []);
+  const { isLoading, isError, message } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (isError) {
       showError(antMessage, message);
     }
 
-    if (isSuccess) {
-      navigate("/");
-    }
-
     return () => dispatch(reset());
-  }, [isError, isSuccess]);
+  }, [isError]);
 
   const onFinish = (values) => {
     console.log("Received values of Login form: ", values);
@@ -58,12 +35,7 @@ function Login() {
       style={{ width: "100%", margin: "auto", maxWidth: "400px" }}
       title={<span style={{ fontSize: "20px" }}>Login</span>}
     >
-      <Form
-        name="normal_login"
-        className="login-form"
-        initialValues={initialValues}
-        onFinish={onFinish}
-      >
+      <Form name="normal_login" className="login-form" onFinish={onFinish}>
         <Form.Item
           name="email"
           rules={[
