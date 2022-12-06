@@ -1,9 +1,17 @@
-import { Avatar, Card, List, message as antMessage, Spin } from "antd";
+import {
+  Avatar,
+  Card,
+  List,
+  message as antMessage,
+  Spin,
+  Typography,
+} from "antd";
 import React, { useEffect } from "react";
 import { BsBoxSeam } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
 import { getMyNotificationsAsync, reset } from "../../features/auth/authSlice";
 import { showError } from "../../utils";
+const { Text } = Typography;
 
 function Notifications() {
   const dispatch = useDispatch();
@@ -34,7 +42,14 @@ function Notifications() {
               <List.Item.Meta
                 avatar={<Avatar icon={<BsBoxSeam />} />}
                 title="Order Updates"
-                description={item?.message}
+                description={
+                  <>
+                    <Text type="secondary">{item?.message}</Text>
+                    <div>
+                      <Text type="secondary">{item?.createdAt}</Text>
+                    </div>
+                  </>
+                }
               />
             </List.Item>
           )}

@@ -9,13 +9,75 @@ const Voucher = require("../models/voucherModel");
 const voucherHelper = require("../helpers/voucherHelper");
 const puppeteer = require("puppeteer");
 const Notification = require("../models/notificationModel");
+const { sendMail } = require("../services/mailService");
+const User = require("../models/userModel");
 
 const USD_TO_VND = 24600;
+const moneyFormatter = new Intl.NumberFormat("vi-vn", {
+  style: "currency",
+  currency: "vnd",
+});
+
+function sendNotification(
+  orderId,
+  userEmail,
+  userFullName,
+  tableData,
+  shippingFee,
+  totalPayment
+) {
+  sendMail({
+    to: userEmail,
+    subject: "Order Successfully Placed",
+    html: `<html>
+    <head>
+      <style>
+        table,
+        th,
+        td {
+          border: 1px solid black;
+          border-collapse: collapse;
+          padding: 10px;
+        }
+      </style>
+    </head>
+    <body>
+      <div>
+        <h4>Hello ${userFullName},</h4>
+        <p>
+          Thank you for ordering. We received your order and will begin processing
+          it soon.
+        </p>
+        <p>Your order ID: ${orderId}</p>
+        <table>
+          <tr>
+            <th>Product</th>
+            <th>Unit Price</th>
+            <th>Quantity</th>
+            <th>Item Subtotal</th>
+          </tr>
+          ${tableData}
+        </table>
+        <p>Shipping Fee: ${shippingFee}</p>
+        <p>Order Total: ${totalPayment}</p>
+        <p>
+          You will receive an email notification when there is an order update.
+        </p>
+      </div>
+    </body>
+  </html>`,
+  });
+}
 
 // @desc    Place order
 // @route   POST /api/orders
 // @access  Private
 const placeOrder = asyncHandler(async (req, res, next) => {
+  if (!req.user.verified) {
+    res.status(422);
+    throw new Error("Please verify your email address first.");
+  }
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json({ errors: errors.array() });
@@ -171,6 +233,8 @@ const placeOrder = asyncHandler(async (req, res, next) => {
       totalPayment: payment,
     });
 
+    let tableData = "";
+
     // update products' quantity and sold after purchasing
     for (const item of orderItems) {
       await Product.findByIdAndUpdate(item.product, {
@@ -179,7 +243,40 @@ const placeOrder = asyncHandler(async (req, res, next) => {
           sold: item.quantity,
         },
       });
+
+      tableData += `<tr>
+        <td>${item.product.name}</td>
+        <td>${moneyFormatter.format(item.product.price)}</td>
+        <td>${item.quantity}</td>
+        <td>${moneyFormatter.format(item.product.price * item.quantity)}</td>
+        </tr>`;
     }
+
+    // update vouchers
+    for (const voucher of order.vouchers) {
+      await Voucher.updateOne(
+        { id: voucher.id },
+        {
+          $push: {
+            usersUsed: req.query.userId,
+          },
+        }
+      );
+    }
+
+    await Notification.create({
+      user: order.user,
+      message: `Your order ${order.id} has been placed successfully.`,
+    });
+
+    sendNotification(
+      order.id,
+      req.user.email,
+      req.user.fullName,
+      tableData,
+      moneyFormatter.format(order.shippingFee),
+      moneyFormatter.format(order.totalPayment)
+    );
 
     res.status(201).json(order);
   }
@@ -189,7 +286,12 @@ const placeOrder = asyncHandler(async (req, res, next) => {
 // @route   GET /api/orders/confirm?orderId=&totalPayment=&userId=?
 // @access  Private (redirect)
 const confirmPayment = asyncHandler(async (req, res, next) => {
-  const order = await Order.findById(req.query.orderId).populate("orderItems");
+  const order = await Order.findById(req.query.orderId).populate({
+    path: "orderItems",
+    populate: {
+      path: "product",
+    },
+  });
 
   const execute_payment_json = {
     payer_id: req.query.PayerID,
@@ -210,6 +312,9 @@ const confirmPayment = asyncHandler(async (req, res, next) => {
       if (error) {
         throw error;
       } else {
+        let tableData = "";
+
+        console.log(order.orderItems);
         // update products' quantity after purchasing
         for (const item of order.orderItems) {
           await Product.findByIdAndUpdate(item.product, {
@@ -218,6 +323,15 @@ const confirmPayment = asyncHandler(async (req, res, next) => {
               sold: item.quantity,
             },
           });
+
+          tableData += `<tr>
+            <td>${item.product.name}</td>
+            <td>${moneyFormatter.format(item.product.price)}</td>
+            <td>${item.quantity}</td>
+            <td>${moneyFormatter.format(
+              item.product.price * item.quantity
+            )}</td>
+            </tr>`;
         }
 
         // update vouchers
@@ -231,6 +345,22 @@ const confirmPayment = asyncHandler(async (req, res, next) => {
             }
           );
         }
+
+        const user = await User.findById(req.query.userId);
+
+        await Notification.create({
+          user: order.user,
+          message: `Your order ${order.id} has been placed successfully.`,
+        });
+
+        sendNotification(
+          order.id,
+          user.email,
+          user.fullName,
+          tableData,
+          moneyFormatter.format(order.shippingFee),
+          moneyFormatter.format(order.totalPayment)
+        );
 
         // this order become valid now
         order.isValid = true;
@@ -259,7 +389,7 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  const order = await Order.findById(req.params.id);
+  const order = await Order.findById(req.params.id).populate("user");
   if (!order) {
     res.status(404);
     throw new Error("Order not found.");
@@ -282,6 +412,12 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
           user: order.user,
           message: `Your order ${order.id} has been canceled.`,
         });
+
+        sendMail({
+          to: order.user.email,
+          subject: "Order Upates",
+          html: `<p>Your order ${order.id} has been canceled.</p>`,
+        });
       } else if (order.paymentMethod === "Paypal") {
         order.returnAt = new Date().toISOString();
         order.status = "Return/Refund";
@@ -289,6 +425,12 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
         await Notification.create({
           user: order.user,
           message: `Your order ${order.id} has been canceled and is being refunded.`,
+        });
+
+        sendMail({
+          to: order.user.email,
+          subject: "Order Upates",
+          html: `<p>Your order ${order.id} has been canceled and is being refunded.</p>`,
         });
       }
     }
@@ -302,6 +444,12 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
       user: order.user,
       message: `Your order ${order.id} has been confirmed and packed.`,
     });
+
+    sendMail({
+      to: order.user.email,
+      subject: "Order Upates",
+      html: `<p>Your order ${order.id} has been confirmed and packed.</p>`,
+    });
   }
 
   if (order.status === "To Ship" && req.body.status === "To Receive") {
@@ -312,6 +460,12 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
       user: order.user,
       message: `Your order ${order.id} has been shipped out.`,
     });
+
+    sendMail({
+      to: order.user.email,
+      subject: "Order Upates",
+      html: `<p>Your order ${order.id} has been shipped out.</p>`,
+    });
   }
 
   if (order.status === "To Receive" && req.body.status === "Completed") {
@@ -321,6 +475,12 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
     await Notification.create({
       user: order.user,
       message: `Your order ${order.id} has been delivered.`,
+    });
+
+    sendMail({
+      to: order.user.email,
+      subject: "Order Upates",
+      html: `<p>Your order ${order.id} has been delivered.</p>`,
     });
   }
 

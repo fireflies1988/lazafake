@@ -14,6 +14,7 @@ import {
   Input,
   List,
   message as antMessage,
+  Typography,
   Row,
 } from "antd";
 import React, { useEffect, useState } from "react";
@@ -31,7 +32,7 @@ import { showError } from "../../utils";
 import Container from "../Container";
 import { StyledTopNav } from "./styled";
 import { BsBoxSeam } from "react-icons/bs";
-
+const { Text } = Typography;
 const { Search } = Input;
 
 function TopNav() {
@@ -240,7 +241,16 @@ function TopNav() {
                           <List.Item.Meta
                             avatar={<Avatar icon={<BsBoxSeam />} />}
                             title="Order Updates"
-                            description={item?.message}
+                            description={
+                              <>
+                                <Text type="secondary">{item?.message}</Text>
+                                <div>
+                                  <Text type="secondary">
+                                    {item?.createdAt}
+                                  </Text>
+                                </div>
+                              </>
+                            }
                           />
                         </List.Item>
                       )}

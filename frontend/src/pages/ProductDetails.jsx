@@ -264,7 +264,7 @@ function ProductDetails() {
               _id: p._id,
               url: p?.images[0]?.url,
               name: p.name,
-              price: `${p.price}đ`,
+              price: moneyFormatter.format(p.price),
               rating: "4.0",
               sold: p.sold,
             }))}
