@@ -110,7 +110,7 @@ export const getUsersAsync = createAsyncThunk(
 
 // get verification code
 export const sendVerificationCodeAsync = createAsyncThunk(
-  "auth/sendVerificationCode",
+  "auth/mail/sendVerificationCode",
   async (_, thunkAPI) => {
     try {
       const accessToken = thunkAPI.getState().auth.user?.accessToken;
@@ -123,13 +123,41 @@ export const sendVerificationCodeAsync = createAsyncThunk(
 
 // verify email
 export const verifyEmailAddressAsync = createAsyncThunk(
-  "auth/verify",
+  "auth/mail/verify",
   async ({ code }, thunkAPI) => {
     try {
       const accessToken = thunkAPI.getState().auth.user?.accessToken;
       return await authService.verifyEmailAddressAsync(code, accessToken);
     } catch (err) {
       return handleError(err, thunkAPI, "verifyEmailAddressAsync", false);
+    }
+  }
+);
+
+// forgot password
+export const forgotPasswordAsync = createAsyncThunk(
+  "auth/password/forgot",
+  async ({ email }, thunkAPI) => {
+    try {
+      return await authService.forgotPasswordAsync(email);
+    } catch (err) {
+      return handleError(err, thunkAPI, "forgotPasswordAsync", false);
+    }
+  }
+);
+
+// reset password
+export const resetPasswordAsync = createAsyncThunk(
+  "auth/password/reset",
+  async ({ email, newPassword, resetPasswordToken }, thunkAPI) => {
+    try {
+      return await authService.resetPasswordAsync({
+        email,
+        newPassword,
+        resetPasswordToken,
+      });
+    } catch (err) {
+      return handleError(err, thunkAPI, "resetPasswordAsync", false);
     }
   }
 );
@@ -274,6 +302,28 @@ export const authSlice = createSlice({
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
+      })
+      .addCase(forgotPasswordAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(forgotPasswordAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = action.payload;
+      })
+      .addCase(forgotPasswordAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(resetPasswordAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(resetPasswordAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+      })
+      .addCase(resetPasswordAsync.rejected, (state, action) => {
+        state.isLoading = false;
       });
   },
 });

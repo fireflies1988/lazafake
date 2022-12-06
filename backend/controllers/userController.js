@@ -10,6 +10,7 @@ const Voucher = require("../models/voucherModel");
 const Order = require("../models/orderModel");
 const Notification = require("../models/notificationModel");
 const mailService = require("../services/mailService");
+const crypto = require("crypto");
 
 // @desc    Register
 // @route   POST /api/users
@@ -328,6 +329,7 @@ const verifyEmailAddress = asyncHandler(async (req, res, next) => {
 
   if (await bcrypt.compare(req.body.code, user?.verificationCodeHash)) {
     if (user?.verificationCodeExpiresAt < Date.now()) {
+      // code has expired
       res.status(422);
       throw new Error(
         "The verification code has expired. Please click 'Get Verification Code' to get a new one."
@@ -346,6 +348,91 @@ const verifyEmailAddress = asyncHandler(async (req, res, next) => {
   throw new Error("Invalid verification code.");
 });
 
+// @desc    Send password reset
+// @route   POST /api/users/password/forgot
+// @access  Public
+const forgotPassword = asyncHandler(async (req, res, next) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email: email });
+  if (!user) {
+    res.status(400);
+    throw new Error("Email doesn't exist.");
+  }
+
+  if (!user.verified) {
+    res.status(422);
+    throw new Error("This email isn't verified yet.");
+  }
+
+  const resetPasswordToken = crypto.randomBytes(16).toString("hex");
+  const newPassword = generateRandomSixDigits();
+
+  user.resetPasswordTokenHash = await bcrypt.hash(
+    resetPasswordToken,
+    await bcrypt.genSalt(10)
+  );
+  user.resetPasswordTokenExpiresAt = Date.now() + 5 * 60000; // expires after 5 minutes
+  await user.save();
+
+  mailService.sendPasswordResetRequest(
+    email,
+    newPassword,
+    resetPasswordToken,
+    (err, info) => {
+      if (err) {
+        res.status(500);
+        throw err;
+      } else {
+        res.json(
+          "A password reset request was sent to your email. Please check your inbox and follow the instructions."
+        );
+      }
+    }
+  );
+});
+
+// @desc    Reset password
+// @route   GET /api/users/password/reset?email=&newPassword=&resetPasswordToken=&
+// @access  Public
+const resetPassword = asyncHandler(async (req, res, next) => {
+  const { email, newPassword, resetPasswordToken } = req.query;
+  console.log({ email, newPassword, resetPasswordToken });
+  const user = await User.findOne({ email: email });
+  if (!user) {
+    res.redirect(
+      "http://localhost:3000/login?error&message=Email doesn't exist."
+    );
+  }
+
+  if (!user.verified) {
+    res.redirect(
+      "http://localhost:3000/login?error&message=This email isn't verified yet."
+    );
+  }
+
+  // check reset password token
+  if (await bcrypt.compare(resetPasswordToken, user.resetPasswordTokenHash)) {
+    if (user.resetPasswordTokenExpiresAt < Date.now()) {
+      // expired
+      res.redirect(
+        "http://localhost:3000/login?error&message=The reset password token has expired."
+      );
+    } else {
+      user.passwordHash = await bcrypt.hash(
+        newPassword,
+        await bcrypt.genSalt(10)
+      );
+      await user.save();
+      res.redirect(
+        "http://localhost:3000/login?success&message=Your password has been reset. Please log in with your new password."
+      );
+    }
+  }
+  res.redirect(
+    "http://localhost:3000/login?error&message=Invalid reset password token."
+  );
+});
+
 module.exports = {
   register,
   login,
@@ -360,4 +447,6 @@ module.exports = {
   getUsers,
   sendVerificationCode,
   verifyEmailAddress,
+  forgotPassword,
+  resetPassword,
 };

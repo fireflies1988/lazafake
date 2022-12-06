@@ -6,24 +6,58 @@ import {
   Form,
   Input,
   message as antMessage,
+  notification,
 } from "antd";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
+import ForgotPasswordModal from "../components/modals/ForgotPasswordModal";
 import { loginAsync, reset } from "../features/auth/authSlice";
 import "../scss/Login.scss";
 import { showError } from "../utils";
 
 function Login() {
+  const [open, setOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const dispatch = useDispatch();
-  const { isLoading, isError, message } = useSelector((state) => state.auth);
+  const { isLoading, isError, isSuccess, message } = useSelector(
+    (state) => state.auth
+  );
+
+  useEffect(() => {
+    if (searchParams.has("error")) {
+      notification.error({
+        message: "Error",
+        description: searchParams.get("message"),
+        duration: 5,
+      });
+    }
+
+    if (searchParams.has("success")) {
+      notification.success({
+        message: "Notification",
+        description: searchParams.get("message"),
+        duration: 5,
+      });
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (isError) {
       showError(antMessage, message);
     }
 
+    if (isSuccess) {
+      notification.success({
+        message: "Notification",
+        description: message,
+        duration: 5,
+      });
+    }
+
     return () => dispatch(reset());
-  }, [isError]);
+  }, [isError, isSuccess]);
 
   const onFinish = (values) => {
     console.log("Received values of Login form: ", values);
@@ -80,8 +114,11 @@ function Login() {
             <Form.Item name="remember" valuePropName="checked" noStyle>
               <Checkbox>Remember me</Checkbox>
             </Form.Item>
-
-            <Button type="link" href="" className="login-form-forgot">
+            <Button
+              type="link"
+              className="login-form-forgot"
+              onClick={() => setOpen(true)}
+            >
               Forgot password?
             </Button>
           </div>
@@ -110,6 +147,8 @@ function Login() {
           </Button>
         </div>
       </Form>
+
+      <ForgotPasswordModal open={open} onCancel={() => setOpen(false)} />
     </Card>
   );
 }

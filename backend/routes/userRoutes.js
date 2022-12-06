@@ -14,6 +14,8 @@ const {
   getUsers,
   sendVerificationCode,
   verifyEmailAddress,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/userController");
 const { auth } = require("../middlewares/authMiddleware");
 const { validate } = require("../utils/validator");
@@ -41,5 +43,8 @@ router.get("/me/notifications", auth, getMyNotifications);
 router.get("/", auth, checkPermission(Role.Admin), getUsers);
 router.post("/me/mail/send-verification-code", auth, sendVerificationCode);
 router.post("/me/mail/verify", auth, verifyEmailAddress);
+
+router.post("/password/forgot", forgotPassword);
+router.get("/password/reset", resetPassword);
 
 module.exports = router;

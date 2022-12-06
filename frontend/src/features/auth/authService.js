@@ -112,6 +112,26 @@ async function verifyEmailAddressAsync(code, accessToken) {
   return response.data;
 }
 
+// forgot password
+async function forgotPasswordAsync(email) {
+  const response = await axios.post(`${API_URL}/password/forgot`, {
+    email,
+  });
+  console.log("forgotPasswordAsync", response);
+
+  return response.data;
+}
+
+// reset password
+async function resetPasswordAsync(params) {
+  const response = await axios.get(`${API_URL}/password/reset`, {
+    params: params,
+  });
+  console.log("resetPasswordAsync", response);
+
+  return response.data;
+}
+
 const authService = {
   registerAsync,
   loginAsync,
@@ -122,6 +142,8 @@ const authService = {
   getUsersAsync,
   sendVerificationCodeAsync,
   verifyEmailAddressAsync,
+  forgotPasswordAsync,
+  resetPasswordAsync,
 };
 
 export default authService;
