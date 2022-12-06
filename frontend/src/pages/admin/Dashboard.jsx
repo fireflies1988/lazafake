@@ -1,6 +1,7 @@
 import { Col, Row } from "antd";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import ProductStatistics from "../../components/statistics/ProductStatistics";
 import UserStatistics from "../../components/statistics/UserStatistics";
 import { getAllOrdersAsync } from "../../features/order/orderSlice";
 import { getProductsAsync } from "../../features/product/productSlice";
@@ -22,7 +23,7 @@ function Dashboard() {
       </Col>
 
       <Col span={12}>
-        
+        <ProductStatistics />
       </Col>
     </Row>
   );
