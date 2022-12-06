@@ -52,9 +52,7 @@ const options = {
 // monthly new users
 function calculateData(users, year) {
   const res = [];
-  console.log(users);
   const data = users.filter((u) => moment(u.createdAt).isSame(year, "year"));
-  console.log(data);
   for (let i = 1; i <= 12; i++) {
     res.push(
       data.filter((u) => moment(u.createdAt).format("M") === i.toString())
@@ -76,7 +74,7 @@ function UserStatistics() {
     datasets: [
       {
         label: "Monthly New Users",
-        data: [],
+        data: Array.from({ length: 12 }, () => Math.floor(Math.random() * 40)),
         borderColor: "#95de64",
         backgroundColor: "#237804",
         tension: 0.3,
@@ -119,7 +117,8 @@ function UserStatistics() {
           <Statistic
             title="Today's New Users"
             value={
-              users.filter((u) => moment(u.createdAt).isSame(moment())).length
+              users.filter((u) => moment(u.createdAt).isSame(moment(), "date"))
+                .length
             }
           />
         </Col>
