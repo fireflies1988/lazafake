@@ -129,7 +129,8 @@ export const productSlice = createSlice({
         let index = state.products.findIndex(
           (p) => p._id === action.payload._id
         );
-        state.products[index] = action.payload;
+        const mostRecentSale = state.products[index]?.mostRecentSale;
+        state.products[index] = { ...action.payload, mostRecentSale };
         state.message = "Updated successfully.";
       })
       .addCase(updateProductAsync.rejected, (state, action) => {

@@ -2,7 +2,7 @@ const asyncHandler = require("express-async-handler");
 
 function checkPermission(allowedRole) {
   return asyncHandler(async (req, res, next) => {
-    if (req.user?.role === allowedRole) {
+    if (req.user?.role.includes(allowedRole)) {
       next();
     } else {
       res.status(403);

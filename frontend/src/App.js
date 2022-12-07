@@ -73,7 +73,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
 
-        {user?.role === "admin" && (
+        {(user?.role === "admin" || user?.role === "spadmin") && (
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Navigate to="dashboard" />} />
             <Route path="dashboard" element={<Dashboard />} />

@@ -433,6 +433,35 @@ const resetPassword = asyncHandler(async (req, res, next) => {
   );
 });
 
+// @desc    Change role
+// @route   PATCH /api/users/:id/role/change
+// @access  Private (spadmin)
+const changeRole = asyncHandler(async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ errors: errors.array() });
+    return;
+  }
+
+  if (req.user.role !== "spadmin") {
+    res.status(403);
+    throw new Error("You don't have permission to access this resource.");
+  }
+
+  const user = await User.findById(req.params.id).select(
+    "-passwordHash -resetTokenHash"
+  );
+  if (!user) {
+    res.status(400);
+    throw new Error("User not found.");
+  }
+
+  user.role = req.body.role;
+  await user.save();
+
+  res.json(user);
+});
+
 module.exports = {
   register,
   login,
@@ -449,4 +478,5 @@ module.exports = {
   verifyEmailAddress,
   forgotPassword,
   resetPassword,
+  changeRole,
 };

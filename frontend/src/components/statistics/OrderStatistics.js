@@ -77,7 +77,7 @@ const labels = [
 function calculateBarData(orders, year, type) {
   const res = [];
   // filter by year
-  const data = orders.filter((o) => moment(o.createdAt).isSame(year, "year"));
+  const data = orders.filter((o) => moment(o.updatedAt).isSame(year, "year"));
   for (let i = 1; i <= 12; i++) {
     // filter by month
     const temp = data.filter(
@@ -218,7 +218,20 @@ function OrderStatistics() {
         </Col>
         <Col span={4}>
           <Statistic
-            title="Total Canceled Orders"
+            title="Pending Orders"
+            value={
+              orders.filter(
+                (o) =>
+                  o.status === "To Pay" ||
+                  o.status === "To Ship" ||
+                  o.status === "To Receive"
+              ).length
+            }
+          />
+        </Col>
+        <Col span={4}>
+          <Statistic
+            title="Canceled Orders"
             value={
               orders.filter(
                 (o) => o.status === "Canceled" || o.status === "Return/Refund"

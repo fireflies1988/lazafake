@@ -164,5 +164,9 @@ exports.validate = (method) => {
     case "createNotification": {
       return [body("message", "Message is required.").trim().notEmpty()];
     }
+
+    case "changeRole": {
+      return [body("role").isIn(["user", "admin"])];
+    }
   }
 };

@@ -162,6 +162,19 @@ export const resetPasswordAsync = createAsyncThunk(
   }
 );
 
+// change role (spadmin)
+export const changeRoleAsync = createAsyncThunk(
+  "auth/role/change",
+  async ({ userId, role }, thunkAPI) => {
+    try {
+      const accessToken = thunkAPI.getState().auth.user?.accessToken;
+      return await authService.changeRoleAsync(userId, role, accessToken);
+    } catch (err) {
+      return handleError(err, thunkAPI, "changeRoleAsync", false);
+    }
+  }
+);
+
 export const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -324,6 +337,23 @@ export const authSlice = createSlice({
       })
       .addCase(resetPasswordAsync.rejected, (state, action) => {
         state.isLoading = false;
+      })
+      .addCase(changeRoleAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(changeRoleAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        const index = state.users.findIndex(
+          (u) => u._id === action.payload._id
+        );
+        state.users[index] = action.payload;
+        state.message = "You have successfully changed this user's role.";
+      })
+      .addCase(changeRoleAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
       });
   },
 });

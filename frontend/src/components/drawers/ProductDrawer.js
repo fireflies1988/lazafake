@@ -6,6 +6,7 @@ import {
   Input,
   InputNumber,
   message as antMessage,
+  Popconfirm,
   Select,
   Space,
   Spin,
@@ -50,7 +51,7 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
         // set initial fields value
         const { specifications, category, mostRecentSale, ...fields } = product;
         form.setFieldsValue(fields);
-        form.setFieldValue("mostRecentSale", mostRecentSale.label);
+        form.setFieldValue("mostRecentSale", mostRecentSale?.label);
         form.setFieldValue("category", category?._id);
         if (specifications) {
           form.setFieldValue("specifications", JSON.parse(specifications));
@@ -180,16 +181,20 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
         <Space>
           <Button onClick={handleClose}>Cancel</Button>
           {type === "edit" && (
-            <Button
-              danger
-              onClick={() => {
+            <Popconfirm
+              placement="bottom"
+              title="Are you sure you want to delete this product?"
+              onConfirm={() => {
                 dispatch(deleteProductAsync(productId));
                 onClose();
               }}
-              loading={savingProduct}
+              okText="Yes"
+              cancelText="No"
             >
-              Delete
-            </Button>
+              <Button danger loading={savingProduct}>
+                Delete
+              </Button>
+            </Popconfirm>
           )}
           <Button onClick={onSave} type="primary" loading={savingProduct}>
             Save

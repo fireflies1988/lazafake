@@ -16,6 +16,7 @@ const {
   verifyEmailAddress,
   forgotPassword,
   resetPassword,
+  changeRole,
 } = require("../controllers/userController");
 const { auth } = require("../middlewares/authMiddleware");
 const { validate } = require("../utils/validator");
@@ -46,5 +47,7 @@ router.post("/me/mail/verify", auth, verifyEmailAddress);
 
 router.post("/password/forgot", forgotPassword);
 router.get("/password/reset", resetPassword);
+
+router.patch("/:id/role/change", auth, changeRole);
 
 module.exports = router;

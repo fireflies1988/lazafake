@@ -132,6 +132,24 @@ async function resetPasswordAsync(params) {
   return response.data;
 }
 
+// change role (spadmin)
+async function changeRoleAsync(userId, role, accessToken) {
+  const response = await axios.patch(
+    `${API_URL}/${userId}/role/change`,
+    {
+      role,
+    },
+    {
+      headers: {
+        Authorization: "Bearer " + accessToken,
+      },
+    }
+  );
+  console.log("changeRoleAsync", response);
+
+  return response.data;
+}
+
 const authService = {
   registerAsync,
   loginAsync,
@@ -144,6 +162,7 @@ const authService = {
   verifyEmailAddressAsync,
   forgotPasswordAsync,
   resetPasswordAsync,
+  changeRoleAsync,
 };
 
 export default authService;
