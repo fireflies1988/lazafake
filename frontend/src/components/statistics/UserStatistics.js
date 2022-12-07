@@ -102,7 +102,7 @@ function UserStatistics() {
   }, [users, year]);
 
   return (
-    <Card>
+    <Card style={{ height: "100%" }}>
       <Row gutter={[16, 32]}>
         <Col span={8}>
           <Statistic title="Total Users" value={users.length} />

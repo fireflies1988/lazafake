@@ -278,7 +278,7 @@ const cancelOrder = asyncHandler(async (req, res, next) => {
 const getMyNotifications = asyncHandler(async (req, res, next) => {
   res.json(
     await Notification.find({ user: req.user.id }).limit(req.query.limit).sort({
-      createdAt: 1,
+      createdAt: -1,
     })
   );
 });

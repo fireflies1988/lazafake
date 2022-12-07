@@ -222,7 +222,7 @@ function TopNav() {
                         borderRadius: "0.75rem",
                       }}
                       itemLayout="horizontal"
-                      dataSource={notifications.slice(0, 6)}
+                      dataSource={notifications.slice(0, 4)}
                       loadMore={
                         <div
                           style={{
