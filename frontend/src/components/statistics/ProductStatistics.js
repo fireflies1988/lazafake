@@ -35,18 +35,14 @@ function ProductStatistics() {
   }, []);
 
   useEffect(() => {
-    const tmpLabels = [...categories.map((c) => c.name), "Other"];
+    const tmpLabels = categories.map((c) => c.name);
     setLabels(tmpLabels);
 
     const data = [];
     const backgroundColor = [];
     const borderColor = [];
     for (const label of tmpLabels) {
-      if (label === "Other") {
-        data.push(products.filter((p) => !p.category).length);
-      } else {
-        data.push(products.filter((p) => p.category.name === label).length);
-      }
+      data.push(products.filter((p) => p.category.name === label).length);
       let r = Math.floor(Math.random() * 256);
       let g = Math.floor(Math.random() * 256);
       let b = Math.floor(Math.random() * 256);

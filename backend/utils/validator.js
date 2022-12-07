@@ -97,6 +97,7 @@ exports.validate = (method) => {
       return [
         body("name", "Name is required.").trim().notEmpty(),
         body("sku", "SKU is required.").trim().notEmpty(),
+        body("category", "Category is required.").trim().notEmpty(),
         body("price").trim().isDecimal(),
         body("description", "Description is required.").trim().notEmpty(),
         body("quantity").trim().isNumeric({ no_symbols: true }),

@@ -33,7 +33,7 @@ function OrderDrawer({ onClose, open, orderId, type }) {
     } else if (type === "user") {
       setOrderData(myOrders.find((order) => order._id === orderId));
     }
-  }, [orderId, allOrders, myOrders]);
+  }, [orderId, allOrders, myOrders, open]);
 
   useEffect(() => {
     if (orderData?.status === "To Pay") {
@@ -66,6 +66,9 @@ function OrderDrawer({ onClose, open, orderId, type }) {
       orderData?.status === "Return/Refund"
     ) {
       setDisabled(true);
+    } else {
+      setDisabled(false);
+      setStatus("process");
     }
   }, [orderData]);
 

@@ -3,6 +3,8 @@ const { validationResult } = require("express-validator");
 const Product = require("../models/productModel");
 const cloudinary = require("../configs/cloudinary");
 const { removeAccents, containsAccents } = require("../utils/accentUtils");
+const moment = require("moment");
+const Order = require("../models/orderModel");
 
 // @desc    Add a new product
 // @route   POST /api/products
@@ -116,7 +118,8 @@ const getProducts = asyncHandler(async (req, res, next) => {
 
   let products = await Product.find({})
     .populate("category")
-    .limit(req.query.limit);
+    .limit(req.query.limit)
+    .lean();
 
   const keyword = removeAccents(req.query.keyword ?? "").toLowerCase();
   if (keyword) {
@@ -163,6 +166,35 @@ const getProducts = asyncHandler(async (req, res, next) => {
     );
   }
 
+  // add mostRecentSale
+  const orders = await Order.find({ status: "Completed" })
+    .populate("orderItems")
+    .sort({ completedAt: -1 });
+
+  products.map((product) => {
+    product.mostRecentSale = {
+      label: "None",
+      value: Number.MAX_VALUE,
+    };
+    for (let order of orders) {
+      if (
+        order.orderItems
+          .map((i) => i.product.toString())
+          .includes(product._id.toString())
+      ) {
+        if (order?.completedAt) {
+          product.mostRecentSale = {
+            label: moment(order?.completedAt).startOf("day").fromNow(),
+            value: moment().unix() - moment(order?.completedAt).unix(),
+          };
+          break;
+        }
+      }
+    }
+
+    return product;
+  });
+
   res.status(200).json(products);
 });
 
@@ -201,7 +233,8 @@ const updateProduct = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  const { images, reviews, rating, deletedImages, ...updatedFields } = req.body;
+  const { images, reviews, rating, deletedImages, sold, ...updatedFields } =
+    req.body;
 
   const product = await Product.findById(req.params.id);
   if (!product) {

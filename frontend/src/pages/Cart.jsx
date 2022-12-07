@@ -57,6 +57,10 @@ function Cart() {
 
   const columns = [
     {
+      title: "Product ID",
+      dataIndex: "productId",
+    },
+    {
       title: "Thumbnail",
       dataIndex: "thumbnail",
       render: (_, record) => <Image width={100} src={record?.thumbnail} />,
@@ -122,6 +126,7 @@ function Cart() {
       tempData.push({
         key: cartItems[i]._id,
         _id: cartItems[i]._id,
+        productId: cartItems[i]._id,
         thumbnail:
           cartItems[i]?.product?.images?.length > 0
             ? cartItems[i]?.product?.images[0]?.url

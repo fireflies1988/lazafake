@@ -26,10 +26,11 @@ function sendNotification(
   shippingFee,
   totalPayment
 ) {
-  sendMail({
-    to: userEmail,
-    subject: "Order Successfully Placed",
-    html: `<html>
+  sendMail(
+    {
+      to: userEmail,
+      subject: "Order Successfully Placed",
+      html: `<html>
     <head>
       <style>
         table,
@@ -66,7 +67,13 @@ function sendNotification(
       </div>
     </body>
   </html>`,
-  });
+    },
+    (err, info) => {
+      if (err) {
+        console.log(err);
+      }
+    }
+  );
 }
 
 // @desc    Place order
@@ -235,12 +242,11 @@ const placeOrder = asyncHandler(async (req, res, next) => {
 
     let tableData = "";
 
-    // update products' quantity and sold after purchasing
+    // extract products' quantity after purchasing
     for (const item of orderItems) {
       await Product.findByIdAndUpdate(item.product, {
         $inc: {
           quantity: -item.quantity,
-          sold: item.quantity,
         },
       });
 
@@ -320,7 +326,6 @@ const confirmPayment = asyncHandler(async (req, res, next) => {
           await Product.findByIdAndUpdate(item.product, {
             $inc: {
               quantity: -item.quantity,
-              sold: item.quantity,
             },
           });
 
@@ -389,7 +394,12 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  const order = await Order.findById(req.params.id).populate("user");
+  const order = await Order.findById(req.params.id).populate([
+    { path: "user" },
+    {
+      path: "orderItems",
+    },
+  ]);
   if (!order) {
     res.status(404);
     throw new Error("Order not found.");
@@ -413,11 +423,18 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
           message: `Your order ${order.id} has been canceled.`,
         });
 
-        sendMail({
-          to: order.user.email,
-          subject: "Order Upates",
-          html: `<p>Your order ${order.id} has been canceled.</p>`,
-        });
+        sendMail(
+          {
+            to: order.user.email,
+            subject: "Order Upates",
+            html: `<p>Your order ${order.id} has been canceled.</p>`,
+          },
+          (err, info) => {
+            if (err) {
+              console.log(err);
+            }
+          }
+        );
       } else if (order.paymentMethod === "Paypal") {
         order.returnAt = new Date().toISOString();
         order.status = "Return/Refund";
@@ -427,10 +444,26 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
           message: `Your order ${order.id} has been canceled and is being refunded.`,
         });
 
-        sendMail({
-          to: order.user.email,
-          subject: "Order Upates",
-          html: `<p>Your order ${order.id} has been canceled and is being refunded.</p>`,
+        sendMail(
+          {
+            to: order.user.email,
+            subject: "Order Upates",
+            html: `<p>Your order ${order.id} has been canceled and is being refunded.</p>`,
+          },
+          (err, info) => {
+            if (err) {
+              console.log(err);
+            }
+          }
+        );
+      }
+
+      // restore products' quantity after canceling or returning
+      for (const item of order.orderItems) {
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: {
+            quantity: item.quantity,
+          },
         });
       }
     }
@@ -445,11 +478,18 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
       message: `Your order ${order.id} has been confirmed and packed.`,
     });
 
-    sendMail({
-      to: order.user.email,
-      subject: "Order Upates",
-      html: `<p>Your order ${order.id} has been confirmed and packed.</p>`,
-    });
+    sendMail(
+      {
+        to: order.user.email,
+        subject: "Order Upates",
+        html: `<p>Your order ${order.id} has been confirmed and packed.</p>`,
+      },
+      (err, info) => {
+        if (err) {
+          console.log(err);
+        }
+      }
+    );
   }
 
   if (order.status === "To Ship" && req.body.status === "To Receive") {
@@ -461,11 +501,18 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
       message: `Your order ${order.id} has been shipped out.`,
     });
 
-    sendMail({
-      to: order.user.email,
-      subject: "Order Upates",
-      html: `<p>Your order ${order.id} has been shipped out.</p>`,
-    });
+    sendMail(
+      {
+        to: order.user.email,
+        subject: "Order Upates",
+        html: `<p>Your order ${order.id} has been shipped out.</p>`,
+      },
+      (err, info) => {
+        if (err) {
+          console.log(err);
+        }
+      }
+    );
   }
 
   if (order.status === "To Receive" && req.body.status === "Completed") {
@@ -477,11 +524,27 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
       message: `Your order ${order.id} has been delivered.`,
     });
 
-    sendMail({
-      to: order.user.email,
-      subject: "Order Upates",
-      html: `<p>Your order ${order.id} has been delivered.</p>`,
-    });
+    // update products' sold after successfully delivery
+    for (const item of order.orderItems) {
+      await Product.findByIdAndUpdate(item.product, {
+        $inc: {
+          sold: item.quantity,
+        },
+      });
+    }
+
+    sendMail(
+      {
+        to: order.user.email,
+        subject: "Order Upates",
+        html: `<p>Your order ${order.id} has been delivered.</p>`,
+      },
+      (err, info) => {
+        if (err) {
+          console.log(err);
+        }
+      }
+    );
   }
 
   await order.save();

@@ -219,6 +219,11 @@ function Orders() {
   const expandedRowRender = (record, index) => {
     const columns = [
       {
+        title: "Product ID",
+        dataIndex: "productId",
+        key: "productId",
+      },
+      {
         title: "Thumbnail",
         dataIndex: "thumbnail",
         key: "thumbnail",
@@ -247,11 +252,14 @@ function Orders() {
     ];
 
     const data = [];
-    const orderItems = outerData[index].orderItems;
+    const orderItems = outerData.find(
+      (o) => o.orderId === record.orderId
+    ).orderItems;
     console.log(orderItems);
     for (let i = 0; i < orderItems.length; i++) {
       data.push({
         key: i.toString(),
+        productId: orderItems[i]?.product?._id,
         thumbnail:
           orderItems[i]?.product?.images?.length > 0
             ? orderItems[i]?.product?.images[0]?.url

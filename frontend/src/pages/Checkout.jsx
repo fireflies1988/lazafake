@@ -24,6 +24,10 @@ const DEFAULT_SHIPPING_FEE = 30000;
 
 const columns = [
   {
+    title: "Product ID",
+    dataIndex: "productId",
+  },
+  {
     title: "Thumbnail",
     dataIndex: "thumbnail",
     render: (_, record) => <Image width={100} src={record?.thumbnail} />,
@@ -127,6 +131,7 @@ function Checkout() {
       tempData.push({
         key: orderItems[i]._id,
         _id: orderItems[i]._id,
+        productId: orderItems[i]._id,
         thumbnail:
           orderItems[i]?.product?.images?.length > 0
             ? orderItems[i]?.product?.images[0]?.url

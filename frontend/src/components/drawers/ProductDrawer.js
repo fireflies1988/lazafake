@@ -14,7 +14,6 @@ import {
 import TextArea from "antd/es/input/TextArea";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getCategoriesAsync } from "../../features/category/categorySlice";
 import {
   addProductAsync,
   deleteProductAsync,
@@ -44,17 +43,14 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
   }
 
   useEffect(() => {
-    dispatch(getCategoriesAsync());
-  }, []);
-
-  useEffect(() => {
     if (type === "edit") {
       const product = products.find((p) => p._id === productId);
       console.log("product", product);
       if (product) {
         // set initial fields value
-        const { specifications, category, ...fields } = product;
+        const { specifications, category, mostRecentSale, ...fields } = product;
         form.setFieldsValue(fields);
+        form.setFieldValue("mostRecentSale", mostRecentSale.label);
         form.setFieldValue("category", category?._id);
         if (specifications) {
           form.setFieldValue("specifications", JSON.parse(specifications));
@@ -171,7 +167,7 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
     <Drawer
       destroyOnClose={true}
       title={title}
-      width={720}
+      width={800}
       onClose={handleClose}
       open={open}
       placement="left"
@@ -264,8 +260,29 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
           <InputNumber min={1} />
         </Form.Item>
 
+        {type === "edit" && (
+          <>
+            <Form.Item name="sold" label="Sold">
+              <InputNumber disabled />
+            </Form.Item>
+
+            <Form.Item name="mostRecentSale" label="Most Recent Sale">
+              <Input disabled />
+            </Form.Item>
+          </>
+        )}
+
         <Spin spinning={loadingCategories}>
-          <Form.Item name="category" label="Category">
+          <Form.Item
+            name="category"
+            label="Category"
+            rules={[
+              {
+                message: "Please select a category",
+                required: true,
+              },
+            ]}
+          >
             <Select placeholder="Please select a category" allowClear>
               {categories.length > 0 &&
                 categories.map((c) => (
