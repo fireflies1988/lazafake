@@ -509,12 +509,17 @@ const viewOrders = asyncHandler(async (req, res, next) => {
   // }
   res.json(
     await Order.find({ isValid: true })
-      .populate({
-        path: "orderItems",
-        populate: {
-          path: "product",
+      .populate([
+        {
+          path: "orderItems",
+          populate: {
+            path: "product",
+          },
         },
-      })
+        {
+          path: "user",
+        },
+      ])
       .sort({
         createdAt: 1,
       })

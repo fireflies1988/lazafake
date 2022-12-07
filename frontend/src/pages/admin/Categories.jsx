@@ -118,7 +118,7 @@ function Categories() {
         </Button>
       }
     >
-      <Table columns={columns} dataSource={data} pagination={false} />
+      <Table columns={columns} dataSource={data} />
       <AddCategoryModal
         open={openAdd}
         onCancel={() => {

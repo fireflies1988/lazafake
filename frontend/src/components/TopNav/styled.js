@@ -3,7 +3,7 @@ import styled from "styled-components";
 export const StyledTopNav = styled.nav`
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 5;
   width: 100%;
   background-image: linear-gradient(#389e0d, #95de64);
   height: 70px;

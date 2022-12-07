@@ -42,12 +42,12 @@ function Users() {
       key: "gender",
     },
     {
-      title: "dateOfBirth",
+      title: "Date Of Birth",
       dataIndex: "dateOfBirth",
       key: "dateOfBirth",
     },
     {
-      title: "role",
+      title: "Role",
       dataIndex: "role",
       key: "role",
     },
@@ -77,7 +77,7 @@ function Users() {
   return (
     <Card title="User List">
       <Spin spinning={isLoading}>
-        <Table columns={columns} dataSource={data} pagination={false} />
+        <Table columns={columns} dataSource={data} />
       </Spin>
     </Card>
   );

@@ -1,18 +1,23 @@
+import { SearchOutlined } from "@ant-design/icons";
 import {
   Button,
   Card,
   Image,
+  Input,
   message as antMessage,
+  Space,
   Spin,
   Table,
   Tag,
 } from "antd";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import CardTitle from "../../components/CartTitle";
 import OrderDrawer from "../../components/drawers/OrderDrawer";
 import { getMyOrdersAsync, reset } from "../../features/auth/authSlice";
 import { moneyFormatter, showError } from "../../utils";
+import Highlighter from "react-highlight-words";
+import moment from "moment";
 
 const tabList = [
   {
@@ -56,6 +61,121 @@ function MyOrders() {
     (state) => state.auth
   );
 
+  // ---- filter orderId
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+  const searchInput = useRef(null);
+
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+  };
+
+  const handleReset = (clearFilters) => {
+    clearFilters();
+    setSearchText("");
+  };
+
+  const getColumnSearchProps = (dataIndex) => ({
+    filterDropdown: ({
+      setSelectedKeys,
+      selectedKeys,
+      confirm,
+      clearFilters,
+      close,
+    }) => (
+      <div
+        style={{
+          padding: 8,
+        }}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <Input
+          ref={searchInput}
+          placeholder={`Search ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) =>
+            setSelectedKeys(e.target.value ? [e.target.value] : [])
+          }
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{
+            marginBottom: 8,
+            display: "block",
+          }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Search
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters)}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Reset
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              close();
+            }}
+          >
+            close
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined
+        style={{
+          color: filtered ? "#1890ff" : undefined,
+        }}
+      />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+    onFilterDropdownOpenChange: (visible) => {
+      if (visible) {
+        setTimeout(() => searchInput.current?.select(), 100);
+      }
+    },
+    render: (text) =>
+      searchedColumn === dataIndex ? (
+        <Highlighter
+          highlightStyle={{
+            backgroundColor: "#ffc069",
+            padding: 0,
+          }}
+          searchWords={[searchText]}
+          autoEscape
+          textToHighlight={text ? text.toString() : ""}
+        />
+      ) : (
+        text
+      ),
+  });
+  // ----
+
+  // ---- filter payment method
+  const [filteredInfo, setFilteredInfo] = useState({});
+  const handleChange = (pagination, filters, sorter) => {
+    console.log("Various parameters", pagination, filters, sorter);
+    setFilteredInfo(filters);
+  };
+  // ----
+
   useEffect(() => {
     dispatch(getMyOrdersAsync());
   }, []);
@@ -73,7 +193,7 @@ function MyOrders() {
     for (let i = 0; i < orders.length; i++) {
       tempOuterData.push({
         key: i.toString(),
-        id: orders[i]._id,
+        orderId: orders[i]._id,
         orderDetails: orders[i],
         orderItems: orders[i].orderItems,
         orderedAt: orders[i].createdAt,
@@ -145,9 +265,16 @@ function MyOrders() {
 
   const outerColumns = [
     {
+      title: "Order ID",
+      dataIndex: "orderId",
+      key: "orderId",
+      ...getColumnSearchProps("orderId"),
+    },
+    {
       title: "Ordered At",
       dataIndex: "orderedAt",
       key: "orderedAt",
+      sorter: (a, b) => moment(a.orderedAt).unix() - moment(b.orderedAt).unix(),
     },
     {
       title: "Finished At",
@@ -158,6 +285,18 @@ function MyOrders() {
       title: "Payment Method",
       dataIndex: "paymentMethod",
       key: "paymentMethod",
+      filters: [
+        {
+          text: "Cash On Delivery",
+          value: "Cash",
+        },
+        {
+          text: "Paypal",
+          value: "Paypal",
+        },
+      ],
+      filteredValue: filteredInfo.paymentMethod || null,
+      onFilter: (value, record) => record.paymentMethod.includes(value),
     },
     {
       title: "Shipping Fee",
@@ -197,7 +336,7 @@ function MyOrders() {
           type="link"
           size="small"
           onClick={() => {
-            setOrderId(record.id);
+            setOrderId(record.orderId);
             setOpen(true);
           }}
         >
@@ -213,6 +352,7 @@ function MyOrders() {
         columns={outerColumns}
         expandable={{ expandedRowRender }}
         dataSource={outerData}
+        onChange={handleChange}
       />
     ),
     toPay: (
@@ -220,6 +360,7 @@ function MyOrders() {
         columns={outerColumns}
         expandable={{ expandedRowRender }}
         dataSource={outerData.filter((order) => order.status === "To Pay")}
+        onChange={handleChange}
       />
     ),
     toShip: (
@@ -227,6 +368,7 @@ function MyOrders() {
         columns={outerColumns}
         expandable={{ expandedRowRender }}
         dataSource={outerData.filter((order) => order.status === "To Ship")}
+        onChange={handleChange}
       />
     ),
     toReceive: (
@@ -234,6 +376,7 @@ function MyOrders() {
         columns={outerColumns}
         expandable={{ expandedRowRender }}
         dataSource={outerData.filter((order) => order.status === "To Receive")}
+        onChange={handleChange}
       />
     ),
     completed: (
@@ -241,6 +384,7 @@ function MyOrders() {
         columns={outerColumns}
         expandable={{ expandedRowRender }}
         dataSource={outerData.filter((order) => order.status === "Completed")}
+        onChange={handleChange}
       />
     ),
     canceled: (
@@ -248,6 +392,7 @@ function MyOrders() {
         columns={outerColumns}
         expandable={{ expandedRowRender }}
         dataSource={outerData.filter((order) => order.status === "Canceled")}
+        onChange={handleChange}
       />
     ),
     return: (
@@ -257,6 +402,7 @@ function MyOrders() {
         dataSource={outerData.filter(
           (order) => order.status === "Return/Refund"
         )}
+        onChange={handleChange}
       />
     ),
   };
