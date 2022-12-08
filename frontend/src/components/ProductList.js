@@ -45,7 +45,12 @@ function ProductList({ items, columns }) {
                   style={{ display: "flex", justifyContent: "space-between" }}
                 >
                   <div>
-                    {item.rating} <StarFilled style={{ color: "gold" }} />
+                    {item?.averageRating && (
+                      <>
+                        {Number(item?.averageRating).toFixed(1)}{" "}
+                        <StarFilled style={{ color: "gold" }} />
+                      </>
+                    )}
                   </div>
                   <div>{item.sold} Sold</div>
                 </div>

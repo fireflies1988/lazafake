@@ -25,6 +25,7 @@ app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/vouchers", require("./routes/voucherRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/mail", require("./routes/mailRoutes"));
+app.use("/api/reviews", require("./routes/reviewRoutes"));
 
 app.use(errorHandler);
 

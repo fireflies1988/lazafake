@@ -44,6 +44,7 @@ function OrderDrawer({ onClose, open, orderId, type }) {
       setCurrent(3);
     } else if (orderData?.status === "Completed") {
       setCurrent(4);
+      setStatus("finish");
     } else if (
       orderData?.status === "Canceled" ||
       orderData?.status === "Return/Refund"

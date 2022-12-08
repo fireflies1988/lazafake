@@ -8,6 +8,12 @@ const { update } = require("../models/productModel");
 // @route   POST /api/cart/add?productId=
 // @access  Private
 const addToCart = asyncHandler(async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ errors: errors.array() });
+    return;
+  }
+  
   if (!req.query.productId) {
     res.status(400);
     throw new Error(

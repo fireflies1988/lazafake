@@ -232,7 +232,8 @@ function SearchPage() {
                 url: p?.images[0]?.url,
                 name: p.name,
                 price: moneyFormatter.format(p.price),
-                rating: "4.0",
+                averageRating: p?.averageRating,
+                ratingCount: p?.ratingCount,
                 sold: p.sold,
               }))}
             />

@@ -168,5 +168,16 @@ exports.validate = (method) => {
     case "changeRole": {
       return [body("role").isIn(["user", "admin"])];
     }
+
+    case "addReview": {
+      return [
+        body("orderId", "orderId is required.").trim().notEmpty(),
+        body("productId", "productId is required.").trim().notEmpty(),
+        body("rating", "Rating is required.")
+          .trim()
+          .isNumeric({ no_symbols: true }),
+        body("comment", "Comment is required.").trim().notEmpty(),
+      ];
+    }
   }
 };

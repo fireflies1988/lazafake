@@ -17,12 +17,14 @@ import {
   Space,
   Typography,
 } from "antd";
+import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams, Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import ProductList from "../components/ProductList";
 import { addToCartAsync } from "../features/cart/cartSlice";
 import { getProductsAsync } from "../features/product/productSlice";
+import { getReviewsAsync } from "../features/review/reviewSlice";
 import { moneyFormatter } from "../utils";
 const { Text } = Typography;
 
@@ -37,21 +39,6 @@ const tabListNoTitle = [
   },
 ];
 
-const data = [
-  {
-    title: "Ant Design Title 1",
-  },
-  {
-    title: "Ant Design Title 2",
-  },
-  {
-    title: "Ant Design Title 3",
-  },
-  {
-    title: "Ant Design Title 4",
-  },
-];
-
 function ProductDetails() {
   const [visible, setVisible] = useState(false);
   const { productId } = useParams();
@@ -63,9 +50,12 @@ function ProductDetails() {
   const [sepcificationsData, setSepcificationsData] = useState();
   const dispatch = useDispatch();
   const [activeTabKey, setActiveTabKey] = useState("description");
-  console.log(product);
+
+  const { reviews } = useSelector((state) => state.review);
 
   useEffect(() => {
+    dispatch(getReviewsAsync({ productId }));
+
     setQuantity(1);
     const product = products.find((p) => p._id.toString() === productId);
     setProduct(product);
@@ -131,11 +121,16 @@ function ProductDetails() {
               {product?.name}
             </Text>
             <Text style={{ fontSize: "18px" }}>
-              4.6 <StarFilled style={{ color: "gold" }} />
+              {product?.averageRating && (
+                <>
+                  {Number(product?.averageRating).toFixed(1)}{" "}
+                  <StarFilled style={{ color: "gold" }} />
+                  <Divider type="vertical" />
+                </>
+              )}
+              {product?.ratingCount} Ratings
               <Divider type="vertical" />
-              3.1k Ratings
-              <Divider type="vertical" />
-              3.1k Sold
+              {product?.sold} Sold
             </Text>
             <Text type="warning" style={{ fontSize: "20px" }}>
               {moneyFormatter.format(product?.price)}
@@ -210,31 +205,107 @@ function ProductDetails() {
       <Card title="Product Ratings" bordered={false}>
         <Alert
           message={
-            <Text strong style={{ fontSize: "24px" }}>
-              4.6 <StarFilled style={{ color: "gold" }} /> (21 Ratings)
-            </Text>
+            <>
+              {product?.ratingCount === 0 ? (
+                <Text strong style={{ fontSize: "24px" }}>
+                  No Reviews Yet
+                </Text>
+              ) : (
+                <Space size="large">
+                  <Space direction="vertical" style={{ display: "flex" }}>
+                    <Text strong style={{ fontSize: "28px" }}>
+                      {Number(product?.averageRating).toFixed(1)}
+                      <Text type="secondary" style={{ fontSize: "20px" }}>
+                        /5
+                      </Text>{" "}
+                      <StarFilled style={{ color: "gold" }} />
+                    </Text>
+                    <Text type="secondary">{product?.ratingCount} Ratings</Text>
+                  </Space>
+
+                  <Space
+                    direction="vertical"
+                    style={{ display: "flex" }}
+                    size={2}
+                  >
+                    <Space>
+                      <Rate
+                        disabled
+                        defaultValue={5}
+                        style={{ fontSize: "14px" }}
+                      />
+                      <Text type="secondary" style={{ fontSize: "12px" }}>
+                        {reviews.filter((r) => r.rating === 5).length}
+                      </Text>
+                    </Space>
+                    <Space>
+                      <Rate
+                        disabled
+                        defaultValue={4}
+                        style={{ fontSize: "14px" }}
+                      />
+                      <Text type="secondary" style={{ fontSize: "12px" }}>
+                        {reviews.filter((r) => r.rating === 4).length}
+                      </Text>
+                    </Space>
+                    <Space>
+                      <Rate
+                        disabled
+                        defaultValue={3}
+                        style={{ fontSize: "14px" }}
+                      />
+                      <Text type="secondary" style={{ fontSize: "12px" }}>
+                        {reviews.filter((r) => r.rating === 3).length}
+                      </Text>
+                    </Space>
+                    <Space>
+                      <Rate
+                        disabled
+                        defaultValue={2}
+                        style={{ fontSize: "14px" }}
+                      />
+                      <Text type="secondary" style={{ fontSize: "12px" }}>
+                        {reviews.filter((r) => r.rating === 2).length}
+                      </Text>
+                    </Space>
+                    <Space>
+                      <Rate
+                        disabled
+                        defaultValue={1}
+                        style={{ fontSize: "14px" }}
+                      />
+                      <Text type="secondary" style={{ fontSize: "12px" }}>
+                        {reviews.filter((r) => r.rating === 1).length}
+                      </Text>
+                    </Space>
+                  </Space>
+                </Space>
+              )}
+            </>
           }
           type="warning"
         />
 
         <List
           itemLayout="horizontal"
-          dataSource={data}
+          dataSource={reviews}
           renderItem={(item) => (
             <List.Item>
               <List.Item.Meta
                 style={{ alignItems: "center" }}
-                avatar={<Avatar src="https://joeschmoe.io/api/v1/random" />}
-                title={item.title}
+                avatar={<Avatar src={item?.user?.avatar?.url} />}
+                title={item.user?.fullName}
                 description={
                   <Space direction="vertical" style={{ display: "flex" }}>
                     <Rate
                       disabled
-                      defaultValue={2}
+                      defaultValue={item.rating}
                       style={{ fontSize: "14px" }}
                     />
-                    <Text>Very good</Text>
-                    <Text type="secondary">4 weeks ago</Text>
+                    <Text>{item.comment}</Text>
+                    <Text type="secondary">
+                      {moment(item.createdAt).startOf("day").fromNow()}
+                    </Text>
                   </Space>
                 }
               />
@@ -265,7 +336,8 @@ function ProductDetails() {
               url: p?.images[0]?.url,
               name: p.name,
               price: moneyFormatter.format(p.price),
-              rating: "4.0",
+              averageRating: p?.averageRating,
+              ratingCount: p?.ratingCoung,
               sold: p.sold,
             }))}
         />

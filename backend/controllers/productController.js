@@ -5,6 +5,7 @@ const cloudinary = require("../configs/cloudinary");
 const { removeAccents, containsAccents } = require("../utils/accentUtils");
 const moment = require("moment");
 const Order = require("../models/orderModel");
+const Review = require("../models/reviewModel");
 
 // @desc    Add a new product
 // @route   POST /api/products
@@ -97,25 +98,6 @@ const removeProductImage = asyncHandler(async (req, res, next) => {
 // @route   GET /api/products?category=&limit=&
 // @access  Public
 const getProducts = asyncHandler(async (req, res, next) => {
-  // let products = await Product.find({
-  //   $or: [
-  //     {
-  //       name: { $regex: keyword, $options: "i" },
-  //     },
-  //     {
-  //       description: { $regex: keyword, $options: "i" },
-  //     },
-  //     {
-  //       specifications: {
-  //         $regex: keyword,
-  //         $options: "i",
-  //       },
-  //     },
-  //   ],
-  // })
-  //   .populate("category")
-  //   .limit(req.query.limit);
-
   let products = await Product.find({})
     .populate("category")
     .limit(req.query.limit)
@@ -194,6 +176,26 @@ const getProducts = asyncHandler(async (req, res, next) => {
 
     return product;
   });
+
+  // add average rating
+  await Promise.all(
+    products.map(async (product) => {
+      const reviews = await Review.find({
+        product: product._id.toString(),
+      }).lean();
+
+      product.ratingCount = reviews.length;
+
+      if (reviews.length > 0) {
+        product.averageRating =
+          reviews.reduce((acc, cur) => acc + cur.rating, 0) / reviews.length;
+      }
+
+      return product;
+    })
+  );
+
+  console.log(products);
 
   res.status(200).json(products);
 });

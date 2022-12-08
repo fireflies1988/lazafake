@@ -1,4 +1,4 @@
-import { SearchOutlined } from "@ant-design/icons";
+import { ConsoleSqlOutlined, SearchOutlined } from "@ant-design/icons";
 import {
   Button,
   Card,
@@ -18,6 +18,8 @@ import { getMyOrdersAsync, reset } from "../../features/auth/authSlice";
 import { moneyFormatter, showError } from "../../utils";
 import Highlighter from "react-highlight-words";
 import moment from "moment";
+import { getReviewsAsync } from "../../features/review/reviewSlice";
+import ReviewModal from "../../components/modals/ReviewModal";
 
 const tabList = [
   {
@@ -56,10 +58,21 @@ function MyOrders() {
   const [orderId, setOrderId] = useState();
   const [open, setOpen] = useState(false);
 
+  const [openReview, setOpenReview] = useState(false);
+  const [reviewData, setReviewData] = useState();
+  const [type, setType] = useState("add");
+
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
   const { orders, message, isError, isLoading } = useSelector(
     (state) => state.auth
   );
+  const { reviews } = useSelector((state) => state.review);
+
+  useEffect(() => {
+    dispatch(getMyOrdersAsync());
+    dispatch(getReviewsAsync({ userId: user._id }));
+  }, []);
 
   // ---- filter orderId
   const [searchText, setSearchText] = useState("");
@@ -177,10 +190,6 @@ function MyOrders() {
   // ----
 
   useEffect(() => {
-    dispatch(getMyOrdersAsync());
-  }, []);
-
-  useEffect(() => {
     if (isError) {
       showError(antMessage, message);
     }
@@ -245,16 +254,66 @@ function MyOrders() {
         dataIndex: "itemSubtotal",
         key: "itemSubtotal",
       },
+      {
+        title: "Action",
+        key: "operation",
+        render: (_, record) => {
+          const review = reviews.find(
+            (r) =>
+              r.product === record.productId &&
+              r.order === record.orderData.orderId
+          );
+          console.log({ review });
+
+          if (record.orderData.status === "Completed") {
+            if (review) {
+              return (
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => {
+                    setOpenReview(true);
+                    setType("edit");
+                    setReviewData(review);
+                  }}
+                >
+                  Your Review
+                </Button>
+              );
+            } else {
+              return (
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => {
+                    setOpenReview(true);
+                    setType("add");
+                    setReviewData({
+                      order: record.orderData.orderId,
+                      product: record.productId,
+                    });
+                  }}
+                >
+                  Review
+                </Button>
+              );
+            }
+          } else {
+            return "";
+          }
+        },
+      },
     ];
 
     const data = [];
-    const orderItems = outerData.find(
-      (o) => o.orderId === record.orderId
-    ).orderItems;
+    const orderData = outerData.find((o) => o.orderId === record.orderId);
+    console.log({ orderData });
+    const orderItems = orderData.orderItems;
     console.log(orderItems);
     for (let i = 0; i < orderItems.length; i++) {
       data.push({
         key: i.toString(),
+        orderData: orderData,
         productId: orderItems[i]?.product?._id,
         thumbnail:
           orderItems[i]?.product?.images?.length > 0
@@ -430,6 +489,12 @@ function MyOrders() {
         open={open}
         onClose={() => setOpen(false)}
         type="user"
+      />
+      <ReviewModal
+        open={openReview}
+        onCancel={() => setOpenReview(false)}
+        reviewData={reviewData}
+        type={type}
       />
     </Card>
   );
