@@ -131,23 +131,26 @@ function Checkout() {
       tempData.push({
         key: orderItems[i]._id,
         _id: orderItems[i]._id,
-        productId: orderItems[i]._id,
+        productId: orderItems[i].product._id,
         thumbnail:
           orderItems[i]?.product?.images?.length > 0
             ? orderItems[i]?.product?.images[0]?.url
             : "",
         name: orderItems[i].product?.name,
-        price: moneyFormatter.format(orderItems[i].product?.price),
+        price: moneyFormatter.format(
+          orderItems[i]?.product?.price - orderItems[i]?.product?.discount
+        ),
         quantity: orderItems[i].quantity,
         itemSubtotal: moneyFormatter.format(
-          orderItems[i].quantity * orderItems[i].product?.price
+          orderItems[i].quantity *
+            (orderItems[i]?.product?.price - orderItems[i]?.product?.discount)
         ),
       });
     }
     setData(tempData);
     setSubtotal(
       tempData?.reduce(
-        (sum, object) => sum + reverseMoneyFormattedText(object.itemSubtotal),
+        (sum, obj) => sum + reverseMoneyFormattedText(obj.itemSubtotal),
         0
       )
     );

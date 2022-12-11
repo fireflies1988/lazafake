@@ -6,13 +6,17 @@ const CartItem = require("../models/cartItemModel");
 const Order = require("../models/orderModel");
 const Product = require("../models/productModel");
 const Voucher = require("../models/voucherModel");
-const voucherHelper = require("../helpers/voucherHelper");
-const puppeteer = require("puppeteer");
+const {
+  checkVoucherConditions,
+  checkAddressConditions,
+  checkCartItem,
+  calculateDiscount,
+  convertVndToUsd,
+} = require("../helpers/orderHelper");
 const Notification = require("../models/notificationModel");
 const { sendMail } = require("../services/mailService");
 const User = require("../models/userModel");
 
-const USD_TO_VND = 24600;
 const moneyFormatter = new Intl.NumberFormat("vi-vn", {
   style: "currency",
   currency: "vnd",
@@ -91,44 +95,31 @@ const placeOrder = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  const { user, totalPayment, status, currency, isValid, ...fields } = req.body;
+  const {
+    user,
+    totalPayment,
+    status,
+    currency,
+    isValid,
+    orderItems, // cartItems
+    ...fields
+  } = req.body;
 
   // check shipping address
-  const address = await Address.findById(fields.shippingAddress);
-  if (!address) {
-    res.status(400);
-    throw new Error("Address not found.");
-  }
+  await checkAddressConditions(res, fields.shippingAddress, req.user.id);
 
-  if (address.user.toString() !== req.user.id) {
-    res.status(400);
-    throw new Error("This is not your address.");
-  }
+  let tempTotalPayment = Number(fields.shippingFee);
+  let tempOrderItems = []; // for later use (payment)
 
-  let payment = Number(fields.shippingFee);
-  let orderItems = []; // for later use (payment)
-
-  // check quantity again
-  let errMessages = [];
-  for (let itemId of fields?.orderItems) {
+  for (let itemId of orderItems) {
     const cartItem = await CartItem.findById(itemId).populate("product");
-    orderItems.push(cartItem);
-    if (cartItem.user.toString() !== req.user.id) {
-      res.status(400);
-      throw new Error(`This item ${cartItem.id} is not in your cart`);
-    }
+    tempOrderItems.push(cartItem);
 
-    if (cartItem.quantity > cartItem.product.quantity) {
-      errMessages.push(
-        `There are not enough '${cartItem.product.name}' in stock (remaining ${cartItem.product.quantity}). Please adjust the quantity of this item.`
-      );
-    } else {
-      payment += cartItem.quantity * cartItem.product.price;
-    }
-  }
+    // check if cartItem is valid
+    checkCartItem(res, cartItem, req.user.id);
 
-  if (errMessages.length > 0) {
-    return res.status(409).json({ message: errMessages });
+    tempTotalPayment +=
+      cartItem.quantity * (cartItem.product.price - cartItem.product.discount);
   }
 
   // check applied vouchers
@@ -138,7 +129,7 @@ const placeOrder = asyncHandler(async (req, res, next) => {
     for (const voucherId of fields.vouchers) {
       const voucher = await Voucher.findById(voucherId);
 
-      voucherHelper.checkConditions(res, voucher, req.user.id, payment);
+      checkVoucherConditions(res, voucher, req.user.id, tempTotalPayment);
 
       // if everything is okay, calculate discount amount
       if (voucherTypes.has(voucher.type)) {
@@ -146,20 +137,12 @@ const placeOrder = asyncHandler(async (req, res, next) => {
         throw new Error("You can't use the same two vouchers for one order.");
       }
       voucherTypes.add(voucher.type);
-      if (voucher.isPercentageDiscount) {
-        if (
-          (payment * voucher.discountAmount) / 100 >
-          voucher.maxDiscountAmount
-        ) {
-          discountAmount += voucher.maxDiscountAmount;
-        } else {
-          discountAmount += (payment * voucher.discountAmount) / 100;
-        }
-      } else {
-        discountAmount += voucher.discountAmount;
-      }
+
+      // calculate discount
+      discountAmount += calculateDiscount(voucher, tempTotalPayment);
     }
-    payment -= discountAmount;
+
+    tempTotalPayment -= discountAmount;
   }
 
   // payment
@@ -167,20 +150,27 @@ const placeOrder = asyncHandler(async (req, res, next) => {
     const order = await Order.create({
       ...fields,
       user: req.user.id,
-      totalPayment: payment,
+      orderItems: tempOrderItems.map((o) => ({
+        product: o.product._id,
+        quantity: o.quantity,
+        price: o.product.price,
+        discount: o.product.discount,
+      })),
+      totalPayment: tempTotalPayment,
       isValid: false,
     });
 
     // convert vnd to usd (paypal accepts usd only)
-    let total =
-      orderItems.reduce(
-        (acc, obj) =>
+    console.log(tempOrderItems);
+    let totalPaymentInUSD = (
+      tempOrderItems.reduce(
+        (acc, cur) =>
           acc +
-          (Math.round((obj.product.price / USD_TO_VND) * 100) / 100) *
-            obj.quantity,
+          convertVndToUsd(cur.product.price - cur.product.discount) *
+            cur.quantity,
         0
-      ) -
-      Math.round((discountAmount / USD_TO_VND) * 100) / 100;
+      ) - convertVndToUsd(discountAmount)
+    ).toFixed(2);
 
     var create_payment_json = {
       intent: "sale",
@@ -188,25 +178,26 @@ const placeOrder = asyncHandler(async (req, res, next) => {
         payment_method: "paypal",
       },
       redirect_urls: {
-        return_url: `http://localhost:5000/api/orders/confirm?orderId=${order.id}&totalPayment=${total}&userId=${req.user.id}`,
+        return_url: `http://localhost:5000/api/orders/confirm?orderId=${order.id}&totalPayment=${totalPaymentInUSD}&userId=${req.user.id}`,
         cancel_url: `http://localhost:5000/api/orders/cancel?orderId=${order.id}`,
       },
       transactions: [
         {
           item_list: {
             items: [
-              ...orderItems.map((item) => ({
+              ...tempOrderItems.map((item) => ({
                 name: item.product.name,
                 sku: item.product?.sku,
-                price:
-                  Math.round((item.product.price / USD_TO_VND) * 100) / 100, // convert vnd to usd
+                price: convertVndToUsd(
+                  item.product.price - item.product.discount
+                ),
                 currency: "USD",
                 quantity: item.quantity,
               })),
               {
                 name: "Voucher discount",
                 sku: "9999",
-                price: -Math.round((discountAmount / USD_TO_VND) * 100) / 100, // convert vnd to usd
+                price: -convertVndToUsd(discountAmount),
                 currency: "USD",
                 quantity: 1,
               },
@@ -214,7 +205,7 @@ const placeOrder = asyncHandler(async (req, res, next) => {
           },
           amount: {
             currency: "USD",
-            total: total,
+            total: totalPaymentInUSD,
           },
           description: "This is the payment description.",
         },
@@ -237,14 +228,20 @@ const placeOrder = asyncHandler(async (req, res, next) => {
     const order = await Order.create({
       ...fields,
       user: req.user.id,
-      totalPayment: payment,
+      orderItems: tempOrderItems.map((o) => ({
+        product: o.product._id,
+        quantity: o.quantity,
+        price: o.product.price,
+        discount: o.product.discount,
+      })),
+      totalPayment: tempTotalPayment,
     });
 
     let tableData = "";
 
     // extract products' quantity after purchasing
-    for (const item of orderItems) {
-      await Product.findByIdAndUpdate(item.product, {
+    for (const item of tempOrderItems) {
+      await Product.findByIdAndUpdate(item.product._id, {
         $inc: {
           quantity: -item.quantity,
         },
@@ -252,9 +249,13 @@ const placeOrder = asyncHandler(async (req, res, next) => {
 
       tableData += `<tr>
         <td>${item.product.name}</td>
-        <td>${moneyFormatter.format(item.product.price)}</td>
+        <td>${moneyFormatter.format(
+          item.product.price - item.product.discount
+        )}</td>
         <td>${item.quantity}</td>
-        <td>${moneyFormatter.format(item.product.price * item.quantity)}</td>
+        <td>${moneyFormatter.format(
+          (item.product.price - item.product.discount) * item.quantity
+        )}</td>
         </tr>`;
     }
 
@@ -320,10 +321,9 @@ const confirmPayment = asyncHandler(async (req, res, next) => {
       } else {
         let tableData = "";
 
-        console.log(order.orderItems);
         // update products' quantity after purchasing
         for (const item of order.orderItems) {
-          await Product.findByIdAndUpdate(item.product, {
+          await Product.findByIdAndUpdate(item.product._id, {
             $inc: {
               quantity: -item.quantity,
             },
@@ -331,10 +331,12 @@ const confirmPayment = asyncHandler(async (req, res, next) => {
 
           tableData += `<tr>
             <td>${item.product.name}</td>
-            <td>${moneyFormatter.format(item.product.price)}</td>
+            <td>${moneyFormatter.format(
+              item.product.price - item.product.discount
+            )}</td>
             <td>${item.quantity}</td>
             <td>${moneyFormatter.format(
-              item.product.price * item.quantity
+              (item.product.price - item.product.discount) * item.quantity
             )}</td>
             </tr>`;
         }
@@ -394,12 +396,7 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  const order = await Order.findById(req.params.id).populate([
-    { path: "user" },
-    {
-      path: "orderItems",
-    },
-  ]);
+  const order = await Order.findById(req.params.id).populate("user");
   if (!order) {
     res.status(404);
     throw new Error("Order not found.");
@@ -556,20 +553,6 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
 // @route   GET /api/orders
 // @access  Private (admin)
 const viewOrders = asyncHandler(async (req, res, next) => {
-  // const statuses = [
-  //   "To Pay",
-  //   "To Ship",
-  //   "To Receive",
-  //   "Completed",
-  //   "Canceled",
-  //   "Return/Refund",
-  // ];
-  // const index = Number(req.query.status);
-  // if (index < statuses.length && index >= 0) {
-  //   res.json(await Order.find({ status: statuses[index] }));
-  // } else {
-  //   res.json(await Order.find({}));
-  // }
   res.json(
     await Order.find({ isValid: true })
       .populate([

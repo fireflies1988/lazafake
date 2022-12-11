@@ -37,6 +37,11 @@ const productSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
+    discount: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
     sold: {
       type: Number,
       required: true,

@@ -2,7 +2,6 @@ const { validationResult } = require("express-validator");
 const Product = require("../models/productModel");
 const asyncHandler = require("express-async-handler");
 const CartItem = require("../models/cartItemModel");
-const { update } = require("../models/productModel");
 
 // @desc    Add a product to cart
 // @route   POST /api/cart/add?productId=

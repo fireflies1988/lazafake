@@ -22,7 +22,7 @@ const addReview = asyncHandler(async (req, res, next) => {
   }
 
   // check order
-  const order = await Order.findById(orderId).populate("orderItems");
+  const order = await Order.findById(orderId);
 
   if (!order) {
     res.status(400);

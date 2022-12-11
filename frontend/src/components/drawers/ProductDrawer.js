@@ -123,6 +123,7 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
         formData.append("sku", values.sku);
         formData.append("name", values.name);
         formData.append("price", values.price);
+        formData.append("discount", values.discount);
         formData.append("quantity", values.quantity);
         formData.append("description", values.description);
         if (values.category) {
@@ -250,6 +251,25 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
           ]}
         >
           <InputNumber addonAfter="VNĐ" />
+        </Form.Item>
+
+        <Form.Item
+          name="discount"
+          label="Discount"
+          rules={[
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || value < getFieldValue("price")) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(
+                  new Error("Discount must be less than price!")
+                );
+              },
+            }),
+          ]}
+        >
+          <InputNumber addonAfter="VNĐ" min={0} defaultValue={0} step={1000} />
         </Form.Item>
 
         <Form.Item

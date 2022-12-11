@@ -9,6 +9,5 @@ console.log(moment("2022-12-07T21:13:35+07:00").startOf('day').fromNow());
 // console.log(moment().format("M"));
 // console.log(new Date().getMonth());
 // console.log(Array.from([0, 1, 2], (x) => 2000 - x));
-let a = [{ name: "hell", age: 12}, {name: "asdf", age: 13}]
-a.map(b => { b.stupid = true; return b});
-console.log(a);
+
+console.log(Math.round((30000 / 24000) * 100) / 100)

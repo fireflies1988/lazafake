@@ -116,6 +116,10 @@ const getProducts = asyncHandler(async (req, res, next) => {
     );
   }
 
+  if (req.query.onSale === "true") {
+    products = products.filter((p) => p.discount > 0);
+  }
+
   if (req.query.category) {
     products = products.filter((p) => p?.category.name === req.query.category);
   }
@@ -149,9 +153,9 @@ const getProducts = asyncHandler(async (req, res, next) => {
   }
 
   // add mostRecentSale
-  const orders = await Order.find({ status: "Completed" })
-    .populate("orderItems")
-    .sort({ completedAt: -1 });
+  const orders = await Order.find({ status: "Completed" }).sort({
+    completedAt: -1,
+  });
 
   products.map((product) => {
     product.mostRecentSale = {
@@ -159,6 +163,7 @@ const getProducts = asyncHandler(async (req, res, next) => {
       value: Number.MAX_VALUE,
     };
     for (let order of orders) {
+      console.log(order);
       if (
         order.orderItems
           .map((i) => i.product.toString())
@@ -185,6 +190,7 @@ const getProducts = asyncHandler(async (req, res, next) => {
       }).lean();
 
       product.ratingCount = reviews.length;
+      product.averageRating = 0;
 
       if (reviews.length > 0) {
         product.averageRating =

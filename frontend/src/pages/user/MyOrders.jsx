@@ -320,10 +320,13 @@ function MyOrders() {
             ? orderItems[i]?.product?.images[0]?.url
             : "",
         productName: orderItems[i].product?.name,
-        price: moneyFormatter.format(orderItems[i].product?.price),
-        quantity: orderItems[i].quantity,
+        price: moneyFormatter.format(
+          orderItems[i]?.price - orderItems[i]?.discount
+        ),
+        quantity: orderItems[i]?.quantity,
         itemSubtotal: moneyFormatter.format(
-          orderItems[i].quantity * orderItems[i].product?.price
+          orderItems[i]?.quantity *
+            (orderItems[i]?.price - orderItems[i]?.discount)
         ),
       });
     }

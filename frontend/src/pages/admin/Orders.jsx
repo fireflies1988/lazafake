@@ -255,7 +255,7 @@ function Orders() {
     const orderItems = outerData.find(
       (o) => o.orderId === record.orderId
     ).orderItems;
-    console.log(orderItems);
+    console.log({ outerData });
     for (let i = 0; i < orderItems.length; i++) {
       data.push({
         key: i.toString(),
@@ -264,11 +264,14 @@ function Orders() {
           orderItems[i]?.product?.images?.length > 0
             ? orderItems[i]?.product?.images[0]?.url
             : "",
-        productName: orderItems[i].product?.name,
-        price: moneyFormatter.format(orderItems[i].product?.price),
-        quantity: orderItems[i].quantity,
+        productName: orderItems[i]?.product?.name,
+        price: moneyFormatter.format(
+          orderItems[i].price - orderItems[i].discount
+        ),
+        quantity: orderItems[i]?.quantity,
         itemSubtotal: moneyFormatter.format(
-          orderItems[i].quantity * orderItems[i].product?.price
+          orderItems[i]?.quantity *
+            (orderItems[i].price - orderItems[i].discount)
         ),
       });
     }

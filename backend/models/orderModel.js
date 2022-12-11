@@ -14,9 +14,23 @@ const orderSchema = mongoose.Schema(
     },
     orderItems: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "CartItem",
-        required: true,
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+        },
+        price: {
+          type: Number,
+          required: true,
+        },
+        discount: {
+          type: Number,
+          required: true,
+        },
       },
     ],
     vouchers: [

@@ -121,7 +121,7 @@ function ProductDetails() {
               {product?.name}
             </Text>
             <Text style={{ fontSize: "18px" }}>
-              {product?.averageRating && (
+              {product?.averageRating > 0 && (
                 <>
                   {Number(product?.averageRating).toFixed(1)}{" "}
                   <StarFilled style={{ color: "gold" }} />
@@ -133,8 +133,19 @@ function ProductDetails() {
               {product?.sold} Sold
             </Text>
             <Text type="warning" style={{ fontSize: "20px" }}>
-              {moneyFormatter.format(product?.price)}
+              {moneyFormatter.format(product?.price - product?.discount)}
             </Text>
+            <Space>
+              <Text type="secondary" delete>
+                {moneyFormatter.format(product?.price)}
+              </Text>
+              {product?.discount > 0 && (
+                <Text type="danger">
+                  -{Math.round((product?.discount / product?.price) * 100)}%
+                </Text>
+              )}
+            </Space>
+
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
               <InputNumber
                 addonBefore="Quantity"
@@ -318,7 +329,7 @@ function ProductDetails() {
         extra={
           <Link to={`/search?category=${product?.category?.name}`}>More</Link>
         }
-        title="Related Products"
+        title="Relevant Products"
         bodyStyle={{
           backgroundColor: "#efefef",
           padding: "0.5rem 0",
@@ -335,7 +346,8 @@ function ProductDetails() {
               _id: p._id,
               url: p?.images[0]?.url,
               name: p.name,
-              price: moneyFormatter.format(p.price),
+              price: p.price,
+              discount: p.discount,
               averageRating: p?.averageRating,
               ratingCount: p?.ratingCoung,
               sold: p.sold,

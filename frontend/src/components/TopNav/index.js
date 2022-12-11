@@ -212,7 +212,7 @@ function TopNav() {
             {user ? (
               <>
                 <Dropdown
-                  placement="topRight"
+                  placement="bottomLeft"
                   dropdownRender={() => (
                     <List
                       style={{

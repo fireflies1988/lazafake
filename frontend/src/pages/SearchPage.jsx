@@ -91,6 +91,11 @@ function SearchPage() {
     setSearchParams(searchParams);
   }
 
+  function onSaleCheck(e) {
+    searchParams.set("onSale", e.target.checked);
+    setSearchParams(searchParams);
+  }
+
   return (
     <Row gutter={16}>
       <Col span={4}>
@@ -128,6 +133,13 @@ function SearchPage() {
           <Checkbox defaultChecked={false}>Brand 2</Checkbox>
           <Checkbox defaultChecked={false}>Brand 2</Checkbox>
           <Checkbox defaultChecked={false}>Brand 2</Checkbox>
+
+          <Divider style={{ margin: "0.5rem 0" }} />
+          <Text strong>Promotion</Text>
+          <Checkbox defaultChecked={false} onChange={(e) => onSaleCheck(e)}>
+            On Sale
+          </Checkbox>
+
           <Divider style={{ margin: "0.5rem 0" }} />
           <Text strong>Price Range</Text>
           <Form layout="vertical" onFinish={onFinish}>
@@ -157,18 +169,6 @@ function SearchPage() {
                   width: "calc(50% - 8px)",
                   margin: "0 8px",
                 }}
-                // rules={[
-                //   ({ getFieldValue }) => ({
-                //     validator(_, value) {
-                //       if (!value || value > getFieldValue("minPrice")) {
-                //         return Promise.resolve();
-                //       }
-                //       return Promise.reject(
-                //         new Error("Max price must be greater than min price!")
-                //       );
-                //     },
-                //   }),
-                // ]}
               >
                 <InputNumber
                   placeholder="Max"
@@ -231,7 +231,8 @@ function SearchPage() {
                 _id: p._id,
                 url: p?.images[0]?.url,
                 name: p.name,
-                price: moneyFormatter.format(p.price),
+                price: p.price,
+                discount: p?.discount,
                 averageRating: p?.averageRating,
                 ratingCount: p?.ratingCount,
                 sold: p.sold,

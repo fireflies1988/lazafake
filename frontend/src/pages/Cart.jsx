@@ -126,17 +126,20 @@ function Cart() {
       tempData.push({
         key: cartItems[i]._id,
         _id: cartItems[i]._id,
-        productId: cartItems[i]._id,
+        productId: cartItems[i].product._id,
         thumbnail:
           cartItems[i]?.product?.images?.length > 0
             ? cartItems[i]?.product?.images[0]?.url
             : "",
         name: cartItems[i].product?.name,
-        price: moneyFormatter.format(cartItems[i].product?.price),
+        price: moneyFormatter.format(
+          cartItems[i].product?.price - cartItems[i].product?.discount
+        ),
         quantity: cartItems[i].quantity,
         productQuantity: cartItems[i].product.quantity,
         totalPrice: moneyFormatter.format(
-          cartItems[i].quantity * cartItems[i].product?.price
+          cartItems[i].quantity *
+            (cartItems[i].product?.price - cartItems[i].product?.discount)
         ),
       });
     }

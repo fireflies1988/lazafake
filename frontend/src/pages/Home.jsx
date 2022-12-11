@@ -1,19 +1,23 @@
 import {
   Avatar,
+  Badge,
   Card,
   Carousel,
+  message as antMessage,
   Space,
   Spin,
-  message as antMessage,
+  Typography,
 } from "antd";
-import React from "react";
+import moment from "moment";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import ProductList from "../components/ProductList";
-import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
 import { getCategoriesAsync } from "../features/category/categorySlice";
 import { getProductsAsync } from "../features/product/productSlice";
-import { moneyFormatter, showError } from "../utils";
+import { showError } from "../utils";
+
+const { Text } = Typography;
 
 const gridStyle = {
   width: "10%",
@@ -99,26 +103,104 @@ function Home() {
         </Card>
       </Spin>
 
-      <Card
-        title="Featured Products"
-        bodyStyle={{
-          backgroundColor: "#efefef",
-          padding: "0.5rem 0",
-        }}
-        style={{ borderRadius: 0, border: 0 }}
-      >
-        <ProductList
-          columns={6}
-          items={products.slice(0, 12).map((p) => ({
-            _id: p._id,
-            url: p?.images[0]?.url,
-            name: p.name,
-            price: moneyFormatter.format(p.price),
-            rating: "4.0",
-            sold: p.sold,
-          }))}
-        />
-      </Card>
+      <Badge.Ribbon color="yellow" placement="start">
+        <Card
+          title="Best-Selling Products"
+          bodyStyle={{
+            backgroundColor: "#efefef",
+            padding: "0.5rem 0",
+          }}
+          extra={<Link to={`/search?sortBy=sales`}>More</Link>}
+          style={{ borderRadius: 0, border: 0 }}
+        >
+          <Spin spinning={loadingProducts}>
+            <ProductList
+              columns={6}
+              items={[...products]
+                .sort((a, b) => b.sold - a.sold)
+                .slice(0, 12)
+                .map((p) => ({
+                  _id: p._id,
+                  url: p?.images[0]?.url,
+                  name: p.name,
+                  price: p.price,
+                  discount: p.discount,
+                  averageRating: p?.averageRating,
+                  ratingCount: p?.ratingCount,
+                  sold: p.sold,
+                }))}
+            />
+          </Spin>
+        </Card>
+      </Badge.Ribbon>
+
+      <Badge.Ribbon text="" color="green" placement="start">
+        <Card
+          title="New Products"
+          bodyStyle={{
+            backgroundColor: "#efefef",
+            padding: "0.5rem 0",
+          }}
+          extra={<Link to={`/search?sortBy=newest`}>More</Link>}
+          style={{ borderRadius: 0, border: 0 }}
+        >
+          <Spin spinning={loadingProducts}>
+            <ProductList
+              columns={6}
+              items={[...products]
+                .sort(
+                  (a, b) =>
+                    moment(b.createdAt).unix() - moment(a.createdAt).unix()
+                )
+                .slice(0, 12)
+                .map((p) => ({
+                  _id: p._id,
+                  url: p?.images[0]?.url,
+                  name: p.name,
+                  price: p.price,
+                  discount: p.discount,
+                  averageRating: p?.averageRating,
+                  ratingCount: p?.ratingCount,
+                  sold: p.sold,
+                }))}
+            />
+          </Spin>
+        </Card>
+      </Badge.Ribbon>
+
+      <Badge.Ribbon text="" color="red" placement="start">
+        <Card
+          title="Promotional Products"
+          bodyStyle={{
+            backgroundColor: "#efefef",
+            padding: "0.5rem 0",
+          }}
+          extra={<Link to={`/search?sortBy=newest`}>More</Link>}
+          style={{ borderRadius: 0, border: 0 }}
+        >
+          <Spin spinning={loadingProducts}>
+            <ProductList
+              columns={6}
+              items={[...products]
+                .map((p) => ({ ...p, sort: Math.random() }))
+                .sort((a, b) => a.sort - b.sort)
+                .map(({ sort, ...p }) => p)
+                .filter((p) => p.discount > 0)
+                .slice(0, 12)
+                .map((p) => ({
+                  _id: p._id,
+                  url: p?.images[0]?.url,
+                  name: p.name,
+                  price: p.price,
+                  discount: p.discount,
+                  averageRating: p?.averageRating,
+                  ratingCount: p?.ratingCount,
+                  sold: p.sold,
+                }))}
+            />
+          </Spin>
+        </Card>
+      </Badge.Ribbon>
 
       {categories?.length > 0 &&
         categories.map((c, index) => (
@@ -132,20 +214,23 @@ function Home() {
             }}
             style={{ borderRadius: 0, border: 0 }}
           >
-            <ProductList
-              columns={6}
-              items={products
-                .filter((p) => p?.category?._id.toString() === c._id)
-                .map((p) => ({
-                  _id: p._id,
-                  url: p?.images[0]?.url,
-                  name: p.name,
-                  price: moneyFormatter.format(p.price),
-                  averageRating: p?.averageRating,
-                  ratingCount: p?.ratingCount,
-                  sold: p.sold,
-                }))}
-            />
+            <Spin spinning={loadingProducts}>
+              <ProductList
+                columns={6}
+                items={products
+                  .filter((p) => p?.category?._id.toString() === c._id)
+                  .map((p) => ({
+                    _id: p._id,
+                    url: p?.images[0]?.url,
+                    name: p.name,
+                    price: p.price,
+                    discount: p.discount,
+                    averageRating: p?.averageRating,
+                    ratingCount: p?.ratingCount,
+                    sold: p.sold,
+                  }))}
+              />
+            </Spin>
           </Card>
         ))}
     </Space>

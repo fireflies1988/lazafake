@@ -182,6 +182,13 @@ function Products() {
       sorter: (a, b) => a.price - b.price,
     },
     {
+      title: "Discount",
+      dataIndex: "discount",
+      key: "discount",
+      render: (_, { discount }) => moneyFormatter.format(discount),
+      sorter: (a, b) => a.discount - b.discount,
+    },
+    {
       title: "Quantity",
       dataIndex: "quantity",
       key: "quantity",
@@ -266,6 +273,7 @@ function Products() {
         sku: products[i].sku,
         name: products[i].name,
         price: products[i].price,
+        discount: products[i].discount,
         quantity: products[i].quantity,
         sold: products[i].sold,
         mostRecentSale: products[i]?.mostRecentSale,
