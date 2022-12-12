@@ -163,12 +163,6 @@ function Products() {
       render: (_, record) => <Image width={100} src={record.thumbnail} />,
     },
     {
-      title: "SKU",
-      dataIndex: "sku",
-      key: "sku",
-      ...getColumnSearchProps("sku"),
-    },
-    {
       title: "Name",
       dataIndex: "name",
       key: "name",
@@ -270,7 +264,6 @@ function Products() {
       tempData.push({
         key: i,
         productId: products[i]._id,
-        sku: products[i].sku,
         name: products[i].name,
         price: products[i].price,
         discount: products[i].discount,

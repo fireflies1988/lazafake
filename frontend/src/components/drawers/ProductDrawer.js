@@ -139,7 +139,7 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
 
         const formData = new FormData();
         // convert values to formData
-        formData.append("sku", values.sku);
+        // formData.append("sku", values.sku);
         formData.append("name", values.name);
         formData.append("price", values.price);
         formData.append("discount", values.discount);
@@ -282,7 +282,7 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
           </Form.Item>
         )}
 
-        <Form.Item
+        {/* <Form.Item
           name="sku"
           label="SKU"
           rules={[
@@ -294,7 +294,7 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
           ]}
         >
           <Input />
-        </Form.Item>
+        </Form.Item> */}
 
         <Form.Item
           name="name"
