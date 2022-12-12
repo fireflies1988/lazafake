@@ -24,8 +24,9 @@ const receiptSchema = mongoose.Schema(
         },
       },
     ],
-    note: {
-      type: String,
+    totalPrice: {
+      type: Number,
+      required: true,
     },
   },
   {

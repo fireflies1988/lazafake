@@ -148,6 +148,10 @@ exports.validate = (method) => {
       ];
     }
 
+    case "addReceipt": {
+      return [body("products", "products can't be empty.").isArray({ min: 1 })];
+    }
+
     case "updateOrderStatus": {
       return [
         body("status").isIn([

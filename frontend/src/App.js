@@ -8,6 +8,7 @@ import Dashboard from "./pages/admin/Dashboard";
 import Orders from "./pages/admin/Orders";
 import Products from "./pages/admin/Products";
 import Users from "./pages/admin/Users";
+import WarehouseReceipts from "./pages/admin/WarehouseReceipts";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Home from "./pages/Home";
@@ -79,6 +80,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="categories" element={<Categories />} />
             <Route path="users" element={<Users />} />
+            <Route path="receipts" element={<WarehouseReceipts />} />
             <Route path="products" element={<Products />} />
             <Route path="orders" element={<Orders />} />
             <Route path="*" element={<Navigate to="dashboard" />} />

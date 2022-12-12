@@ -7,7 +7,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import AdminTopNav from "../../components/AdminTopNav";
 import Content from "../../components/Content";
 import { BiCategory } from "react-icons/bi";
-import { BsInboxes } from "react-icons/bs";
+import { BsInboxes, BsReceipt } from "react-icons/bs";
 
 const items = [
   {
@@ -24,6 +24,11 @@ const items = [
     label: <a href="/admin/categories">Categories</a>,
     key: "categories",
     icon: <BiCategory />,
+  },
+  {
+    label: <a href="/admin/receipts">Warehouse Receipts</a>,
+    key: "receipts",
+    icon: <BsReceipt />,
   },
   {
     label: <a href="/admin/products">Products</a>,

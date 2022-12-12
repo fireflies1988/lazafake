@@ -3,7 +3,6 @@ const { validationResult } = require("express-validator");
 const Category = require("../models/categoryModel");
 const Product = require("../models/productModel");
 const cloudinary = require("../configs/cloudinary");
-const { findById } = require("../models/categoryModel");
 
 // @desc    Add a new category
 // @route   POST /api/categories
