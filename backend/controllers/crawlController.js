@@ -31,13 +31,13 @@ const crawlTikiProductAsync = asyncHandler(async (req, res, next) => {
     const $ = cheerio.load(html);
 
     const name = $("div.header h1.title").text();
-    const currentPrice = reverseMoneyFormattedText(
-      $(".product-price__current-price").text()
-    );
-    const listPrice =
-      $(".product-price__list-price").length > 0
-        ? reverseMoneyFormattedText($(".product-price__list-price").text())
-        : 0;
+    // const currentPrice = reverseMoneyFormattedText(
+    //   $(".product-price__current-price").text()
+    // );
+    // const listPrice =
+    //   $(".product-price__list-price").length > 0
+    //     ? reverseMoneyFormattedText($(".product-price__list-price").text())
+    //     : 0;
     const brand = $("[data-view-id='pdp_details_view_brand']").text();
     const imageUrl = $(`[alt='${name}']`).attr("src");
     const description = $("div[class^='ToggleContent__View']").text();
@@ -51,19 +51,17 @@ const crawlTikiProductAsync = asyncHandler(async (req, res, next) => {
     });
 
     // handle price
-    let price, discount;
-    if (listPrice === 0) {
-      price = currentPrice;
-      discount = 0;
-    } else {
-      price = listPrice;
-      discount = listPrice - currentPrice;
-    }
+    // let price, discount;
+    // if (listPrice === 0) {
+    //   price = currentPrice;
+    //   discount = 0;
+    // } else {
+    //   price = listPrice;
+    //   discount = listPrice - currentPrice;
+    // }
 
     res.json({
       name,
-      price,
-      discount,
       brand,
       imageUrl,
       description,

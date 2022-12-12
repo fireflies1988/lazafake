@@ -66,7 +66,7 @@ function ProductDetails() {
   }, [products, productId]);
 
   useEffect(() => {
-    dispatch(getProductsAsync());
+    dispatch(getProductsAsync({ listed: true }));
   }, []);
 
   return (

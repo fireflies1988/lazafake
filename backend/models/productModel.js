@@ -9,6 +9,7 @@ const productSchema = mongoose.Schema(
     price: {
       type: Number,
       required: true,
+      default: 0,
     },
     description: {
       type: String,
@@ -32,6 +33,7 @@ const productSchema = mongoose.Schema(
     quantity: {
       type: Number,
       required: true,
+      default: 0,
     },
     discount: {
       type: Number,
@@ -46,6 +48,11 @@ const productSchema = mongoose.Schema(
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
+      required: true,
+    },
+    listed: {
+      type: Boolean,
+      default: false,
       required: true,
     },
   },

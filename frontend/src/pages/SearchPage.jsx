@@ -19,7 +19,6 @@ import { useSearchParams } from "react-router-dom";
 import ProductList from "../components/ProductList";
 import { getCategoriesAsync } from "../features/category/categorySlice";
 import { getProductsAsync } from "../features/product/productSlice";
-import { moneyFormatter } from "../utils";
 const { Text } = Typography;
 
 function SearchPage() {
@@ -40,7 +39,9 @@ function SearchPage() {
   }, []);
 
   useEffect(() => {
-    let params = {};
+    let params = {
+      listed: true,
+    };
     searchParams.forEach((value, key) => {
       params[key] = value;
     });

@@ -15,6 +15,22 @@ async function addProductAsync(formData, accessToken) {
   return response.data;
 }
 
+// list product
+async function listProductAsync({ productId, price }, accessToken) {
+  const response = await axios.patch(
+    `${API_URL}/${productId}/list`,
+    { price },
+    {
+      headers: {
+        Authorization: "Bearer " + accessToken,
+      },
+    }
+  );
+  console.log("listProductAsync", response);
+
+  return response.data;
+}
+
 // get products
 async function getProductsAsync(queryParams = null) {
   const response = await axios.get(API_URL, {
@@ -54,6 +70,7 @@ const productService = {
   getProductsAsync,
   deleteProductAsync,
   updateProductAsync,
+  listProductAsync
 };
 
 export default productService;

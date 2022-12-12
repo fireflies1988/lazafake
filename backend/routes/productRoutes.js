@@ -11,6 +11,7 @@ const {
   updateProduct,
   removeProductImage,
   addProductImage,
+  listProduct,
 } = require("../controllers/productController");
 const upload = require("../configs/multer");
 
@@ -47,6 +48,14 @@ router.post(
   checkPermission(Role.Admin),
   upload.single("image"),
   addProductImage
+);
+
+router.patch(
+  "/:id/list",
+  auth,
+  checkPermission(Role.Admin),
+  validate("listProduct"),
+  listProduct
 );
 
 module.exports = router;

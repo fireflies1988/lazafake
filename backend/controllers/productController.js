@@ -17,7 +17,7 @@ const addProduct = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  const { images, reviews, rating, ...fields } = req.body;
+  const { images, price, quantity, reviews, rating, ...fields } = req.body;
   const newProduct = await Product.create(fields);
 
   // handle images
@@ -44,6 +44,29 @@ const addProduct = asyncHandler(async (req, res, next) => {
   res
     .status(201)
     .json(await Product.findById(newProduct.id).populate("category"));
+});
+
+// @desc    List a product
+// @route   PATCH /api/products/:id/list
+// @access  Private (admin)
+const listProduct = asyncHandler(async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ errors: errors.array() });
+    return;
+  }
+
+  const product = await Product.findById(req.params.id).populate("category");
+  if (!product) {
+    res.status(404);
+    throw new Error("Product not found.");
+  }
+
+  product.price = req.body.price;
+  product.listed = true;
+  await product.save();
+
+  res.json(product);
 });
 
 // @desc    Add a new product image
@@ -114,6 +137,12 @@ const getProducts = asyncHandler(async (req, res, next) => {
           .includes(keyword) ||
         removeAccents(p?.category.name).toLowerCase().includes(keyword)
     );
+  }
+
+  if (req.query.listed === "true") {
+    products = products.filter((p) => p.listed === true);
+  } else if (req.query.listed === "false") {
+    products = products.filter((p) => p.listed === false);
   }
 
   if (req.query.onSale === "true") {
@@ -293,4 +322,5 @@ module.exports = {
   updateProduct,
   removeProductImage,
   addProductImage,
+  listProduct,
 };

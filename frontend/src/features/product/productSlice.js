@@ -23,6 +23,22 @@ export const addProductAsync = createAsyncThunk(
   }
 );
 
+// list product (admin)
+export const listProductAsync = createAsyncThunk(
+  "product/list",
+  async ({ productId, price }, thunkAPI) => {
+    try {
+      const accessToken = thunkAPI.getState().auth.user?.accessToken;
+      return await productService.listProductAsync(
+        { productId, price },
+        accessToken
+      );
+    } catch (err) {
+      return handleError(err, thunkAPI, "listProductAsync", false);
+    }
+  }
+);
+
 // get product
 export const getProductsAsync = createAsyncThunk(
   "product/getAll",
@@ -140,6 +156,24 @@ export const productSlice = createSlice({
         state.message = "Updated successfully.";
       })
       .addCase(updateProductAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(listProductAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(listProductAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        let index = state.products.findIndex(
+          (p) => p._id === action.payload._id
+        );
+        const mostRecentSale = state.products[index]?.mostRecentSale;
+        state.products[index] = { ...action.payload, mostRecentSale };
+        state.message = "Listed product successfully.";
+      })
+      .addCase(listProductAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

@@ -8,6 +8,15 @@ const dotenv = require("dotenv").config();
 connectDb();
 
 (async () => {
+  await Product.updateMany(
+    {},
+    {
+      $set: {
+        listed: true,
+      },
+    }
+  );
+
   console.log("success");
   process.exit();
 })();

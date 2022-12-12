@@ -27,7 +27,7 @@ import { checkUploadCondition, showError } from "../../utils";
 const { Option } = Select;
 
 function isImage(url) {
-  return /\.(jpg|jpeg|png|webp|avif|gif|svg)$/.test(url);
+  return /\.(jpg|jpeg|png|webp|avif|gif|svg)$/.test(url.toLowerCase());
 }
 
 function ProductDrawer({ open, onClose, title, type, productId }) {
@@ -50,7 +50,6 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
   } = useSelector((state) => state.product);
 
   function handleClose() {
-    console.log("hi");
     form.resetFields();
     setFileList([]);
     setTikiLink();
@@ -139,10 +138,7 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
 
         const formData = new FormData();
         // convert values to formData
-        // formData.append("sku", values.sku);
         formData.append("name", values.name);
-        formData.append("price", values.price);
-        formData.append("discount", values.discount);
         formData.append("quantity", values.quantity);
         formData.append("description", values.description);
         if (values.category) {
@@ -282,20 +278,6 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
           </Form.Item>
         )}
 
-        {/* <Form.Item
-          name="sku"
-          label="SKU"
-          rules={[
-            {
-              required: true,
-              message: "Please input product SKU!",
-              whitespace: true,
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item> */}
-
         <Form.Item
           name="name"
           label="Name"
@@ -310,50 +292,38 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
           <Input />
         </Form.Item>
 
-        <Form.Item
-          name="price"
-          label="Price"
-          rules={[
-            {
-              required: true,
-              message: "Please input product price!",
-            },
-          ]}
-        >
-          <InputNumber addonAfter="VNĐ" />
-        </Form.Item>
+        {type === "edit" && (
+          <Form.Item name="price" label="Price">
+            <InputNumber addonAfter="VNĐ" disabled defaultValue={0} />
+          </Form.Item>
+        )}
 
-        <Form.Item
-          name="discount"
-          label="Discount"
-          rules={[
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || value < getFieldValue("price")) {
-                  return Promise.resolve();
-                }
-                return Promise.reject(
-                  new Error("Discount must be less than price!")
-                );
-              },
-            }),
-          ]}
-        >
-          <InputNumber addonAfter="VNĐ" min={0} defaultValue={0} step={1000} />
-        </Form.Item>
+        {type === "edit" && (
+          <Form.Item
+            name="discount"
+            label="Discount"
+            rules={[
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || value <= getFieldValue("price")) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(
+                    new Error("Discount must be less than price!")
+                  );
+                },
+              }),
+            ]}
+          >
+            <InputNumber disabled addonAfter="VNĐ" min={0} defaultValue={0} />
+          </Form.Item>
+        )}
 
-        <Form.Item
-          name="quantity"
-          label="Quantity"
-          rules={[
-            {
-              required: true,
-              message: "Please input product quantity!",
-            },
-          ]}
-        >
-          <InputNumber min={1} />
-        </Form.Item>
+        {type === "edit" && (
+          <Form.Item name="quantity" label="Quantity">
+            <InputNumber min={1} disabled defaultValue={0} />
+          </Form.Item>
+        )}
 
         {type === "edit" && (
           <>

@@ -51,7 +51,7 @@ function Home() {
 
   useEffect(() => {
     dispatch(getCategoriesAsync());
-    dispatch(getProductsAsync());
+    dispatch(getProductsAsync({ listed: true }));
   }, []);
 
   useEffect(() => {

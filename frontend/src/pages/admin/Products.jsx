@@ -8,6 +8,7 @@ import {
   message as antMessage,
   Spin,
   Input,
+  Segmented,
 } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,6 +18,7 @@ import { moneyFormatter, showError } from "../../utils";
 import Highlighter from "react-highlight-words";
 import { getCategoriesAsync } from "../../features/category/categorySlice";
 import moment from "moment";
+import ListProductModal from "../../components/modals/ListProductModal";
 
 function Products() {
   const [openAdd, setOpenAdd] = useState(false);
@@ -27,6 +29,9 @@ function Products() {
   const [productId, setProductId] = useState();
   const dispatch = useDispatch();
   const { categories } = useSelector((state) => state.category);
+
+  const [segmented, setSegmented] = useState("Listed");
+  const [openList, setOpenList] = useState(false);
 
   useEffect(() => {
     dispatch(getCategoriesAsync());
@@ -142,7 +147,6 @@ function Products() {
   // ---- filter
   const [filteredInfo, setFilteredInfo] = useState({});
   const handleChange = (pagination, filters, sorter) => {
-    console.log("Various parameters", pagination, filters, sorter);
     setFilteredInfo(filters);
   };
   // ----
@@ -214,17 +218,30 @@ function Products() {
       onFilter: (value, record) => record.category.includes(value),
     },
     {
-      title: "Imported At",
+      title: "Created At",
       dataIndex: "createdAt",
       key: "createdAt",
       sorter: (a, b) => moment(a.createdAt).unix() - moment(b.createdAt).unix(),
     },
     {
-      title: "Action",
+      title: "Actions",
       key: "action",
       fixed: "right",
       render: (_, record) => (
-        <Space>
+        <Space direction="vertical" style={{ display: "flex" }}>
+          {segmented === "Unlisted" && (
+            <Button
+              type="link"
+              size="small"
+              onClick={() => {
+                setOpenList(true);
+                setProductId(record.productId);
+              }}
+            >
+              List
+            </Button>
+          )}
+
           <Button
             type="link"
             ghost
@@ -255,8 +272,10 @@ function Products() {
   }, [isError, isSuccess]);
 
   useEffect(() => {
-    dispatch(getProductsAsync());
-  }, []);
+    dispatch(
+      getProductsAsync({ listed: segmented === "Listed" ? true : false })
+    );
+  }, [segmented]);
 
   useEffect(() => {
     const tempData = [];
@@ -292,16 +311,24 @@ function Products() {
         </Button>
       }
     >
-      <Spin spinning={isLoading}>
-        <Table
-          columns={columns}
-          dataSource={data}
-          scroll={{
-            x: 1500,
-          }}
-          onChange={handleChange}
+      <Space direction="vertical" style={{ display: "flex" }}>
+        <Segmented
+          options={["Listed", "Unlisted"]}
+          value={segmented}
+          onChange={(value) => setSegmented(value)}
         />
-      </Spin>
+        <Spin spinning={isLoading}>
+          <Table
+            columns={columns}
+            dataSource={data}
+            scroll={{
+              x: 1500,
+            }}
+            onChange={handleChange}
+          />
+        </Spin>
+      </Space>
+
       <ProductDrawer
         onClose={() => setOpenAdd(false)}
         open={openAdd}
@@ -314,6 +341,11 @@ function Products() {
         type="edit"
         title="Product Details"
         productId={productId}
+      />
+      <ListProductModal
+        productId={productId}
+        open={openList}
+        onCancel={() => setOpenList(false)}
       />
     </Card>
   );
