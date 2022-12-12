@@ -204,8 +204,8 @@ function Products() {
       title: "Most Recent Sale",
       dataIndex: "mostRecentSale",
       key: "mostRecentSale",
-      render: (_, { mostRecentSale }) => mostRecentSale.label,
-      sorter: (a, b) => a.mostRecentSale.value - b.mostRecentSale.value,
+      render: (_, { mostRecentSale }) => mostRecentSale?.label,
+      sorter: (a, b) => a.mostRecentSale?.value - b.mostRecentSale?.value,
     },
     {
       title: "Category",

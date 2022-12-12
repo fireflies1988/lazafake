@@ -1,12 +1,14 @@
 import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   Button,
+  Col,
   Drawer,
   Form,
   Input,
   InputNumber,
   message as antMessage,
   Popconfirm,
+  Row,
   Select,
   Space,
   Spin,
@@ -20,26 +22,38 @@ import {
   deleteProductAsync,
   updateProductAsync,
 } from "../../features/product/productSlice";
-import { checkUploadCondition } from "../../utils";
+import useFetch from "../../hooks/useFetch";
+import { checkUploadCondition, showError } from "../../utils";
 const { Option } = Select;
+
+function isImage(url) {
+  return /\.(jpg|jpeg|png|webp|avif|gif|svg)$/.test(url);
+}
 
 function ProductDrawer({ open, onClose, title, type, productId }) {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
+  const [tikiLink, setTikiLink] = useState();
   const [deletedImages, setDeletedImages] = useState([]); // contain imageIds
   const dispatch = useDispatch();
   const { categories, isLoading: loadingCategories } = useSelector(
     (state) => state.category
   );
+  const { crawlTikiProductAsync } = useFetch();
+
   const {
     isSuccess,
+    isError,
     isLoading: savingProduct,
     products,
+    message,
   } = useSelector((state) => state.product);
 
   function handleClose() {
     console.log("hi");
     form.resetFields();
+    setFileList([]);
+    setTikiLink();
     onClose();
   }
 
@@ -76,12 +90,17 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
       if (type === "add") {
         form.resetFields();
         setFileList([]);
+        setTikiLink();
       }
 
       if (type === "edit") {
       }
     }
-  }, [isSuccess]);
+
+    if (isError) {
+      showError(antMessage, message);
+    }
+  }, [isSuccess, isError]);
 
   const uploadProps = {
     onRemove: (file) => {
@@ -165,6 +184,41 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
       });
   }
 
+  async function copyData() {
+    if (!tikiLink?.trim()) {
+      return antMessage.error("Please input product link!");
+    }
+
+    const response = await crawlTikiProductAsync(tikiLink);
+
+    console.log(response);
+    const { brand, specifications, imageUrl, ...rest } = response;
+
+    // set initial fields value
+    form.setFieldsValue(rest);
+    if (specifications) {
+      form.setFieldValue("specifications", JSON.parse(specifications));
+    } else {
+      form.setFieldValue("specifications", []);
+    }
+
+    if (isImage(imageUrl)) {
+      // convert imageUrl to file
+      const res = await fetch(response.imageUrl);
+      const blob = await res.blob();
+      const file = new File([blob], "image", {
+        type: blob.type,
+      });
+
+      setFileList([
+        {
+          url: imageUrl,
+          file: file,
+        },
+      ]);
+    }
+  }
+
   return (
     <Drawer
       destroyOnClose={true}
@@ -212,6 +266,22 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
         wrapperCol={{ span: 20 }}
         scrollToFirstError
       >
+        {type === "add" && (
+          <Form.Item label="Tiki Product Link">
+            <Row gutter={8}>
+              <Col span={16}>
+                <Input
+                  value={tikiLink}
+                  onChange={(e) => setTikiLink(e.target.value)}
+                />
+              </Col>
+              <Col span={8}>
+                <Button onClick={copyData}>Copy Data</Button>
+              </Col>
+            </Row>
+          </Form.Item>
+        )}
+
         <Form.Item
           name="sku"
           label="SKU"

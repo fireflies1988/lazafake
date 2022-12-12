@@ -23,48 +23,20 @@ const createVoucher = asyncHandler(async (req, res, next) => {
     );
   }
 
-  if (fields.type === "Free Shipping") {
-    // Free Shipping voucher
-    // check discount type
-    if (
-      fields.isPercentageDiscount === true ||
-      fields.isPercentageDiscount === "true"
-    ) {
+  if (
+    fields.isPercentageDiscount === true ||
+    fields.isPercentageDiscount === "true"
+  ) {
+    // maxDiscountAmount is required, discountAmount < 100
+    if (fields.discountAdmount >= 100) {
       res.status(400);
-      throw new Error(
-        "You can't apply percentage discount for 'Free Shipping' voucher type. Please change isPercentageDiscount's value from true to false and adjust the discountAmount."
-      );
+      throw new Error("discountAmount can't exceed 100%.");
     }
 
-    // maxDiscountAmount is not necessary
-    delete fields.maxDiscountAmount;
-  } else {
-    // LazaFake voucher
-    if (
-      fields.isPercentageDiscount === true ||
-      fields.isPercentageDiscount === "true"
-    ) {
-      // maxDiscountAmount is required, discountAmount < 100
-      if (fields.discountAdmount >= 100) {
-        res.status(400);
-        throw new Error("discountAmount can't exceed 100%.");
-      }
-
-      if (!fields.maxDiscountAmount) {
-        res.status(400);
-        throw new Error("maxDiscountAmount is required.");
-      }
-    }
-  }
-
-  // check if this voucher is limited
-  if (fields.limited === true || fields.limited === "true") {
-    if (!fields.limit) {
+    if (!fields.maxDiscountAmount) {
       res.status(400);
-      throw new Error("limit is required.");
+      throw new Error("maxDiscountAmount is required.");
     }
-  } else {
-    delete fields.limit;
   }
 
   const voucher = await Voucher.create(fields);

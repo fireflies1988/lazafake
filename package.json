@@ -22,6 +22,7 @@
   "homepage": "https://github.com/fireflies1988/lazafake#readme",
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "cheerio": "^1.0.0-rc.12",
     "cloudinary": "^1.32.0",
     "concurrently": "^7.6.0",
     "cors": "^2.8.5",
@@ -36,6 +37,8 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^6.8.0",
     "nodemon": "^2.0.20",
-    "paypal-rest-sdk": "^1.8.1"
+    "paypal-rest-sdk": "^1.8.1",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.6"
   }
 }

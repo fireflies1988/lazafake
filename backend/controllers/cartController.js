@@ -12,7 +12,7 @@ const addToCart = asyncHandler(async (req, res, next) => {
     res.status(400).json({ errors: errors.array() });
     return;
   }
-  
+
   if (!req.query.productId) {
     res.status(400);
     throw new Error(

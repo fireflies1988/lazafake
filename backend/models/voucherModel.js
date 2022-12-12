@@ -17,10 +17,6 @@ const voucherSchema = mongoose.Schema(
       enum: ["Free Shipping", "LazaFake"],
       required: true,
     },
-    limited: {
-      type: Boolean,
-      required: true,
-    },
     limit: {
       type: Number,
     },
@@ -39,7 +35,6 @@ const voucherSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
-    // if it's percentage discount
     maxDiscountAmount: {
       type: Number,
     },
@@ -47,6 +42,10 @@ const voucherSchema = mongoose.Schema(
       type: Number,
       required: true,
       default: 0,
+    },
+    startDate: {
+      type: Date,
+      required: true,
     },
     expirationDate: {
       type: Date,

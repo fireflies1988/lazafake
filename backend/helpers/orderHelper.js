@@ -26,13 +26,11 @@ function checkVoucherConditions(res, voucherObj, userId, totalPayment) {
   }
 
   // check limit
-  if (voucherObj.limited === true) {
-    if (voucherObj.usersUsed.length >= voucherObj.limit) {
-      res.status(422);
-      throw new Error(
-        "This voucher has already been used the maximum number of times."
-      );
-    }
+  if (voucherObj.usersUsed.length >= voucherObj.limit) {
+    res.status(422);
+    throw new Error(
+      "This voucher has already been used the maximum number of times."
+    );
   }
 }
 

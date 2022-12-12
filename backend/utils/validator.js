@@ -121,10 +121,13 @@ exports.validate = (method) => {
         body("name", "Voucher name is required.").trim().notEmpty(),
         body("code", "Voucher code is required").trim().notEmpty(),
         body("type").isIn(["LazaFake", "Free Shipping"]),
-        body("limited").isBoolean(),
         body("isPercentageDiscount").isBoolean(),
+        body("limit", "Limit is required.")
+          .trim()
+          .isNumeric({ no_symbols: true }),
         body("discountAmount").trim().isDecimal(),
         body("minSpend").optional().trim().isDecimal(),
+        body("startDate").isDate(),
         body("expirationDate").optional().isDate(),
       ];
     }
@@ -177,6 +180,12 @@ exports.validate = (method) => {
           .trim()
           .isNumeric({ no_symbols: true }),
         body("comment", "Comment is required.").trim().notEmpty(),
+      ];
+    }
+
+    case "crawlTikiProduct": {
+      return [
+        body("productLink", "productLink is required.").trim().notEmpty(),
       ];
     }
   }

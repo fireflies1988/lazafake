@@ -84,7 +84,13 @@ export const productSlice = createSlice({
       .addCase(addProductAsync.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.products.push(action.payload);
+        state.products.push({
+          ...action.payload,
+          mostRecentSale: {
+            label: "None",
+            value: Number.MAX_VALUE,
+          },
+        });
         state.message = "New product has been added successfully.";
       })
       .addCase(addProductAsync.rejected, (state, action) => {

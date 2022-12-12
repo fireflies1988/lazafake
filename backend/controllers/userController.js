@@ -443,11 +443,6 @@ const changeRole = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  if (req.user.role !== "spadmin") {
-    res.status(403);
-    throw new Error("You don't have permission to access this resource.");
-  }
-
   const user = await User.findById(req.params.id).select(
     "-passwordHash -resetTokenHash"
   );

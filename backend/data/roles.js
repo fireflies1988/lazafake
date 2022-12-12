@@ -1,4 +1,5 @@
 module.exports = {
-    Admin: "admin",
-    User: "user",
-}
+  Admin: "admin",
+  User: "user",
+  SpAdmin: "spadmin",
+};
