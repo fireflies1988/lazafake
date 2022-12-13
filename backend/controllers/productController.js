@@ -7,6 +7,7 @@ const moment = require("moment");
 const Order = require("../models/orderModel");
 const Review = require("../models/reviewModel");
 const PriceChange = require("../models/priceChangeModel");
+const Receipt = require("../models/receiptModel");
 
 // @desc    Add a new product
 // @route   POST /api/products
@@ -163,7 +164,7 @@ const removeProductImage = asyncHandler(async (req, res, next) => {
 // @route   GET /api/products?category=&limit=&
 // @access  Public
 const getProducts = asyncHandler(async (req, res, next) => {
-  let products = await Product.find({})
+  let products = await Product.find({ deleted: false })
     .populate("category")
     .limit(req.query.limit)
     .lean();
@@ -287,6 +288,32 @@ const deleteProduct = asyncHandler(async (req, res, next) => {
     throw new Error("Product not found");
   }
 
+  if (product.deleted) {
+    res.status(409);
+    throw new Error("This product is already deleted.");
+  }
+
+  // listed => don't allow deleting completely
+  if (product.listed) {
+    product.deleted = true;
+    await product.save();
+    return res.json(product);
+  }
+
+  // unlisted and have imported products => don't allow deleting completely => soft delete
+  const receipts = await Receipt.find({});
+  for (const receipt of receipts) {
+    if (
+      receipt.products.filter((p) => p.product.toString() === product.id)
+        .length > 0
+    ) {
+      product.deleted = true;
+      await product.save();
+      return res.json(product);
+    }
+  }
+
+  // unlisted and never imports products => allow deleting completely
   try {
     // remove cloudinary folder
     await cloudinary.api.delete_resources_by_prefix(

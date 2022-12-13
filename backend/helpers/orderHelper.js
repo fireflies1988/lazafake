@@ -53,6 +53,11 @@ function checkCartItem(res, cartItemObj, userId) {
     throw new Error(`This item ${cartItemObj.id} is not in your cart`);
   }
 
+  if (cartItemObj.quantity === 0) {
+    res.status(400);
+    throw new Error("Invalid quantity.");
+  }
+
   if (cartItemObj.quantity > cartItemObj.product.quantity) {
     res.status(409);
     throw new Error(

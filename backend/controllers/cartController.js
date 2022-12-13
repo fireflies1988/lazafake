@@ -26,6 +26,11 @@ const addToCart = asyncHandler(async (req, res, next) => {
     throw new Error("Product not found.");
   }
 
+  if (product.deleted) {
+    res.status(409);
+    throw new Error("Can't add deleted product to cart.");
+  }
+
   // check if product is added to cart
   const cartItem = await CartItem.findOne({
     user: req.user.id,
@@ -41,6 +46,7 @@ const addToCart = asyncHandler(async (req, res, next) => {
     res.status(400);
     throw new Error("Invalid quantity!");
   }
+
   if (req.body.quantity > product.quantity) {
     res.status(409);
     throw new Error(
@@ -141,8 +147,13 @@ const getCartItems = asyncHandler(async (req, res, next) => {
   );
 
   // automatically update items' quantity if they exceed the maximum quantity of the product.
+  // automatically delete items that are marked as deleted or have quantity === 0
   for (const item of cartItems) {
-    if (item.quantity > item.product.quantity) {
+    if (item.product.deleted) {
+      await CartItem.deleteOne({ _id: item._id });
+    } else if (item.product.quantity === 0) {
+      await CartItem.deleteOne({ _id: item._id });
+    } else if (item.quantity > item.product.quantity) {
       await CartItem.updateOne(
         { _id: item._id },
         {

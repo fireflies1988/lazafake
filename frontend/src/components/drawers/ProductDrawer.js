@@ -95,10 +95,6 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
       if (type === "edit") {
       }
     }
-
-    if (isError) {
-      showError(antMessage, message);
-    }
   }, [isSuccess, isError]);
 
   const uploadProps = {
