@@ -12,6 +12,7 @@ const {
   removeProductImage,
   addProductImage,
   listProduct,
+  changeProductPrice,
 } = require("../controllers/productController");
 const upload = require("../configs/multer");
 
@@ -56,6 +57,14 @@ router.patch(
   checkPermission(Role.Admin),
   validate("listProduct"),
   listProduct
+);
+
+router.post(
+  "/:id/change-price",
+  auth,
+  checkPermission(Role.Admin),
+  validate("changeProductPrice"),
+  changeProductPrice
 );
 
 module.exports = router;

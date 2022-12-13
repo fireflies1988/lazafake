@@ -31,6 +31,22 @@ async function listProductAsync({ productId, price }, accessToken) {
   return response.data;
 }
 
+// change product price
+async function changeProductPriceAsync({ productId, newPrice }, accessToken) {
+  const response = await axios.post(
+    `${API_URL}/${productId}/change-price`,
+    { newPrice },
+    {
+      headers: {
+        Authorization: "Bearer " + accessToken,
+      },
+    }
+  );
+  console.log("changeProductPriceAsync", response);
+
+  return response.data;
+}
+
 // get products
 async function getProductsAsync(queryParams = null) {
   const response = await axios.get(API_URL, {
@@ -70,7 +86,8 @@ const productService = {
   getProductsAsync,
   deleteProductAsync,
   updateProductAsync,
-  listProductAsync
+  listProductAsync,
+  changeProductPriceAsync,
 };
 
 export default productService;

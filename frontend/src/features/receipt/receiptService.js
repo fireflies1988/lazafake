@@ -20,6 +20,7 @@ async function addReceiptAsync({ products }, accessToken) {
   return response.data;
 }
 
+// get receipts
 async function getReceiptsAsync(accessToken) {
   const response = await axios.get(API_URL, {
     headers: {

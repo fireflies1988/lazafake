@@ -1,0 +1,4 @@
+# Tính thời gian lần bán gần đây nhất: tính dựa vào lịch sử đơn hàng
+    - Lấy danh sách tất cả đơn hàng có status "Completed" và sắp xếp theo giời gian hoàn tất giao giảm dần.
+    - Cho chạy vòng lặp kiểm tra từng đơn hàng xem sản phẩm đó có năm trong đơn hàng hay không và vòng lặp sẽ dừng ngay khi mà tìm thấy đơn thấy đầu tiên thõa điều kiện (vì ở trên em có sắp xếp đơn hàng theo thời gian hoàn tất giảm dần, nên cái đầu tiền tìm thấy sẽ là đơn hàng gần đây nhất có chứa sản phẩm)
+    - Lần bán gần đây nhất là thời gian hoàn tất của đơn hàng vừa tìm được.

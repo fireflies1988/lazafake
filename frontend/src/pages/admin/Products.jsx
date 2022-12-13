@@ -19,6 +19,7 @@ import Highlighter from "react-highlight-words";
 import { getCategoriesAsync } from "../../features/category/categorySlice";
 import moment from "moment";
 import ListProductModal from "../../components/modals/ListProductModal";
+import ChangePriceModal from "../../components/modals/ChangePriceModal";
 
 function Products() {
   const [openAdd, setOpenAdd] = useState(false);
@@ -32,6 +33,8 @@ function Products() {
 
   const [segmented, setSegmented] = useState("Listed");
   const [openList, setOpenList] = useState(false);
+  const [openChangePrice, setOpenChangePrice] = useState(false);
+  const [productPrice, setProductPrice] = useState();
 
   useEffect(() => {
     dispatch(getCategoriesAsync());
@@ -164,7 +167,7 @@ function Products() {
       dataIndex: "thumbnail",
       key: "thumbnail",
       fixed: "left",
-      render: (_, record) => <Image width={100} src={record.thumbnail} />,
+      render: (_, record) => <Image width={50} src={record.thumbnail} />,
     },
     {
       title: "Name",
@@ -225,7 +228,7 @@ function Products() {
     },
     {
       title: "Actions",
-      key: "action",
+      key: "actions",
       fixed: "right",
       render: (_, record) => (
         <Space direction="vertical" style={{ display: "flex" }}>
@@ -242,6 +245,19 @@ function Products() {
             </Button>
           )}
 
+          {segmented === "Listed" && (
+            <Button
+              type="link"
+              size="small"
+              onClick={() => {
+                setOpenChangePrice(true);
+                setProductId(record.productId);
+                setProductPrice(record.price);
+              }}
+            >
+              Change Price
+            </Button>
+          )}
           <Button
             type="link"
             ghost
@@ -346,6 +362,12 @@ function Products() {
         productId={productId}
         open={openList}
         onCancel={() => setOpenList(false)}
+      />
+      <ChangePriceModal
+        productId={productId}
+        price={productPrice}
+        open={openChangePrice}
+        onCancel={() => setOpenChangePrice(false)}
       />
     </Card>
   );

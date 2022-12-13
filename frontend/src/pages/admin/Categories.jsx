@@ -155,7 +155,7 @@ function Categories() {
       title: "Thumbnail",
       dataIndex: "thumbnail",
       key: "thumbnail",
-      render: (_, { thumbnail }) => <Image width={100} src={thumbnail} />,
+      render: (_, { thumbnail }) => <Image width={50} src={thumbnail} />,
     },
     {
       title: "Created At",

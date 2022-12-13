@@ -8,6 +8,7 @@ import AdminTopNav from "../../components/AdminTopNav";
 import Content from "../../components/Content";
 import { BiCategory } from "react-icons/bi";
 import { BsInboxes, BsReceipt } from "react-icons/bs";
+import { MdOutlinePriceChange } from "react-icons/md";
 
 const items = [
   {
@@ -29,6 +30,11 @@ const items = [
     label: <a href="/admin/receipts">Warehouse Receipts</a>,
     key: "receipts",
     icon: <BsReceipt />,
+  },
+  {
+    label: <a href="/admin/price-history">Price History</a>,
+    key: "price-history",
+    icon: <MdOutlinePriceChange />,
   },
   {
     label: <a href="/admin/products">Products</a>,

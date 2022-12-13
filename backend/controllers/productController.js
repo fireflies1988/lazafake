@@ -6,6 +6,7 @@ const { removeAccents, containsAccents } = require("../utils/accentUtils");
 const moment = require("moment");
 const Order = require("../models/orderModel");
 const Review = require("../models/reviewModel");
+const PriceChange = require("../models/priceChangeModel");
 
 // @desc    Add a new product
 // @route   POST /api/products
@@ -62,10 +63,51 @@ const listProduct = asyncHandler(async (req, res, next) => {
     throw new Error("Product not found.");
   }
 
+  if (product.listed) {
+    res.status(409);
+    throw new Error("This product is already listed!");
+  }
+
   product.price = req.body.price;
   product.listed = true;
   await product.save();
 
+  res.json(product);
+});
+
+// @desc    Change product price
+// @route   POST /api/products/:id/change-price
+// @access  Private (admin)
+const changeProductPrice = asyncHandler(async (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ errors: errors.array() });
+    return;
+  }
+
+  const product = await Product.findById(req.params.id).populate("category");
+  if (!product) {
+    res.status(404);
+    throw new Error("Product not found.");
+  }
+
+  const oldPrice = product.price;
+  const { newPrice } = req.body;
+  if (oldPrice === newPrice) {
+    res.status(400);
+    throw new Error("No changes found.");
+  }
+
+  product.price = newPrice;
+
+  await PriceChange.create({
+    user: req.user.id,
+    product: req.params.id,
+    oldPrice: oldPrice,
+    newPrice: newPrice,
+  });
+
+  await product.save();
   res.json(product);
 });
 
@@ -323,4 +365,5 @@ module.exports = {
   removeProductImage,
   addProductImage,
   listProduct,
+  changeProductPrice,
 };

@@ -6,6 +6,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import Categories from "./pages/admin/Categories";
 import Dashboard from "./pages/admin/Dashboard";
 import Orders from "./pages/admin/Orders";
+import PriceChanges from "./pages/admin/PriceChanges";
 import Products from "./pages/admin/Products";
 import Users from "./pages/admin/Users";
 import WarehouseReceipts from "./pages/admin/WarehouseReceipts";
@@ -81,6 +82,7 @@ function App() {
             <Route path="categories" element={<Categories />} />
             <Route path="users" element={<Users />} />
             <Route path="receipts" element={<WarehouseReceipts />} />
+            <Route path="price-history" element={<PriceChanges />} />
             <Route path="products" element={<Products />} />
             <Route path="orders" element={<Orders />} />
             <Route path="*" element={<Navigate to="dashboard" />} />

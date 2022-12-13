@@ -39,6 +39,22 @@ export const listProductAsync = createAsyncThunk(
   }
 );
 
+// change price (admin)
+export const changeProductPriceAsync = createAsyncThunk(
+  "product/change-price",
+  async ({ productId, newPrice }, thunkAPI) => {
+    try {
+      const accessToken = thunkAPI.getState().auth.user?.accessToken;
+      return await productService.changeProductPriceAsync(
+        { productId, newPrice },
+        accessToken
+      );
+    } catch (err) {
+      return handleError(err, thunkAPI, "changeProductPriceAsync", false);
+    }
+  }
+);
+
 // get product
 export const getProductsAsync = createAsyncThunk(
   "product/getAll",
@@ -166,14 +182,30 @@ export const productSlice = createSlice({
       .addCase(listProductAsync.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
+        state.products = state.products.filter(
+          (p) => p._id !== action.payload._id
+        );
+        state.message = "Listed product successfully.";
+      })
+      .addCase(listProductAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(changeProductPriceAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(changeProductPriceAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
         let index = state.products.findIndex(
           (p) => p._id === action.payload._id
         );
         const mostRecentSale = state.products[index]?.mostRecentSale;
         state.products[index] = { ...action.payload, mostRecentSale };
-        state.message = "Listed product successfully.";
+        state.message = "Changed product price successfully.";
       })
-      .addCase(listProductAsync.rejected, (state, action) => {
+      .addCase(changeProductPriceAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

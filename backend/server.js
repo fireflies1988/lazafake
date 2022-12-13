@@ -28,6 +28,7 @@ app.use("/api/mail", require("./routes/mailRoutes"));
 app.use("/api/reviews", require("./routes/reviewRoutes"));
 app.use("/api/crawl", require("./routes/crawlRoutes"));
 app.use("/api/receipts", require("./routes/receiptRoutes"));
+app.use("/api/price-changes", require("./routes/priceChangeRoutes"));
 
 app.use(errorHandler);
 

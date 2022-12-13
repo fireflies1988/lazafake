@@ -152,6 +152,14 @@ exports.validate = (method) => {
       return [body("products", "products can't be empty.").isArray({ min: 1 })];
     }
 
+    case "changeProductPrice": {
+      return [
+        body("newPrice", "newPrice is required.")
+          .trim()
+          .isNumeric({ no_symbols: true }),
+      ];
+    }
+
     case "updateOrderStatus": {
       return [
         body("status").isIn([
