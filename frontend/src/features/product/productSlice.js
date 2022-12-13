@@ -4,6 +4,7 @@ import productService from "./productService";
 
 const initialState = {
   products: [],
+  segmented: "",
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -107,6 +108,9 @@ export const productSlice = createSlice({
       state.isSuccess = false;
       state.message = "";
     },
+    changeSegmented: (state, action) => {
+      state.segmented = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -116,13 +120,15 @@ export const productSlice = createSlice({
       .addCase(addProductAsync.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.products.push({
-          ...action.payload,
-          mostRecentSale: {
-            label: "None",
-            value: Number.MAX_VALUE,
-          },
-        });
+        if (state.segmented === "Unlisted") {
+          state.products.push({
+            ...action.payload,
+            mostRecentSale: {
+              label: "None",
+              value: Number.MAX_VALUE,
+            },
+          });
+        }
         state.message = "New product has been added successfully.";
       })
       .addCase(addProductAsync.rejected, (state, action) => {
@@ -213,5 +219,5 @@ export const productSlice = createSlice({
   },
 });
 
-export const { reset } = productSlice.actions;
+export const { reset, changeSegmented } = productSlice.actions;
 export default productSlice.reducer;

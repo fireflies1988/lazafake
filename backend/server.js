@@ -29,6 +29,7 @@ app.use("/api/reviews", require("./routes/reviewRoutes"));
 app.use("/api/crawl", require("./routes/crawlRoutes"));
 app.use("/api/receipts", require("./routes/receiptRoutes"));
 app.use("/api/price-changes", require("./routes/priceChangeRoutes"));
+app.use("/api/promotions", require("./routes/promotionRoutes"));
 
 app.use(errorHandler);
 

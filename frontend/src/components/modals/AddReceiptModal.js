@@ -89,7 +89,7 @@ function AddReceiptModal({ open, onCancel }) {
         <InputNumber
           min={0}
           addonAfter="VND"
-          defaultValue={record.price}
+          value={record.price}
           onChange={(value) => {
             setData(
               data.map((d) => {
@@ -110,7 +110,7 @@ function AddReceiptModal({ open, onCancel }) {
       render: (_, record) => (
         <InputNumber
           min={1}
-          defaultValue={record.quantity}
+          value={record.quantity}
           onChange={(value) => {
             setData(
               data.map((d) => {

@@ -160,6 +160,15 @@ exports.validate = (method) => {
       ];
     }
 
+    case "addPromotion": {
+      return [
+        body("name", "name is required.").trim().notEmpty(),
+        body("from", "from is required.").isISO8601(),
+        body("to", "to is required.").isISO8601(),
+        body("products", "products can't be empty.").isArray({ min: 1 }),
+      ];
+    }
+
     case "updateOrderStatus": {
       return [
         body("status").isIn([

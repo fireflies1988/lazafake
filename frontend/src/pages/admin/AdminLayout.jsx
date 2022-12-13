@@ -42,8 +42,8 @@ const items = [
     icon: <RiProductHuntLine />,
   },
   {
-    label: <a href="/admin/products">Vouchers</a>,
-    key: "vouchers",
+    label: <a href="/admin/promotions">Promotions</a>,
+    key: "promotions",
     icon: <RiCoupon3Line />,
   },
   {

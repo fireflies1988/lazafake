@@ -48,7 +48,6 @@ const productSchema = mongoose.Schema(
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-      required: true,
     },
     listed: {
       type: Boolean,

@@ -13,7 +13,11 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ProductDrawer from "../../components/drawers/ProductDrawer";
-import { getProductsAsync, reset } from "../../features/product/productSlice";
+import {
+  getProductsAsync,
+  reset,
+  changeSegmented,
+} from "../../features/product/productSlice";
 import { moneyFormatter, showError } from "../../utils";
 import Highlighter from "react-highlight-words";
 import { getCategoriesAsync } from "../../features/category/categorySlice";
@@ -291,6 +295,7 @@ function Products() {
     dispatch(
       getProductsAsync({ listed: segmented === "Listed" ? true : false })
     );
+    dispatch(changeSegmented(segmented));
   }, [segmented]);
 
   useEffect(() => {
