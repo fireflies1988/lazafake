@@ -206,6 +206,7 @@ function MyOrders() {
         key: i.toString(),
         orderId: orders[i]._id,
         orderDetails: orders[i],
+        shippingAddress: orders[i]?.shippingAddress,
         orderItems: orders[i].orderItems,
         orderedAt: orders[i].createdAt,
         finishedAt: orders[i]?.completedAt ?? "",

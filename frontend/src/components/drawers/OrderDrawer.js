@@ -1,4 +1,13 @@
-import { Button, Drawer, Popconfirm, Space, Steps, Typography } from "antd";
+import GoogleMap from "../GoogleMap";
+import {
+  Button,
+  Descriptions,
+  Drawer,
+  Popconfirm,
+  Space,
+  Steps,
+  Typography,
+} from "antd";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateOrderStatusAsync } from "../../features/order/orderSlice";
@@ -18,6 +27,7 @@ function OrderDrawer({ onClose, open, orderId, type }) {
   const [status, setStatus] = useState("process");
   const [disabled, setDisabled] = useState(false);
   const [orderData, setOrderData] = useState();
+  const [address, setAddress] = useState("");
 
   const dispatch = useDispatch();
   const { orders: allOrders, isLoading: loadingAllOrders } = useSelector(
@@ -36,6 +46,10 @@ function OrderDrawer({ onClose, open, orderId, type }) {
   }, [orderId, allOrders, myOrders, open]);
 
   useEffect(() => {
+    setAddress(
+      `${orderData?.shippingAddress?.address}, ${orderData?.shippingAddress?.ward}, ${orderData?.shippingAddress?.district}, ${orderData?.shippingAddress?.province}`
+    );
+
     if (orderData?.status === "To Pay") {
       setCurrent(1);
     } else if (orderData?.status === "To Ship") {
@@ -79,9 +93,9 @@ function OrderDrawer({ onClose, open, orderId, type }) {
       placement="left"
       onClose={onClose}
       open={open}
-      width={500}
+      width={700}
     >
-      <Space direction="vertical" style={{ display: "flex" }} size="middle">
+      <Space direction="vertical" style={{ display: "flex" }}>
         <Steps
           direction="vertical"
           size="small"
@@ -110,7 +124,25 @@ function OrderDrawer({ onClose, open, orderId, type }) {
             },
           ]}
         />
-        <Text strong>Order Status: {orderData?.status}</Text>
+
+        <Descriptions column={1} bordered>
+          <Descriptions.Item label="Order Status">
+            {orderData?.status}
+          </Descriptions.Item>
+          <Descriptions.Item label="Shipping Address">
+            {address}
+          </Descriptions.Item>
+        </Descriptions>
+
+        <GoogleMap
+          style={{
+            border: 0,
+            width: "100%",
+            height: "400px",
+          }}
+          address={address}
+        />
+
         {type === "admin" && (
           <Space>
             <Popconfirm

@@ -8,9 +8,35 @@ const orderSchema = mongoose.Schema(
       required: true,
     },
     shippingAddress: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Address",
-      required: true,
+      fullName: {
+        type: String,
+        required: true,
+      },
+      phoneNumber: {
+        type: String,
+        required: true,
+      },
+      province: {
+        type: String,
+        required: true,
+      },
+      district: {
+        type: String,
+        required: true,
+      },
+      ward: {
+        type: String,
+        required: true,
+      },
+      address: {
+        type: String,
+        required: true,
+      },
+      label: {
+        type: String,
+        enum: ["Work", "Home", "Other"],
+        default: "Other",
+      },
     },
     orderItems: [
       {

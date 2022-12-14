@@ -102,11 +102,12 @@ const placeOrder = asyncHandler(async (req, res, next) => {
     currency,
     isValid,
     orderItems, // cartItems: { cartItemId, discount }
+    shippingAddress,
     ...fields
   } = req.body;
 
   // check shipping address
-  await checkAddressConditions(res, fields.shippingAddress, req.user.id);
+  await checkAddressConditions(res, shippingAddress, req.user.id);
 
   let tempTotalPayment = Number(fields.shippingFee);
   let tempOrderItems = []; // for later use (payment)
@@ -152,6 +153,7 @@ const placeOrder = asyncHandler(async (req, res, next) => {
     const order = await Order.create({
       ...fields,
       user: req.user.id,
+      shippingAddress: await Address.findById(shippingAddress),
       orderItems: tempOrderItems.map((o) => ({
         product: o.cartItem.product._id,
         quantity: o.cartItem.quantity,
@@ -230,6 +232,7 @@ const placeOrder = asyncHandler(async (req, res, next) => {
     const order = await Order.create({
       ...fields,
       user: req.user.id,
+      shippingAddress: await Address.findById(shippingAddress),
       orderItems: tempOrderItems.map((o) => ({
         product: o.cartItem.product._id,
         quantity: o.cartItem.quantity,
