@@ -10,15 +10,36 @@ function ProductList({ items, columns }) {
       {items?.length > 0 ? (
         items.map((item, index) => (
           <Col span={span} key={index}>
-            {item.discount > 0 ? (
-              <Badge.Ribbon
-                text={<>{Math.round((item.discount / item.price) * 100)}% OFF</>}
-                color="red"
-              >
-                <ProductCard item={item} />
+            {item.quantity === 0 ? (
+              <Badge.Ribbon text="OUT OF STOCK" color="gray" placement="start">
+                {item.discount > 0 ? (
+                  <Badge.Ribbon
+                    text={
+                      <>{Math.round((item.discount / item.price) * 100)}% OFF</>
+                    }
+                    color="red"
+                  >
+                    <ProductCard item={item} />
+                  </Badge.Ribbon>
+                ) : (
+                  <ProductCard item={item} />
+                )}
               </Badge.Ribbon>
             ) : (
-              <ProductCard item={item} />
+              <>
+                {item.discount > 0 ? (
+                  <Badge.Ribbon
+                    text={
+                      <>{Math.round((item.discount / item.price) * 100)}% OFF</>
+                    }
+                    color="red"
+                  >
+                    <ProductCard item={item} />
+                  </Badge.Ribbon>
+                ) : (
+                  <ProductCard item={item} />
+                )}
+              </>
             )}
           </Col>
         ))

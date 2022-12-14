@@ -8,8 +8,6 @@ const dotenv = require("dotenv").config();
 connectDb();
 
 (async () => {
-  
-
   console.log("success");
   process.exit();
 })();

@@ -40,6 +40,22 @@ const columns = [
     title: "Unit Price",
     dataIndex: "price",
     align: "right",
+    render: (_, record) => (
+      <Space>
+        <Text>{moneyFormatter.format(record.price - record.discount)}</Text>
+        {record.discount > 0 && (
+          <Text
+            type="secondary"
+            delete
+            style={{
+              fontSize: "12px",
+            }}
+          >
+            {moneyFormatter.format(record.price)}
+          </Text>
+        )}
+      </Space>
+    ),
   },
   {
     title: "Quantity",
@@ -137,13 +153,12 @@ function Checkout() {
             ? orderItems[i]?.product?.images[0]?.url
             : "",
         name: orderItems[i].product?.name,
-        price: moneyFormatter.format(
-          orderItems[i]?.product?.price - orderItems[i]?.product?.discount
-        ),
+        price: orderItems[i]?.product?.price,
+        discount: orderItems[i]?.discount,
         quantity: orderItems[i].quantity,
         itemSubtotal: moneyFormatter.format(
           orderItems[i].quantity *
-            (orderItems[i]?.product?.price - orderItems[i]?.product?.discount)
+            (orderItems[i]?.product?.price - orderItems[i]?.discount)
         ),
       });
     }
@@ -164,10 +179,14 @@ function Checkout() {
 
     const orderData = {
       shippingAddress: address._id,
-      orderItems: orderItems.map((item) => item._id),
+      orderItems: orderItems.map((item) => ({
+        cartItemId: item._id,
+        discount: item?.discount,
+      })),
       shippingFee: shippingFee,
       paymentMethod: paymentMethod,
     };
+    console.log(orderData);
 
     dispatch(placeOrderAsync(orderData));
   }
@@ -256,7 +275,7 @@ function Checkout() {
         />
       </Space>
 
-      <Card
+      {/* <Card
         title="Vouchers"
         style={{ borderRadius: 0 }}
         extra={
@@ -264,7 +283,7 @@ function Checkout() {
             Select Voucher
           </Button>
         }
-      ></Card>
+      ></Card> */}
 
       <Card title="Payment Method" style={{ borderRadius: 0 }}>
         <Radio.Group onChange={onChange} value={paymentMethod}>

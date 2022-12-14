@@ -27,6 +27,10 @@ function SearchPage() {
   // sort by
   const [radioValue, setRadioValue] = useState(searchParams.get("sortBy"));
   const [priceOrder, setPriceOrder] = useState(searchParams.get("order"));
+  const [onSale, setOnSale] = useState(
+    searchParams.get("onSale") === "true" ? true : false
+  );
+  console.log(onSale);
 
   const dispatch = useDispatch();
   const { categories } = useSelector((state) => state.category);
@@ -93,6 +97,7 @@ function SearchPage() {
   }
 
   function onSaleCheck(e) {
+    setOnSale(e.target.checked);
     searchParams.set("onSale", e.target.checked);
     setSearchParams(searchParams);
   }
@@ -137,7 +142,7 @@ function SearchPage() {
 
           <Divider style={{ margin: "0.5rem 0" }} />
           <Text strong>Promotion</Text>
-          <Checkbox defaultChecked={false} onChange={(e) => onSaleCheck(e)}>
+          <Checkbox onChange={(e) => onSaleCheck(e)} checked={onSale}>
             On Sale
           </Checkbox>
 
@@ -226,19 +231,7 @@ function SearchPage() {
           style={{ borderRadius: 0, border: 0 }}
         >
           <Spin spinning={loadingProducts}>
-            <ProductList
-              columns={4}
-              items={products.map((p) => ({
-                _id: p._id,
-                url: p?.images[0]?.url,
-                name: p.name,
-                price: p.price,
-                discount: p?.discount,
-                averageRating: p?.averageRating,
-                ratingCount: p?.ratingCount,
-                sold: p.sold,
-              }))}
-            />
+            <ProductList columns={4} items={products} />
           </Spin>
         </Card>
       </Col>

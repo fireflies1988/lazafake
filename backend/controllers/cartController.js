@@ -2,6 +2,8 @@ const { validationResult } = require("express-validator");
 const Product = require("../models/productModel");
 const asyncHandler = require("express-async-handler");
 const CartItem = require("../models/cartItemModel");
+const Promotion = require("../models/promotionModel");
+const moment = require("moment");
 
 // @desc    Add a product to cart
 // @route   POST /api/cart/add?productId=
@@ -135,16 +137,31 @@ const changeQtyFromCart = asyncHandler(async (req, res, next) => {
   updatedItem.quantity = req.body.quantity;
   await updatedItem.save();
 
-  res.json(updatedItem);
+  const cartItem = updatedItem.toJSON();
+  // add discount
+  const promotions = await Promotion.find({});
+  const currentPromotion = promotions.filter(
+    (p) => moment().isBetween(p.from, p.to) && p.terminated === false
+  )[0]; // get happening promotion only
+
+  cartItem.discount = 0;
+  for (const p of currentPromotion.products) {
+    if (p.product.toString() === cartItem.product._id.toString()) {
+      cartItem.discount = p.discount;
+      break;
+    }
+  }
+
+  res.json(cartItem);
 });
 
 // @desc    View cart
 // @route   GET /api/cart/view
 // @access  Private
 const getCartItems = asyncHandler(async (req, res, next) => {
-  const cartItems = await CartItem.find({ user: req.user.id }).populate(
-    "product"
-  );
+  const cartItems = await CartItem.find({ user: req.user.id })
+    .populate("product")
+    .lean();
 
   // automatically update items' quantity if they exceed the maximum quantity of the product.
   // automatically delete items that are marked as deleted or have quantity === 0
@@ -165,7 +182,26 @@ const getCartItems = asyncHandler(async (req, res, next) => {
     }
   }
 
-  res.json(await CartItem.find({ user: req.user.id }).populate("product"));
+  // add discount
+  const promotions = await Promotion.find({});
+  const currentPromotion = promotions.filter(
+    (p) => moment().isBetween(p.from, p.to) && p.terminated === false
+  )[0]; // get happening promotion only
+
+  cartItems.map((cartItem) => {
+    cartItem.discount = 0;
+
+    for (const p of currentPromotion.products) {
+      if (p.product.toString() === cartItem.product._id.toString()) {
+        cartItem.discount = p.discount;
+        break;
+      }
+    }
+
+    return cartItem;
+  });
+
+  res.json(cartItems);
 });
 
 // @desc    Check out (check again if the quantity of the items you selected is valid)

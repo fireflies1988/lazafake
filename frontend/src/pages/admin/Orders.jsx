@@ -8,6 +8,7 @@ import {
   Spin,
   Table,
   Tag,
+  Typography,
 } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,6 +18,7 @@ import { moneyFormatter, showError } from "../../utils";
 import Highlighter from "react-highlight-words";
 import { SearchOutlined } from "@ant-design/icons";
 import moment from "moment";
+const { Text } = Typography;
 
 const tabList = [
   {
@@ -238,6 +240,22 @@ function Orders() {
         title: "Unit Price",
         key: "price",
         dataIndex: "price",
+        render: (_, record) => (
+          <Space>
+            <Text>{moneyFormatter.format(record.price - record.discount)}</Text>
+            {record.discount > 0 && (
+              <Text
+                type="secondary"
+                delete
+                style={{
+                  fontSize: "12px",
+                }}
+              >
+                {moneyFormatter.format(record.price)}
+              </Text>
+            )}
+          </Space>
+        ),
       },
       {
         title: "Quantity",
@@ -265,9 +283,8 @@ function Orders() {
             ? orderItems[i]?.product?.images[0]?.url
             : "",
         productName: orderItems[i]?.product?.name,
-        price: moneyFormatter.format(
-          orderItems[i].price - orderItems[i].discount
-        ),
+        price: orderItems[i].price,
+        discount: orderItems[i].discount,
         quantity: orderItems[i]?.quantity,
         itemSubtotal: moneyFormatter.format(
           orderItems[i]?.quantity *

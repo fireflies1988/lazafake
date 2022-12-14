@@ -295,27 +295,6 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
         )}
 
         {type === "edit" && (
-          <Form.Item
-            name="discount"
-            label="Discount"
-            rules={[
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || value <= getFieldValue("price")) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(
-                    new Error("Discount must be less than price!")
-                  );
-                },
-              }),
-            ]}
-          >
-            <InputNumber disabled addonAfter="VNĐ" min={0} defaultValue={0} />
-          </Form.Item>
-        )}
-
-        {type === "edit" && (
           <Form.Item name="quantity" label="Quantity">
             <InputNumber min={1} disabled defaultValue={0} />
           </Form.Item>

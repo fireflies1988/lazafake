@@ -40,11 +40,11 @@ const items = [
     key: "notifications",
     icon: <BellOutlined />,
   },
-  {
-    label: <a href="/user/vouchers">My Vouchers</a>,
-    key: "vouchers",
-    icon: <RiCoupon3Line />,
-  },
+  // {
+  //   label: <a href="/user/vouchers">My Vouchers</a>,
+  //   key: "vouchers",
+  //   icon: <RiCoupon3Line />,
+  // },
 ];
 
 function UserLayout() {

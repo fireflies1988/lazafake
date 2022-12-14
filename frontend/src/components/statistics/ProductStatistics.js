@@ -74,7 +74,7 @@ function ProductStatistics() {
             <Col span={24}>
               <Statistic
                 valueStyle={{ color: "#cf1322" }}
-                title="Low Stock Products (quantity < 10)"
+                title="Low In Stock Products (quantity < 10)"
                 value={products.filter((p) => p.quantity < 10).length}
               />
             </Col>

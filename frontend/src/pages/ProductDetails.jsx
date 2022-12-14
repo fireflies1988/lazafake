@@ -146,6 +146,13 @@ function ProductDetails() {
               )}
             </Space>
 
+            {product?.quantity === 0 && (
+              <Alert
+                message="Sorry, we are out of stock of this item."
+                type="error"
+              />
+            )}
+
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
               <InputNumber
                 addonBefore="Quantity"
@@ -338,20 +345,9 @@ function ProductDetails() {
       >
         <ProductList
           columns={6}
-          items={products
-            .filter(
-              (p) => p?.category?._id.toString() === product?.category?._id
-            )
-            .map((p) => ({
-              _id: p._id,
-              url: p?.images[0]?.url,
-              name: p.name,
-              price: p.price,
-              discount: p.discount,
-              averageRating: p?.averageRating,
-              ratingCount: p?.ratingCoung,
-              sold: p.sold,
-            }))}
+          items={products.filter(
+            (p) => p?.category?._id.toString() === product?.category?._id
+          )}
         />
       </Card>
     </Space>

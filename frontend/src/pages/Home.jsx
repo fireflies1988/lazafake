@@ -116,19 +116,7 @@ function Home() {
           <Spin spinning={loadingProducts}>
             <ProductList
               columns={6}
-              items={[...products]
-                .sort((a, b) => b.sold - a.sold)
-                .slice(0, 12)
-                .map((p) => ({
-                  _id: p._id,
-                  url: p?.images[0]?.url,
-                  name: p.name,
-                  price: p.price,
-                  discount: p.discount,
-                  averageRating: p?.averageRating,
-                  ratingCount: p?.ratingCount,
-                  sold: p.sold,
-                }))}
+              items={[...products].sort((a, b) => b.sold - a.sold).slice(0, 12)}
             />
           </Spin>
         </Card>
@@ -152,17 +140,7 @@ function Home() {
                   (a, b) =>
                     moment(b.createdAt).unix() - moment(a.createdAt).unix()
                 )
-                .slice(0, 12)
-                .map((p) => ({
-                  _id: p._id,
-                  url: p?.images[0]?.url,
-                  name: p.name,
-                  price: p.price,
-                  discount: p.discount,
-                  averageRating: p?.averageRating,
-                  ratingCount: p?.ratingCount,
-                  sold: p.sold,
-                }))}
+                .slice(0, 12)}
             />
           </Spin>
         </Card>
@@ -175,7 +153,7 @@ function Home() {
             backgroundColor: "#efefef",
             padding: "0.5rem 0",
           }}
-          extra={<Link to={`/search?sortBy=newest`}>More</Link>}
+          extra={<Link to={`/search?onSale=true`}>More</Link>}
           style={{ borderRadius: 0, border: 0 }}
         >
           <Spin spinning={loadingProducts}>
@@ -186,17 +164,7 @@ function Home() {
                 .sort((a, b) => a.sort - b.sort)
                 .map(({ sort, ...p }) => p)
                 .filter((p) => p.discount > 0)
-                .slice(0, 12)
-                .map((p) => ({
-                  _id: p._id,
-                  url: p?.images[0]?.url,
-                  name: p.name,
-                  price: p.price,
-                  discount: p.discount,
-                  averageRating: p?.averageRating,
-                  ratingCount: p?.ratingCount,
-                  sold: p.sold,
-                }))}
+                .slice(0, 12)}
             />
           </Spin>
         </Card>
@@ -217,18 +185,9 @@ function Home() {
             <Spin spinning={loadingProducts}>
               <ProductList
                 columns={6}
-                items={products
-                  .filter((p) => p?.category?._id.toString() === c._id)
-                  .map((p) => ({
-                    _id: p._id,
-                    url: p?.images[0]?.url,
-                    name: p.name,
-                    price: p.price,
-                    discount: p.discount,
-                    averageRating: p?.averageRating,
-                    ratingCount: p?.ratingCount,
-                    sold: p.sold,
-                  }))}
+                items={products.filter(
+                  (p) => p?.category?._id.toString() === c._id
+                )}
               />
             </Spin>
           </Card>

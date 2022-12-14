@@ -9,6 +9,7 @@ import {
   Spin,
   Table,
   Tag,
+  Typography,
 } from "antd";
 import moment from "moment";
 import React, { useEffect, useRef, useState } from "react";
@@ -20,6 +21,7 @@ import ReviewModal from "../../components/modals/ReviewModal";
 import { getMyOrdersAsync, reset } from "../../features/auth/authSlice";
 import { getReviewsAsync } from "../../features/review/reviewSlice";
 import { moneyFormatter, showError } from "../../utils";
+const { Text } = Typography;
 
 const tabList = [
   {
@@ -243,6 +245,22 @@ function MyOrders() {
         title: "Unit Price",
         key: "price",
         dataIndex: "price",
+        render: (_, record) => (
+          <Space>
+            <Text>{moneyFormatter.format(record.price - record.discount)}</Text>
+            {record.discount > 0 && (
+              <Text
+                type="secondary"
+                delete
+                style={{
+                  fontSize: "12px",
+                }}
+              >
+                {moneyFormatter.format(record.price)}
+              </Text>
+            )}
+          </Space>
+        ),
       },
       {
         title: "Quantity",
@@ -320,9 +338,8 @@ function MyOrders() {
             ? orderItems[i]?.product?.images[0]?.url
             : "",
         productName: orderItems[i].product?.name,
-        price: moneyFormatter.format(
-          orderItems[i]?.price - orderItems[i]?.discount
-        ),
+        price: orderItems[i]?.price,
+        discount: orderItems[i].discount,
         quantity: orderItems[i]?.quantity,
         itemSubtotal: moneyFormatter.format(
           orderItems[i]?.quantity *

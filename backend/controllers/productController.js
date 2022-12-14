@@ -8,6 +8,7 @@ const Order = require("../models/orderModel");
 const Review = require("../models/reviewModel");
 const PriceChange = require("../models/priceChangeModel");
 const Receipt = require("../models/receiptModel");
+const Promotion = require("../models/promotionModel");
 
 // @desc    Add a new product
 // @route   POST /api/products
@@ -188,10 +189,6 @@ const getProducts = asyncHandler(async (req, res, next) => {
     products = products.filter((p) => p.listed === false);
   }
 
-  if (req.query.onSale === "true") {
-    products = products.filter((p) => p.discount > 0);
-  }
-
   if (req.query.category) {
     products = products.filter((p) => p?.category.name === req.query.category);
   }
@@ -273,7 +270,27 @@ const getProducts = asyncHandler(async (req, res, next) => {
     })
   );
 
-  console.log(products);
+  // add discount
+  const promotions = await Promotion.find({});
+  const currentPromotion = promotions.filter(
+    (p) => moment().isBetween(p.from, p.to) && p.terminated === false
+  )[0]; // get happening promotion only
+  products.map((product) => {
+    product.discount = 0;
+
+    for (const p of currentPromotion.products) {
+      if (p.product.toString() === product._id.toString()) {
+        product.discount = p.discount;
+        break;
+      }
+    }
+
+    return product;
+  });
+
+  if (req.query.onSale === "true") {
+    products = products.filter((p) => p.discount > 0);
+  }
 
   res.status(200).json(products);
 });

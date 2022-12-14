@@ -72,6 +72,22 @@ function Cart() {
     {
       title: "Unit Price",
       dataIndex: "price",
+      render: (_, record) => (
+        <Space>
+          <Text>{moneyFormatter.format(record.price - record.discount)}</Text>
+          {record.discount > 0 && (
+            <Text
+              type="secondary"
+              delete
+              style={{
+                fontSize: "12px",
+              }}
+            >
+              {moneyFormatter.format(record.price)}
+            </Text>
+          )}
+        </Space>
+      ),
     },
     {
       title: "Quantity",
@@ -132,14 +148,13 @@ function Cart() {
             ? cartItems[i]?.product?.images[0]?.url
             : "",
         name: cartItems[i].product?.name,
-        price: moneyFormatter.format(
-          cartItems[i].product?.price - cartItems[i].product?.discount
-        ),
+        price: cartItems[i].product?.price,
+        discount: cartItems[i]?.discount,
         quantity: cartItems[i].quantity,
         productQuantity: cartItems[i].product.quantity,
         totalPrice: moneyFormatter.format(
           cartItems[i].quantity *
-            (cartItems[i].product?.price - cartItems[i].product?.discount)
+            (cartItems[i].product?.price - cartItems[i]?.discount)
         ),
       });
     }

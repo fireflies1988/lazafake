@@ -62,13 +62,13 @@ function sendPasswordResetRequest(
   sendMail(mailOptions, callback);
 }
 
-// sendVerificationCode("tester2@gmail.com", "234123", (err, info) => {
+// sendMail({ to: "tungkieu10101967@gmail.com", subject: "Test", html: "<p>Hello</p>"}, (err, info) => {
 //   if (err) {
 //     console.log(err);
 //   } else {
-//     console.log(info);
+//     console.log("success");
 //   }
-// });
+// })
 
 module.exports = {
   sendMail,

@@ -101,7 +101,7 @@ const placeOrder = asyncHandler(async (req, res, next) => {
     status,
     currency,
     isValid,
-    orderItems, // cartItems
+    orderItems, // cartItems: { cartItemId, discount }
     ...fields
   } = req.body;
 
@@ -111,15 +111,17 @@ const placeOrder = asyncHandler(async (req, res, next) => {
   let tempTotalPayment = Number(fields.shippingFee);
   let tempOrderItems = []; // for later use (payment)
 
-  for (let itemId of orderItems) {
-    const cartItem = await CartItem.findById(itemId).populate("product");
-    tempOrderItems.push(cartItem);
+  for (let item of orderItems) {
+    const cartItem = await CartItem.findById(item.cartItemId).populate(
+      "product"
+    );
+    tempOrderItems.push({ cartItem, discount: item.discount });
 
     // check if cartItem is valid
     checkCartItem(res, cartItem, req.user.id);
 
     tempTotalPayment +=
-      cartItem.quantity * (cartItem.product.price - cartItem.product.discount);
+      cartItem.quantity * (cartItem.product.price - item.discount);
   }
 
   // check applied vouchers
@@ -151,10 +153,10 @@ const placeOrder = asyncHandler(async (req, res, next) => {
       ...fields,
       user: req.user.id,
       orderItems: tempOrderItems.map((o) => ({
-        product: o.product._id,
-        quantity: o.quantity,
-        price: o.product.price,
-        discount: o.product.discount,
+        product: o.cartItem.product._id,
+        quantity: o.cartItem.quantity,
+        price: o.cartItem.product.price,
+        discount: o.discount,
       })),
       totalPayment: tempTotalPayment,
       isValid: false,
@@ -166,8 +168,8 @@ const placeOrder = asyncHandler(async (req, res, next) => {
       tempOrderItems.reduce(
         (acc, cur) =>
           acc +
-          convertVndToUsd(cur.product.price - cur.product.discount) *
-            cur.quantity,
+          convertVndToUsd(cur.cartItem.product.price - cur.discount) *
+            cur.cartItem.quantity,
         0
       ) - convertVndToUsd(discountAmount)
     ).toFixed(2);
@@ -186,13 +188,13 @@ const placeOrder = asyncHandler(async (req, res, next) => {
           item_list: {
             items: [
               ...tempOrderItems.map((item) => ({
-                name: item.product.name,
-                sku: item.product?.sku,
+                name: item.cartItem.product.name,
+                sku: "1111",
                 price: convertVndToUsd(
-                  item.product.price - item.product.discount
+                  item.cartItem.product.price - item.discount
                 ),
                 currency: "USD",
-                quantity: item.quantity,
+                quantity: item.cartItem.quantity,
               })),
               {
                 name: "Voucher discount",
@@ -229,10 +231,10 @@ const placeOrder = asyncHandler(async (req, res, next) => {
       ...fields,
       user: req.user.id,
       orderItems: tempOrderItems.map((o) => ({
-        product: o.product._id,
-        quantity: o.quantity,
-        price: o.product.price,
-        discount: o.product.discount,
+        product: o.cartItem.product._id,
+        quantity: o.cartItem.quantity,
+        price: o.cartItem.product.price,
+        discount: o.discount,
       })),
       totalPayment: tempTotalPayment,
     });
@@ -241,20 +243,20 @@ const placeOrder = asyncHandler(async (req, res, next) => {
 
     // extract products' quantity after purchasing
     for (const item of tempOrderItems) {
-      await Product.findByIdAndUpdate(item.product._id, {
+      await Product.findByIdAndUpdate(item.cartItem.product._id, {
         $inc: {
-          quantity: -item.quantity,
+          quantity: -item.cartItem.quantity,
         },
       });
 
       tableData += `<tr>
-        <td>${item.product.name}</td>
+        <td>${item.cartItem.product.name}</td>
         <td>${moneyFormatter.format(
-          item.product.price - item.product.discount
+          item.cartItem.product.price - item.discount
         )}</td>
-        <td>${item.quantity}</td>
+        <td>${item.cartItem.quantity}</td>
         <td>${moneyFormatter.format(
-          (item.product.price - item.product.discount) * item.quantity
+          (item.cartItem.product.price - item.discount) * item.cartItem.quantity
         )}</td>
         </tr>`;
     }
@@ -331,12 +333,10 @@ const confirmPayment = asyncHandler(async (req, res, next) => {
 
           tableData += `<tr>
             <td>${item.product.name}</td>
-            <td>${moneyFormatter.format(
-              item.product.price - item.product.discount
-            )}</td>
+            <td>${moneyFormatter.format(item.price - item.discount)}</td>
             <td>${item.quantity}</td>
             <td>${moneyFormatter.format(
-              (item.product.price - item.product.discount) * item.quantity
+              (item.price - item.discount) * item.quantity
             )}</td>
             </tr>`;
         }

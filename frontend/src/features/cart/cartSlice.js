@@ -80,7 +80,7 @@ export const changeQtyAsync = createAsyncThunk(
   }
 );
 
-// check out 
+// check out
 // not used
 export const checkoutAsync = createAsyncThunk(
   "cart/checkout",

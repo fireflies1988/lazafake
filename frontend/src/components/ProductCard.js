@@ -22,7 +22,7 @@ export function ProductCard({ item }) {
       onClick={() => navigate(`/products/${item._id}`)}
     >
       <img
-        src={item.url}
+        src={item?.images?.length > 0 ? item?.images[0]?.url : ""}
         alt="product.img"
         style={{
           height: "200px",
