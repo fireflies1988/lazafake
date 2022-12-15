@@ -155,7 +155,7 @@ export const cartSlice = createSlice({
       .addCase(removeMultipleFromCartAsync.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.cartItems = action.payload;
+        state.cartItems = state.cartItems.filter((i) => !action.payload.includes(i._id));
         state.message = "Removed selected items.";
       })
       .addCase(removeMultipleFromCartAsync.rejected, (state, action) => {

@@ -101,21 +101,24 @@ function calculateBarData(orders, year, type) {
 }
 
 // monthly revenue
-function calculateLineData(orders, year) {
+function calculateRevenue(orders, year) {
   const res = [];
-  const data = orders.filter((o) => moment(o.createdAt).isSame(year, "year"));
+  const data = orders.filter((o) =>
+    moment(o?.completedAt).isSame(year, "year")
+  );
   for (let i = 1; i <= 12; i++) {
     res.push(
       data
-        .filter((o) => moment(o.createdAt).format("M") === i.toString())
+        .filter((o) => moment(o?.completedAt).format("M") === i.toString())
         .reduce((acc, cur) => {
           if (cur.status === "Completed") {
-            acc += cur.totalPayment;
+            acc += cur.totalPayment - cur.shippingFee;
           }
           return acc;
         }, 0)
     );
   }
+  console.log(res);
   return res;
 }
 
@@ -192,7 +195,7 @@ function OrderStatistics() {
         {
           fill: true,
           label: "Revenue",
-          data: calculateLineData(orders, year),
+          data: calculateRevenue(orders, year),
           borderColor: "#d3f261",
           backgroundColor: "#f4ffb8",
           tension: 0.3,
@@ -251,7 +254,7 @@ function OrderStatistics() {
             value={moneyFormatter.format(
               orders.reduce((acc, cur) => {
                 if (cur.status === "Completed") {
-                  acc += cur.totalPayment;
+                  acc += cur.totalPayment - cur.shippingFee;
                 }
                 return acc;
               }, 0)

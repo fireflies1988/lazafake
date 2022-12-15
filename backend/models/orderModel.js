@@ -59,6 +59,9 @@ const orderSchema = mongoose.Schema(
           required: true,
           default: 0,
         },
+        avgImportPrice: {
+          type: Number,
+        },
       },
     ],
     vouchers: [

@@ -240,7 +240,7 @@ const getProducts = asyncHandler(async (req, res, next) => {
       ) {
         if (order?.completedAt) {
           product.mostRecentSale = {
-            label: moment(order?.completedAt).startOf("day").fromNow(),
+            label: moment(order?.completedAt).fromNow(),
             value: moment().unix() - moment(order?.completedAt).unix(),
           };
           break;

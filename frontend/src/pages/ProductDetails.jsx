@@ -322,7 +322,7 @@ function ProductDetails() {
                     />
                     <Text>{item.comment}</Text>
                     <Text type="secondary">
-                      {moment(item.createdAt).startOf("day").fromNow()}
+                      {moment(item.createdAt).fromNow()}
                     </Text>
                   </Space>
                 }

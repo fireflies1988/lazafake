@@ -230,7 +230,7 @@ function Orders() {
         title: "Thumbnail",
         dataIndex: "thumbnail",
         key: "thumbnail",
-        render: (_, { thumbnail }) => <Image width={100} src={thumbnail} />,
+        render: (_, { thumbnail }) => <Image width={50} src={thumbnail} />,
       },
       {
         title: "Product Name",
@@ -259,6 +259,13 @@ function Orders() {
         ),
       },
       {
+        title: "Average Import Price",
+        key: "avgImportPrice",
+        dataIndex: "avgImportPrice",
+        render: (_, { avgImportPrice }) =>
+          moneyFormatter.format(avgImportPrice),
+      },
+      {
         title: "Quantity",
         dataIndex: "quantity",
         key: "quantity",
@@ -285,6 +292,7 @@ function Orders() {
             : "",
         productName: orderItems[i]?.product?.name,
         price: orderItems[i].price,
+        avgImportPrice: orderItems[i]?.avgImportPrice,
         discount: orderItems[i].discount,
         quantity: orderItems[i]?.quantity,
         itemSubtotal: moneyFormatter.format(

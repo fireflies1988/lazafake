@@ -161,8 +161,6 @@ function Cart() {
     setData(tempData);
   }, [cartItems]);
 
-  console.log("CartItems", cartItems);
-
   const rowSelection = {
     selectedRowKeys,
     onChange: onSelectChange,

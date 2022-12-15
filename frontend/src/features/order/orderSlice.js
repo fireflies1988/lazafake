@@ -104,8 +104,7 @@ export const orderSlice = createSlice({
         const index = state.orders.findIndex(
           (order) => order._id === action.payload._id
         );
-        const { orderItems, ...rest } = action.payload; // don't update orderItems
-        state.orders[index] = { ...state.orders[index], ...rest };
+        state.orders[index] = action.payload;
         state.message = "Updated order successfully.";
       })
       .addCase(updateOrderStatusAsync.rejected, (state, action) => {

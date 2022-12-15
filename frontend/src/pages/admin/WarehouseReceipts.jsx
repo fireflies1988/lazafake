@@ -51,7 +51,7 @@ function WarehouseReceipts() {
     }
 
     dispatch(reset());
-  }, [isError]);
+  }, [isError, isSuccess]);
 
   // ---- filter orderId
   const [searchText, setSearchText] = useState("");
@@ -217,6 +217,11 @@ function WarehouseReceipts() {
         key: "quantity",
       },
       {
+        title: "Sold",
+        dataIndex: "sold",
+        key: "sold",
+      },
+      {
         title: "Subtotal",
         dataIndex: "subtotal",
         key: "subtotal",
@@ -237,6 +242,7 @@ function WarehouseReceipts() {
         productName: products[i].product?.name,
         price: moneyFormatter.format(products[i].price),
         quantity: products[i]?.quantity,
+        sold: products[i]?.sold,
         subtotal: moneyFormatter.format(
           products[i]?.quantity * products[i]?.price
         ),

@@ -16,11 +16,12 @@ import {
   reset as resetProductState,
 } from "../../features/product/productSlice";
 import { addReceiptAsync } from "../../features/receipt/receiptSlice";
-import { moneyFormatter, showError } from "../../utils";
+import { moneyFormatter, removeAccents, showError } from "../../utils";
 
 function AddReceiptModal({ open, onCancel }) {
   const [data, setData] = useState([]);
 
+  const [selectValues, setSelectValues] = useState([]);
   const [previousSelect, setPreviousSelect] = useState([]);
 
   const {
@@ -45,13 +46,18 @@ function AddReceiptModal({ open, onCancel }) {
       showError(antMessage, productMessage);
     }
 
+    dispatch(resetProductState());
+  }, [productError]);
+
+  useEffect(() => {
     if (isSuccess) {
       antMessage.success(message);
+      setSelectValues([]);
+      setPreviousSelect([]);
+      setData([]);
       onCancel();
     }
-
-    dispatch(resetProductState());
-  }, [productError, isSuccess]);
+  }, [isSuccess]);
 
   useEffect(() => {
     const temp = [];
@@ -133,6 +139,7 @@ function AddReceiptModal({ open, onCancel }) {
   ];
 
   const handleChange = (values) => {
+    setSelectValues(values);
     console.log(`selected: ${values}`);
     let productId;
     if (previousSelect.length < values.length) {
@@ -172,6 +179,9 @@ function AddReceiptModal({ open, onCancel }) {
       footer={[
         <Button
           onClick={() => {
+            setSelectValues([]);
+            setPreviousSelect([]);
+            setData([]);
             onCancel();
           }}
         >
@@ -202,6 +212,7 @@ function AddReceiptModal({ open, onCancel }) {
     >
       <Space direction="vertical" style={{ display: "flex" }}>
         <Select
+          value={selectValues}
           mode="multiple"
           loading={loadingProducts}
           allowClear
@@ -212,7 +223,9 @@ function AddReceiptModal({ open, onCancel }) {
           onChange={handleChange}
           options={options}
           filterOption={(input, option) =>
-            (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            removeAccents(option?.label ?? "")
+              .toLowerCase()
+              .includes(removeAccents(input).toLowerCase())
           }
         />
         <Table columns={columns} dataSource={data} pagination={false} />

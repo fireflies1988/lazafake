@@ -96,10 +96,10 @@ const removeMultipleFromCart = asyncHandler(async (req, res, next) => {
   const { items } = req.body;
 
   for (let item of items) {
-    await CartItem.deleteOne({ id: item });
+    await CartItem.deleteOne({ _id: item });
   }
 
-  res.json(await CartItem.find({ user: req.user.id }).populate("product"));
+  res.json(items);
 });
 
 // @desc    Change the quantity of a item in your cart

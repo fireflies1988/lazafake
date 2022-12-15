@@ -96,7 +96,8 @@ function Checkout() {
     if (e.target.value === "Cash") {
       setShippingFee(DEFAULT_SHIPPING_FEE);
     } else {
-      setShippingFee(0);
+      // setShippingFee(0);
+      setShippingFee(DEFAULT_SHIPPING_FEE);
     }
     setPaymentMethod(e.target.value);
   };

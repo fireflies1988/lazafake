@@ -16,6 +16,7 @@ const {
 const Notification = require("../models/notificationModel");
 const { sendMail } = require("../services/mailService");
 const User = require("../models/userModel");
+const Receipt = require("../models/receiptModel");
 
 const moneyFormatter = new Intl.NumberFormat("vi-vn", {
   style: "currency",
@@ -524,11 +525,85 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
       message: `Your order ${order.id} has been delivered.`,
     });
 
-    // update products' sold after successfully delivery
-    for (const item of order.orderItems) {
-      await Product.findByIdAndUpdate(item.product, {
+    // update products' sold and avgImportPrice after successfully delivery
+    for (const orderItem of order.orderItems) {
+      // find all import batches that contains this product
+      const receipts = await Receipt.find({
+        "products.product": orderItem.product,
+      });
+
+      // calculate avgImportPrice at that time
+      let totalImportPrice = 0;
+      let remain = orderItem.quantity;
+
+      for (const receipt of receipts) {
+        // get product details in that receipt
+        const productInReceipt = receipt.products.find(
+          (p) => p.product.toString() === orderItem.product.toString()
+        );
+
+        // check if this import batch is still in use
+        if (productInReceipt.sold === productInReceipt.quantity) {
+          continue;
+        }
+
+        if (remain + productInReceipt.sold <= productInReceipt.quantity) {
+          totalImportPrice += productInReceipt.price * remain;
+
+          // update receipt's sold field
+          // You must include the array field as part of the query document.
+          await Receipt.updateOne(
+            {
+              _id: receipt._id,
+              "products.product": orderItem.product,
+            },
+            {
+              $inc: {
+                "products.$.sold": remain,
+              },
+            }
+          );
+
+          // done
+          break;
+        } else {
+          remain -= productInReceipt.quantity - productInReceipt.sold;
+          totalImportPrice +=
+            (productInReceipt.quantity - productInReceipt.sold) *
+            productInReceipt.price;
+
+          await Receipt.updateOne(
+            {
+              _id: receipt._id,
+              "products.product": orderItem.product,
+            },
+            {
+              $set: {
+                "products.$.sold": productInReceipt.quantity,
+              },
+            }
+          );
+        }
+      }
+
+      let avgImportPrice = Math.round(totalImportPrice / orderItem.quantity);
+      // update orderItem's avgImportPrice
+      await Order.updateOne(
+        {
+          _id: order._id,
+          "orderItems.product": orderItem.product,
+        },
+        {
+          $set: {
+            "orderItems.$.avgImportPrice": avgImportPrice,
+          },
+        }
+      );
+
+      // update product's sold field
+      await Product.findByIdAndUpdate(orderItem.product, {
         $inc: {
-          sold: item.quantity,
+          sold: orderItem.quantity,
         },
       });
     }
@@ -549,7 +624,19 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
 
   await order.save();
 
-  res.json(order);
+  res.json(
+    await Order.findById(order.id).populate([
+      {
+        path: "orderItems",
+        populate: {
+          path: "product",
+        },
+      },
+      {
+        path: "user",
+      },
+    ])
+  );
 });
 
 // @desc    Get all orders
@@ -557,21 +644,17 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
 // @access  Private (admin)
 const viewOrders = asyncHandler(async (req, res, next) => {
   res.json(
-    await Order.find({ isValid: true })
-      .populate([
-        {
-          path: "orderItems",
-          populate: {
-            path: "product",
-          },
+    await Order.find({ isValid: true }).populate([
+      {
+        path: "orderItems",
+        populate: {
+          path: "product",
         },
-        {
-          path: "user",
-        },
-      ])
-      .sort({
-        createdAt: 1,
-      })
+      },
+      {
+        path: "user",
+      },
+    ])
   );
 });
 

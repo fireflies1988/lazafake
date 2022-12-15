@@ -23,6 +23,11 @@ const receiptSchema = mongoose.Schema(
           required: true,
           min: 1,
         },
+        sold: {
+          type: Number,
+          required: true,
+          default: 0,
+        },
       },
     ],
     totalPrice: {

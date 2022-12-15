@@ -8,13 +8,18 @@ import AdminTopNav from "../../components/AdminTopNav";
 import Content from "../../components/Content";
 import { BiCategory } from "react-icons/bi";
 import { BsInboxes, BsReceipt } from "react-icons/bs";
-import { MdOutlinePriceChange } from "react-icons/md";
+import { MdOutlinePriceChange, MdQueryStats } from "react-icons/md";
 
 const items = [
   {
     label: <a href="/admin/dashboard">Dashboard</a>,
     key: "dashboard",
     icon: <MdOutlineSpaceDashboard />,
+  },
+  {
+    label: <a href="/admin/statement">Profit & Loss Statement</a>,
+    key: "statement",
+    icon: <MdQueryStats />,
   },
   {
     label: <a href="/admin/users">Users</a>,

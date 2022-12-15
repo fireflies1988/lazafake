@@ -6,6 +6,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import Categories from "./pages/admin/Categories";
 import Dashboard from "./pages/admin/Dashboard";
 import Orders from "./pages/admin/Orders";
+import PnLStatement from "./pages/admin/PnLStatement";
 import PriceChanges from "./pages/admin/PriceChanges";
 import Products from "./pages/admin/Products";
 import Promotions from "./pages/admin/Promotions";
@@ -80,6 +81,7 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Navigate to="dashboard" />} />
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="statement" element={<PnLStatement />} />
             <Route path="categories" element={<Categories />} />
             <Route path="users" element={<Users />} />
             <Route path="receipts" element={<WarehouseReceipts />} />
