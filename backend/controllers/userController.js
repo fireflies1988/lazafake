@@ -252,8 +252,8 @@ const viewMyOrders = asyncHandler(async (req, res, next) => {
 // @route   PATCH /api/users/me/orders/:id
 // @access  Private
 const cancelOrder = asyncHandler(async (req, res, next) => {
-  const order = await Order.findById(req.params.id);
-  if (order.user.toString() !== req.user.id) {
+  const order = await Order.findById(req.params.id).populate("user");
+  if (order.user._id.toString() !== req.user.id) {
     res.status(403);
     throw new Error("This is not your order.");
   }
@@ -263,13 +263,75 @@ const cancelOrder = asyncHandler(async (req, res, next) => {
     throw new Error("Can't cancel the order.");
   }
 
-  order.status = "Canceled";
-  if (req.body.cancellationReason) {
-    order.cancellationReason = req.body.cancellationReason;
+  if (order.paymentMethod === "Cash") {
+    order.canceledAt = new Date().toISOString();
+    order.status = "Canceled";
+
+    await Notification.create({
+      user: order.user,
+      message: `Your order ${order.id} has been canceled.`,
+    });
+
+    mailService.sendMail(
+      {
+        to: order.user.email,
+        subject: "Order Updates",
+        html: `<p>Your order ${order.id} has been canceled.</p>`,
+      },
+      (err, info) => {
+        if (err) {
+          console.log(err);
+        }
+      }
+    );
+  } else {
+    order.returnAt = new Date().toISOString();
+    order.status = "Return/Refund";
+
+    await Notification.create({
+      user: order.user,
+      message: `Your order ${order.id} has been canceled and is being refunded.`,
+    });
+
+    mailService.sendMail(
+      {
+        to: order.user.email,
+        subject: "Order Updates",
+        html: `<p>Your order ${order.id} has been canceled and is being refunded.</p>`,
+      },
+      (err, info) => {
+        if (err) {
+          console.log(err);
+        }
+      }
+    );
   }
+
+  // restore products' quantity after canceling or returning
+  for (const item of order.orderItems) {
+    await Product.findByIdAndUpdate(item.product, {
+      $inc: {
+        quantity: item.quantity,
+      },
+    });
+  }
+
+  order.cancellationReason = req.body.cancellationReason;
   await order.save();
 
-  res.json(order);
+  res.json(
+    await Order.findById(order.id).populate([
+      {
+        path: "orderItems",
+        populate: {
+          path: "product",
+        },
+      },
+      {
+        path: "user",
+      },
+    ])
+  );
 });
 
 // @desc    Get my notifications

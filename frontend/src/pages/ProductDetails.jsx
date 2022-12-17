@@ -135,16 +135,17 @@ function ProductDetails() {
             <Text type="warning" style={{ fontSize: "20px" }}>
               {moneyFormatter.format(product?.price - product?.discount)}
             </Text>
-            <Space>
-              <Text type="secondary" delete>
-                {moneyFormatter.format(product?.price)}
-              </Text>
-              {product?.discount > 0 && (
+
+            {product?.discount > 0 && (
+              <Space>
+                <Text type="secondary" delete>
+                  {moneyFormatter.format(product?.price)}
+                </Text>
                 <Text type="danger">
                   -{Math.round((product?.discount / product?.price) * 100)}%
                 </Text>
-              )}
-            </Space>
+              </Space>
+            )}
 
             {product?.quantity === 0 && (
               <Alert

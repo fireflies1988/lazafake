@@ -66,7 +66,7 @@ function MyOrders() {
 
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { orders, message, isError, isLoading } = useSelector(
+  const { orders, message, isError, isSuccess, isLoading } = useSelector(
     (state) => state.auth
   );
   const { reviews } = useSelector((state) => state.review);
@@ -196,8 +196,12 @@ function MyOrders() {
       showError(antMessage, message);
     }
 
+    if (isSuccess) {
+      antMessage.success(message);
+    }
+
     dispatch(reset());
-  }, [isError]);
+  }, [isError, isSuccess]);
 
   useEffect(() => {
     const tempOuterData = [];

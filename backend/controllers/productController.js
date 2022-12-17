@@ -278,10 +278,12 @@ const getProducts = asyncHandler(async (req, res, next) => {
   products.map((product) => {
     product.discount = 0;
 
-    for (const p of currentPromotion.products) {
-      if (p.product.toString() === product._id.toString()) {
-        product.discount = p.discount;
-        break;
+    if (currentPromotion) {
+      for (const p of currentPromotion?.products) {
+        if (p.product.toString() === product._id.toString()) {
+          product.discount = p.discount;
+          break;
+        }
       }
     }
 

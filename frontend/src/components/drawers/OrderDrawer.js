@@ -11,6 +11,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateOrderStatusAsync } from "../../features/order/orderSlice";
+import { cancelOrderAsync } from "../../features/auth/authSlice";
 const { Text } = Typography;
 
 const statuses = [
@@ -132,6 +133,12 @@ function OrderDrawer({ onClose, open, orderId, type }) {
           <Descriptions.Item label="Shipping Address">
             {address}
           </Descriptions.Item>
+          {(orderData?.status === "Canceled" ||
+            orderData?.status === "Return/Refund") && (
+            <Descriptions.Item label="Canceled At">
+              {orderData?.canceledAt ?? orderData?.returnAt ?? ""}
+            </Descriptions.Item>
+          )}
         </Descriptions>
 
         <GoogleMap
@@ -195,6 +202,39 @@ function OrderDrawer({ onClose, open, orderId, type }) {
               </Button>
             </Popconfirm>
           </Space>
+        )}
+
+        {type === "user" && (
+          <Popconfirm
+            placement="topLeft"
+            title="Are you sure to cancel this order?"
+            onConfirm={() =>
+              dispatch(
+                cancelOrderAsync({
+                  orderId: orderData._id,
+                  cancellationReason: "",
+                })
+              )
+            }
+            okText="Yes"
+            cancelText="No"
+            disabled={
+              orderData?.status !== "To Ship" && orderData?.status !== "To Pay"
+            }
+          >
+            <Button
+              type="primary"
+              ghost
+              danger
+              loading={loadingMyOrders}
+              disabled={
+                orderData?.status !== "To Ship" &&
+                orderData?.status !== "To Pay"
+              }
+            >
+              Cancel Order
+            </Button>
+          </Popconfirm>
         )}
       </Space>
     </Drawer>

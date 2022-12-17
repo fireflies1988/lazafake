@@ -11,8 +11,8 @@ async function registerAsync(userData) {
 }
 
 // login
-async function loginAsync(credentails) {
-  const response = await axios.post(API_URL + "/login", credentails);
+async function loginAsync(credentials) {
+  const response = await axios.post(API_URL + "/login", credentials);
   console.log("login", response);
 
   return response.data;
@@ -150,6 +150,24 @@ async function changeRoleAsync(userId, role, accessToken) {
   return response.data;
 }
 
+// cancel order (user)
+async function cancelOrderAsync({ orderId, cancellationReason }, accessToken) {
+  const response = await axios.patch(
+    `${API_URL}/me/orders/${orderId}`,
+    {
+      cancellationReason,
+    },
+    {
+      headers: {
+        Authorization: "Bearer " + accessToken,
+      },
+    }
+  );
+  console.log("cancelOrderAsync", response);
+
+  return response.data;
+}
+
 const authService = {
   registerAsync,
   loginAsync,
@@ -163,6 +181,7 @@ const authService = {
   forgotPasswordAsync,
   resetPasswordAsync,
   changeRoleAsync,
+  cancelOrderAsync,
 };
 
 export default authService;

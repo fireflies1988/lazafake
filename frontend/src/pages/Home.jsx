@@ -116,7 +116,10 @@ function Home() {
           <Spin spinning={loadingProducts}>
             <ProductList
               columns={6}
-              items={[...products].sort((a, b) => b.sold - a.sold).slice(0, 12)}
+              items={[...products]
+                .filter((p) => p.sold > 0)
+                .sort((a, b) => b.sold - a.sold)
+                .slice(0, 12)}
             />
           </Spin>
         </Card>

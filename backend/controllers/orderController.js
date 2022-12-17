@@ -427,7 +427,7 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
         sendMail(
           {
             to: order.user.email,
-            subject: "Order Upates",
+            subject: "Order Updates",
             html: `<p>Your order ${order.id} has been canceled.</p>`,
           },
           (err, info) => {
@@ -448,7 +448,7 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
         sendMail(
           {
             to: order.user.email,
-            subject: "Order Upates",
+            subject: "Order Updates",
             html: `<p>Your order ${order.id} has been canceled and is being refunded.</p>`,
           },
           (err, info) => {
@@ -482,7 +482,7 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
     sendMail(
       {
         to: order.user.email,
-        subject: "Order Upates",
+        subject: "Order Updates",
         html: `<p>Your order ${order.id} has been confirmed and packed.</p>`,
       },
       (err, info) => {
@@ -505,7 +505,7 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
     sendMail(
       {
         to: order.user.email,
-        subject: "Order Upates",
+        subject: "Order Updates",
         html: `<p>Your order ${order.id} has been shipped out.</p>`,
       },
       (err, info) => {
@@ -611,7 +611,7 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
     sendMail(
       {
         to: order.user.email,
-        subject: "Order Upates",
+        subject: "Order Updates",
         html: `<p>Your order ${order.id} has been delivered.</p>`,
       },
       (err, info) => {

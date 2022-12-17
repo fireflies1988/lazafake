@@ -175,6 +175,22 @@ export const changeRoleAsync = createAsyncThunk(
   }
 );
 
+// cancel order (user)
+export const cancelOrderAsync = createAsyncThunk(
+  "order/update",
+  async ({ orderId, cancellationReason }, thunkAPI) => {
+    try {
+      const accessToken = thunkAPI.getState().auth.user?.accessToken;
+      return await authService.cancelOrderAsync(
+        { orderId, cancellationReason },
+        accessToken
+      );
+    } catch (err) {
+      return handleError(err, thunkAPI, "cancelOrderAsync", false);
+    }
+  }
+);
+
 export const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -253,7 +269,6 @@ export const authSlice = createSlice({
       })
       .addCase(getMyOrdersAsync.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.isSuccess = true;
         state.orders = action.payload;
       })
       .addCase(getMyOrdersAsync.rejected, (state, action) => {
@@ -351,6 +366,23 @@ export const authSlice = createSlice({
         state.message = "You have successfully changed this user's role.";
       })
       .addCase(changeRoleAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(cancelOrderAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(cancelOrderAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        const index = state.orders.findIndex(
+          (order) => order._id === action.payload._id
+        );
+        state.orders[index] = action.payload;
+        state.message = "Canceled order successfully.";
+      })
+      .addCase(cancelOrderAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

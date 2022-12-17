@@ -145,10 +145,12 @@ const changeQtyFromCart = asyncHandler(async (req, res, next) => {
   )[0]; // get happening promotion only
 
   cartItem.discount = 0;
-  for (const p of currentPromotion.products) {
-    if (p.product.toString() === cartItem.product._id.toString()) {
-      cartItem.discount = p.discount;
-      break;
+  if (currentPromotion) {
+    for (const p of currentPromotion.products) {
+      if (p.product.toString() === cartItem.product._id.toString()) {
+        cartItem.discount = p.discount;
+        break;
+      }
     }
   }
 
@@ -191,10 +193,12 @@ const getCartItems = asyncHandler(async (req, res, next) => {
   cartItems.map((cartItem) => {
     cartItem.discount = 0;
 
-    for (const p of currentPromotion.products) {
-      if (p.product.toString() === cartItem.product._id.toString()) {
-        cartItem.discount = p.discount;
-        break;
+    if (currentPromotion) {
+      for (const p of currentPromotion.products) {
+        if (p.product.toString() === cartItem.product._id.toString()) {
+          cartItem.discount = p.discount;
+          break;
+        }
       }
     }
 
