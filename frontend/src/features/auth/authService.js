@@ -67,11 +67,12 @@ async function getMyNotificationsAsync(params, accessToken) {
 }
 
 // get users (admin)
-async function getUsersAsync(accessToken) {
+async function getUsersAsync(params, accessToken) {
   const response = await axios.get(`${API_URL}`, {
     headers: {
       Authorization: "Bearer " + accessToken,
     },
+    params: params,
   });
   console.log("getUsersAsync", response);
 

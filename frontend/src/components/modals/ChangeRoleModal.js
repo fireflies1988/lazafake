@@ -49,6 +49,10 @@ function ChangeRoleModal({ open, onCancel, role, userId }) {
                   label: "admin",
                 },
                 {
+                  value: "shipper",
+                  label: "shipper",
+                },
+                {
                   value: "user",
                   label: "user",
                 },

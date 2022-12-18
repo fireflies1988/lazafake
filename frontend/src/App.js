@@ -93,6 +93,14 @@ function App() {
           </Route>
         )}
 
+        {user?.role === "shipper" && (
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="orders" />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="*" element={<Navigate to="orders" />} />
+          </Route>
+        )}
+
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

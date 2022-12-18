@@ -6,12 +6,13 @@ const connectDb = require("../configs/db");
 const Address = require("../models/addressModel");
 const dotenv = require("dotenv").config();
 const Receipt = require("../models/receiptModel");
+const User = require("../models/userModel");
 const mongoose = require("mongoose");
 
 connectDb();
 
 (async () => {
-
+  
 
   console.log("success");
   process.exit();

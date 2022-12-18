@@ -236,12 +236,17 @@ const viewMyVouchers = asyncHandler(async (req, res, next) => {
 const viewMyOrders = asyncHandler(async (req, res, next) => {
   res.json(
     await Order.find({ user: req.user.id, isValid: true })
-      .populate({
-        path: "orderItems",
-        populate: {
-          path: "product",
+      .populate([
+        {
+          path: "orderItems",
+          populate: {
+            path: "product",
+          },
         },
-      })
+        {
+          path: "shipper",
+        },
+      ])
       .sort({
         createdAt: -1,
       })
@@ -346,10 +351,16 @@ const getMyNotifications = asyncHandler(async (req, res, next) => {
 });
 
 // @desc    Get all users
-// @route   GET /api/users
+// @route   GET /api/users?role=
 // @access  Private (Admin)
 const getUsers = asyncHandler(async (req, res, next) => {
-  res.json(await User.find({}));
+  let users = await User.find({});
+
+  if (req.query.role) {
+    users = users.filter((u) => u.role === req.query.role);
+  }
+
+  res.json(users);
 });
 
 // @desc    Send verification code

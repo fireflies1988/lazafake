@@ -9,6 +9,7 @@ import Content from "../../components/Content";
 import { BiCategory } from "react-icons/bi";
 import { BsInboxes, BsReceipt } from "react-icons/bs";
 import { MdOutlinePriceChange, MdQueryStats } from "react-icons/md";
+import { useSelector } from "react-redux";
 
 const items = [
   {
@@ -58,10 +59,19 @@ const items = [
   },
 ];
 
+const shipperItems = [
+  {
+    label: <a href="/admin/orders">Orders</a>,
+    key: "orders",
+    icon: <BsInboxes />,
+  },
+];
+
 function AdminLayout() {
   const location = useLocation();
   const segments = location.pathname.split("/").filter(Boolean);
   const [currentKey, setCurrentKey] = useState(segments[segments.length - 1]);
+  const { user } = useSelector((state) => state.auth);
 
   return (
     <>
@@ -74,7 +84,7 @@ function AdminLayout() {
                 onClick={(e) => setCurrentKey(e.key)}
                 selectedKeys={[currentKey]}
                 mode="inline"
-                items={items}
+                items={user?.role === "shipper" ? shipperItems : items}
               />
             </Card>
           </Col>

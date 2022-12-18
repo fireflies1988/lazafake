@@ -14,11 +14,11 @@ router
   .route("/")
   .post(
     auth,
-    checkPermission(Role.Admin),
+    checkPermission([Role.Admin, Role.SpAdmin]),
     validate("createVoucher"),
     createVoucher
   )
-  .get(auth, checkPermission(Role.Admin), getVouchers);
-router.delete("/:id", auth, checkPermission(Role.Admin), deleteVoucher);
+  .get(auth, checkPermission([Role.Admin, Role.SpAdmin]), getVouchers);
+router.delete("/:id", auth, checkPermission([Role.Admin, Role.SpAdmin]), deleteVoucher);
 
 module.exports = router;

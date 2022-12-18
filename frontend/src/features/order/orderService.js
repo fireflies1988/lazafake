@@ -27,11 +27,12 @@ async function getAllOrdersAsync(accessToken) {
 }
 
 // update order status
-async function updateOrderStatusAsync(orderId, status, accessToken) {
+async function updateOrderStatusAsync(orderId, status, shipper, accessToken) {
   const response = await axios.patch(
     `${API_URL}/${orderId}`,
     {
       status,
+      shipper,
     },
     {
       headers: {

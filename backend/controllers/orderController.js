@@ -471,8 +471,14 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
   }
 
   if (order.status === "To Pay" && req.body.status === "To Ship") {
+    if (!req.body.shipper) {
+      res.status(400);
+      throw new Error("Please choose a shipper for this order.");
+    }
+
     order.confirmedAt = new Date().toISOString();
     order.status = req.body.status;
+    order.shipper = req.body.shipper;
 
     await Notification.create({
       user: order.user,
@@ -635,27 +641,37 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
       {
         path: "user",
       },
+      {
+        path: "shipper",
+      }
     ])
   );
 });
 
 // @desc    Get all orders
 // @route   GET /api/orders
-// @access  Private (admin)
+// @access  Private (admin, spadmin, shipper)
 const viewOrders = asyncHandler(async (req, res, next) => {
-  res.json(
-    await Order.find({ isValid: true }).populate([
-      {
-        path: "orderItems",
-        populate: {
-          path: "product",
-        },
+  let orders = await Order.find({ isValid: true }).populate([
+    {
+      path: "orderItems",
+      populate: {
+        path: "product",
       },
-      {
-        path: "user",
-      },
-    ])
-  );
+    },
+    {
+      path: "user",
+    },
+    {
+      path: "shipper",
+    },
+  ]);
+
+  if (req.user.role === "shipper") {
+    orders = orders.filter((o) => o?.shipper?._id.toString() === req.user?.id);
+  }
+
+  res.json(orders);
 });
 
 module.exports = {

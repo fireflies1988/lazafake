@@ -41,7 +41,7 @@ router.get("/me/vouchers", auth, viewMyVouchers);
 router.get("/me/orders", auth, viewMyOrders);
 router.patch("/me/orders/:id", auth, cancelOrder);
 router.get("/me/notifications", auth, getMyNotifications);
-router.get("/", auth, checkPermission(Role.Admin), getUsers);
+router.get("/", auth, checkPermission([Role.Admin, Role.SpAdmin]), getUsers);
 router.post("/me/mail/send-verification-code", auth, sendVerificationCode);
 router.post("/me/mail/verify", auth, verifyEmailAddress);
 
@@ -51,7 +51,7 @@ router.get("/password/reset", resetPassword);
 router.patch(
   "/:id/role/change",
   auth,
-  checkPermission(Role.SpAdmin),
+  checkPermission([Role.SpAdmin]),
   changeRole
 );
 

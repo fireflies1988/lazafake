@@ -7,6 +7,10 @@ const orderSchema = mongoose.Schema(
       ref: "User",
       required: true,
     },
+    shipper: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     shippingAddress: {
       fullName: {
         type: String,

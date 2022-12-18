@@ -20,7 +20,7 @@ router
   .route("/")
   .post(
     auth,
-    checkPermission(Role.Admin),
+    checkPermission([Role.Admin, Role.SpAdmin]),
     upload.array("images"),
     validate("addProduct"),
     addProduct
@@ -28,10 +28,10 @@ router
   .get(getProducts);
 router
   .route("/:id")
-  .delete(auth, checkPermission(Role.Admin), deleteProduct)
+  .delete(auth, checkPermission([Role.Admin, Role.SpAdmin]), deleteProduct)
   .patch(
     auth,
-    checkPermission(Role.Admin),
+    checkPermission([Role.Admin, Role.SpAdmin]),
     upload.array("images"),
     validate("updateProduct"),
     updateProduct
@@ -40,13 +40,13 @@ router
 router.delete(
   "/:productId/images/:imageId",
   auth,
-  checkPermission(Role.Admin),
+  checkPermission([Role.Admin, Role.SpAdmin]),
   removeProductImage
 );
 router.post(
   "/:id/images",
   auth,
-  checkPermission(Role.Admin),
+  checkPermission([Role.Admin, Role.SpAdmin]),
   upload.single("image"),
   addProductImage
 );
@@ -54,7 +54,7 @@ router.post(
 router.patch(
   "/:id/list",
   auth,
-  checkPermission(Role.Admin),
+  checkPermission([Role.Admin, Role.SpAdmin]),
   validate("listProduct"),
   listProduct
 );
@@ -62,7 +62,7 @@ router.patch(
 router.post(
   "/:id/change-price",
   auth,
-  checkPermission(Role.Admin),
+  checkPermission([Role.Admin, Role.SpAdmin]),
   validate("changeProductPrice"),
   changeProductPrice
 );

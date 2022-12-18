@@ -40,12 +40,13 @@ export const getAllOrdersAsync = createAsyncThunk(
 // update order status (admin)
 export const updateOrderStatusAsync = createAsyncThunk(
   "order/update",
-  async ({ orderId, status }, thunkAPI) => {
+  async ({ orderId, status, shipper }, thunkAPI) => {
     try {
       const accessToken = thunkAPI.getState().auth.user?.accessToken;
       return await orderService.updateOrderStatusAsync(
         orderId,
         status,
+        shipper,
         accessToken
       );
     } catch (err) {

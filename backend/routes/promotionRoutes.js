@@ -14,17 +14,17 @@ const {
 router.post(
   "/",
   auth,
-  checkPermission(Role.Admin),
+  checkPermission([Role.Admin, Role.SpAdmin]),
   validate("addPromotion"),
   addPromotion
 );
 
-router.get("/", auth, checkPermission(Role.Admin), getPromotions);
-router.delete("/:id", auth, checkPermission(Role.Admin), deletePromotion);
+router.get("/", auth, checkPermission([Role.Admin, Role.SpAdmin]), getPromotions);
+router.delete("/:id", auth, checkPermission([Role.Admin, Role.SpAdmin]), deletePromotion);
 router.put(
   "/:id",
   auth,
-  checkPermission(Role.Admin),
+  checkPermission([Role.Admin, Role.SpAdmin]),
   validate("addPromotion"),
   editPromotion
 );

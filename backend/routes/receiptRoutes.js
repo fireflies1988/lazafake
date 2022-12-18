@@ -9,10 +9,10 @@ const { addReceipt, getReceipts } = require("../controllers/receiptController");
 router.post(
   "/",
   auth,
-  checkPermission(Role.Admin),
+  checkPermission([Role.Admin, Role.SpAdmin]),
   validate("addReceipt"),
   addReceipt
 );
-router.get("/", auth, checkPermission(Role.Admin), getReceipts);
+router.get("/", auth, checkPermission([Role.Admin, Role.SpAdmin]), getReceipts);
 
 module.exports = router;

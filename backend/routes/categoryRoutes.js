@@ -16,7 +16,7 @@ router
   .route("/")
   .post(
     auth,
-    checkPermission(Role.Admin),
+    checkPermission([Role.Admin, Role.SpAdmin]),
     upload.single("thumbnail"),
     validate("addCategory"),
     addCategory
@@ -25,10 +25,10 @@ router
 
 router
   .route("/:id")
-  .delete(auth, checkPermission(Role.Admin), deleteCategory)
+  .delete(auth, checkPermission([Role.Admin, Role.SpAdmin]), deleteCategory)
   .patch(
     auth,
-    checkPermission(Role.Admin),
+    checkPermission([Role.Admin, Role.SpAdmin]),
     upload.single("thumbnail"),
     validate("addCategory"),
     updateCategory

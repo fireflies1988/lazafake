@@ -98,10 +98,10 @@ export const getMyNotificationsAsync = createAsyncThunk(
 // get users (admin)
 export const getUsersAsync = createAsyncThunk(
   "auth/users",
-  async (_, thunkAPI) => {
+  async (params, thunkAPI) => {
     try {
       const accessToken = thunkAPI.getState().auth.user?.accessToken;
-      return await authService.getUsersAsync(accessToken);
+      return await authService.getUsersAsync(params, accessToken);
     } catch (err) {
       return handleError(err, thunkAPI, "getUsersAsync", false);
     }

@@ -6,6 +6,6 @@ const checkPermission = require("../middlewares/roleMiddleware");
 const Role = require("../data/roles");
 const { getPriceChanges } = require("../controllers/priceChangeController");
 
-router.get("/", auth, checkPermission(Role.Admin), getPriceChanges);
+router.get("/", auth, checkPermission([Role.Admin, Role.SpAdmin]), getPriceChanges);
 
 module.exports = router;

@@ -12,6 +12,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateOrderStatusAsync } from "../../features/order/orderSlice";
 import { cancelOrderAsync } from "../../features/auth/authSlice";
+import ChooseShipperModal from "../modals/ChooseShipperModal";
 const { Text } = Typography;
 
 const statuses = [
@@ -29,6 +30,7 @@ function OrderDrawer({ onClose, open, orderId, type }) {
   const [disabled, setDisabled] = useState(false);
   const [orderData, setOrderData] = useState();
   const [address, setAddress] = useState("");
+  const [openChooseShipper, setOpenChooseShipper] = useState(false);
 
   const dispatch = useDispatch();
   const { orders: allOrders, isLoading: loadingAllOrders } = useSelector(
@@ -139,6 +141,11 @@ function OrderDrawer({ onClose, open, orderId, type }) {
               {orderData?.canceledAt ?? orderData?.returnAt ?? ""}
             </Descriptions.Item>
           )}
+          {orderData?.shipper && (
+            <Descriptions.Item label="Shipper">
+              {orderData?.shipper?.fullName} ({orderData?.shipper?.email})
+            </Descriptions.Item>
+          )}
         </Descriptions>
 
         <GoogleMap
@@ -152,30 +159,45 @@ function OrderDrawer({ onClose, open, orderId, type }) {
 
         {type === "admin" && (
           <Space>
-            <Popconfirm
-              title="Are you sure to update this order status?"
-              onConfirm={() =>
-                dispatch(
-                  updateOrderStatusAsync({
-                    orderId: orderData._id,
-                    status: statuses[statuses.indexOf(orderData?.status) + 1],
-                  })
-                )
-              }
-              placement="topLeft"
-              okText="Yes"
-              cancelText="No"
-              disabled={disabled}
-            >
+            {orderData?.status === "To Pay" ? (
               <Button
                 type="primary"
                 ghost
                 loading={loadingAllOrders}
                 disabled={disabled}
+                onClick={() => {
+                  setOpenChooseShipper(true);
+                }}
               >
                 Next State
               </Button>
-            </Popconfirm>
+            ) : (
+              <Popconfirm
+                title="Are you sure to update this order status?"
+                onConfirm={() =>
+                  dispatch(
+                    updateOrderStatusAsync({
+                      orderId: orderData._id,
+                      status: statuses[statuses.indexOf(orderData?.status) + 1],
+                    })
+                  )
+                }
+                placement="topLeft"
+                okText="Yes"
+                cancelText="No"
+                disabled={disabled}
+              >
+                <Button
+                  type="primary"
+                  ghost
+                  loading={loadingAllOrders}
+                  disabled={disabled}
+                >
+                  Next State
+                </Button>
+              </Popconfirm>
+            )}
+
             <Popconfirm
               placement="topLeft"
               title="Are you sure to cancel this order?"
@@ -237,6 +259,13 @@ function OrderDrawer({ onClose, open, orderId, type }) {
           </Popconfirm>
         )}
       </Space>
+
+      <ChooseShipperModal
+        open={openChooseShipper}
+        onCancel={() => setOpenChooseShipper(false)}
+        orderId={orderId}
+        type={type}
+      />
     </Drawer>
   );
 }

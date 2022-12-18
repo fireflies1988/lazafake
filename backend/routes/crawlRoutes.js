@@ -9,7 +9,7 @@ const { validate } = require("../utils/validator");
 router.post(
   "/tiki",
   auth,
-  checkPermission(Role.Admin),
+  checkPermission([Role.Admin, Role.SpAdmin]),
   validate("crawlTikiProduct"),
   crawlTikiProductAsync
 );

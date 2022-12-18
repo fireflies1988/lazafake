@@ -16,11 +16,16 @@ router.post("/", auth, validate("placeOrder"), placeOrder);
 router.get("/confirm", confirmPayment);
 router.get("/cancel", cancelPayment);
 
-router.get("/", auth, checkPermission(Role.Admin), viewOrders);
+router.get(
+  "/",
+  auth,
+  checkPermission([Role.Admin, Role.SpAdmin, Role.Shipper]),
+  viewOrders
+);
 router.patch(
   "/:id",
   auth,
-  checkPermission(Role.Admin),
+  checkPermission([Role.Admin, Role.SpAdmin, Role.Shipper]),
   validate("updateOrderStatus"),
   updateOrderStatus
 );
