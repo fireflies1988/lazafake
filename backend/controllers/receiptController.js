@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const { validationResult } = require("express-validator");
 const Receipt = require("../models/receiptModel");
 const Product = require("../models/productModel");
+const mongoose = require("mongoose");
 
 // @desc    Add a new receipt
 // @route   POST /api/receipts
@@ -28,36 +29,50 @@ const addReceipt = asyncHandler(async (req, res, next) => {
     totalPrice += product.price * product.quantity;
   }
 
-  for (const product of products) {
-    await Product.updateOne(
-      { _id: product.product },
-      {
-        $inc: {
-          quantity: product.quantity,
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    for (const product of products) {
+      await Product.updateOne(
+        { _id: product.product },
+        {
+          $inc: {
+            quantity: product.quantity,
+          },
         },
-      }
+        {
+          session,
+        }
+      );
+    }
+
+    const receipt = await new Receipt({
+      user: req.user.id,
+      products,
+      totalPrice,
+    }).save({ session });
+    
+    await session.commitTransaction();
+
+    res.json(
+      await Receipt.findById(receipt.id).populate([
+        {
+          path: "products",
+          populate: {
+            path: "product",
+          },
+        },
+        {
+          path: "user",
+        },
+      ])
     );
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    await session.endSession();
   }
-
-  const receipt = await Receipt.create({
-    user: req.user.id,
-    products,
-    totalPrice,
-  });
-
-  res.json(
-    await Receipt.findById(receipt.id).populate([
-      {
-        path: "products",
-        populate: {
-          path: "product",
-        },
-      },
-      {
-        path: "user",
-      },
-    ])
-  );
 });
 
 // @desc    Get receipts

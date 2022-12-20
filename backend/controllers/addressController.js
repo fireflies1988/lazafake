@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const { validationResult } = require("express-validator");
 const User = require("../models/userModel");
 const Address = require("../models/addressModel");
+const mongoose = require("mongoose");
 
 // @desc    Add address
 // @route   POST /api/addresses
@@ -13,7 +14,7 @@ const addAddress = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  const session = await Address.startSession();
+  const session = await mongoose.startSession();
   session.startTransaction();
   try {
     if (req.body.isDefault === "true" || req.body.isDefault === true) {
@@ -23,14 +24,17 @@ const addAddress = asyncHandler(async (req, res, next) => {
           $set: {
             isDefault: false,
           },
+        },
+        {
+          session,
         }
       );
     }
 
-    await Address.create({
+    await new Address({
       user: req.user.id,
       ...req.body,
-    });
+    }).save({ session });
 
     await session.commitTransaction();
   } catch (err) {
@@ -123,7 +127,7 @@ const updateAddress = asyncHandler(async (req, res, next) => {
     throw new Error("This address is not yours");
   }
 
-  const session = await Address.startSession();
+  const session = await mongoose.startSession();
   session.startTransaction();
   try {
     // only one default address is allowed
@@ -137,11 +141,14 @@ const updateAddress = asyncHandler(async (req, res, next) => {
           $set: {
             isDefault: false,
           },
+        },
+        {
+          session,
         }
       );
     }
 
-    await Address.findByIdAndUpdate(req.params.id, updatedFields);
+    await Address.findByIdAndUpdate(req.params.id, updatedFields, { session });
 
     await session.commitTransaction();
   } catch (err) {

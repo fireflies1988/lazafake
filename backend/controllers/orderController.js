@@ -17,6 +17,7 @@ const Notification = require("../models/notificationModel");
 const { sendMail } = require("../services/mailService");
 const User = require("../models/userModel");
 const Receipt = require("../models/receiptModel");
+const mongoose = require("mongoose");
 
 const moneyFormatter = new Intl.NumberFormat("vi-vn", {
   style: "currency",
@@ -230,68 +231,88 @@ const placeOrder = asyncHandler(async (req, res, next) => {
       }
     });
   } else {
-    const order = await Order.create({
-      ...fields,
-      user: req.user.id,
-      shippingAddress: await Address.findById(shippingAddress),
-      orderItems: tempOrderItems.map((o) => ({
-        product: o.cartItem.product._id,
-        quantity: o.cartItem.quantity,
-        price: o.cartItem.product.price,
-        discount: o.discount,
-      })),
-      totalPayment: tempTotalPayment,
-    });
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const order = await new Order({
+        ...fields,
+        user: req.user.id,
+        shippingAddress: await Address.findById(shippingAddress),
+        orderItems: tempOrderItems.map((o) => ({
+          product: o.cartItem.product._id,
+          quantity: o.cartItem.quantity,
+          price: o.cartItem.product.price,
+          discount: o.discount,
+        })),
+        totalPayment: tempTotalPayment,
+      }).save({ session });
 
-    let tableData = "";
+      let tableData = "";
 
-    // extract products' quantity after purchasing
-    for (const item of tempOrderItems) {
-      await Product.findByIdAndUpdate(item.cartItem.product._id, {
-        $inc: {
-          quantity: -item.cartItem.quantity,
-        },
-      });
-
-      tableData += `<tr>
-        <td>${item.cartItem.product.name}</td>
-        <td>${moneyFormatter.format(
-          item.cartItem.product.price - item.discount
-        )}</td>
-        <td>${item.cartItem.quantity}</td>
-        <td>${moneyFormatter.format(
-          (item.cartItem.product.price - item.discount) * item.cartItem.quantity
-        )}</td>
-        </tr>`;
-    }
-
-    // update vouchers
-    for (const voucher of order.vouchers) {
-      await Voucher.updateOne(
-        { id: voucher.id },
-        {
-          $push: {
-            usersUsed: req.query.userId,
+      // extract products' quantity after purchasing
+      for (const item of tempOrderItems) {
+        await Product.findByIdAndUpdate(
+          item.cartItem.product._id,
+          {
+            $inc: {
+              quantity: -item.cartItem.quantity,
+            },
           },
-        }
+          {
+            session,
+          }
+        );
+
+        tableData += `<tr>
+          <td>${item.cartItem.product.name}</td>
+          <td>${moneyFormatter.format(
+            item.cartItem.product.price - item.discount
+          )}</td>
+          <td>${item.cartItem.quantity}</td>
+          <td>${moneyFormatter.format(
+            (item.cartItem.product.price - item.discount) *
+              item.cartItem.quantity
+          )}</td>
+          </tr>`;
+      }
+
+      // update vouchers
+      for (const voucher of order.vouchers) {
+        await Voucher.updateOne(
+          { id: voucher.id },
+          {
+            $push: {
+              usersUsed: req.query.userId,
+            },
+          },
+          {
+            session,
+          }
+        );
+      }
+
+      await new Notification({
+        user: order.user,
+        message: `Your order ${order.id} has been placed successfully.`,
+      }).save({ session });
+
+      sendNotification(
+        order.id,
+        req.user.email,
+        req.user.fullName,
+        tableData,
+        moneyFormatter.format(order.shippingFee),
+        moneyFormatter.format(order.totalPayment)
       );
+
+      await session.commitTransaction();
+      res.status(201).json(order);
+    } catch (err) {
+      await session.abortTransaction();
+      throw err;
+    } finally {
+      await session.endSession();
     }
-
-    await Notification.create({
-      user: order.user,
-      message: `Your order ${order.id} has been placed successfully.`,
-    });
-
-    sendNotification(
-      order.id,
-      req.user.email,
-      req.user.fullName,
-      tableData,
-      moneyFormatter.format(order.shippingFee),
-      moneyFormatter.format(order.totalPayment)
-    );
-
-    res.status(201).json(order);
   }
 });
 
@@ -325,58 +346,74 @@ const confirmPayment = asyncHandler(async (req, res, next) => {
       if (error) {
         throw error;
       } else {
-        let tableData = "";
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+          let tableData = "";
 
-        // update products' quantity after purchasing
-        for (const item of order.orderItems) {
-          await Product.findByIdAndUpdate(item.product._id, {
-            $inc: {
-              quantity: -item.quantity,
-            },
-          });
-
-          tableData += `<tr>
-            <td>${item.product.name}</td>
-            <td>${moneyFormatter.format(item.price - item.discount)}</td>
-            <td>${item.quantity}</td>
-            <td>${moneyFormatter.format(
-              (item.price - item.discount) * item.quantity
-            )}</td>
-            </tr>`;
-        }
-
-        // update vouchers
-        for (const voucher of order.vouchers) {
-          await Voucher.updateOne(
-            { id: voucher.id },
-            {
-              $push: {
-                usersUsed: req.query.userId,
+          // update products' quantity after purchasing
+          for (const item of order.orderItems) {
+            await Product.findByIdAndUpdate(
+              item.product._id,
+              {
+                $inc: {
+                  quantity: -item.quantity,
+                },
               },
-            }
+              { session }
+            );
+
+            tableData += `<tr>
+              <td>${item.product.name}</td>
+              <td>${moneyFormatter.format(item.price - item.discount)}</td>
+              <td>${item.quantity}</td>
+              <td>${moneyFormatter.format(
+                (item.price - item.discount) * item.quantity
+              )}</td>
+              </tr>`;
+          }
+
+          // update vouchers
+          for (const voucher of order.vouchers) {
+            await Voucher.updateOne(
+              { id: voucher.id },
+              {
+                $push: {
+                  usersUsed: req.query.userId,
+                },
+              },
+              { session }
+            );
+          }
+
+          const user = await User.findById(req.query.userId);
+
+          await new Notification({
+            user: order.user,
+            message: `Your order ${order.id} has been placed successfully.`,
+          }).save({ session });
+
+          sendNotification(
+            order.id,
+            user.email,
+            user.fullName,
+            tableData,
+            moneyFormatter.format(order.shippingFee),
+            moneyFormatter.format(order.totalPayment)
           );
+
+          // this order become valid now
+          order.isValid = true;
+          await order.save({ session });
+          await session.commitTransaction();
+
+          res.redirect("http://localhost:3000/result?success");
+        } catch (err) {
+          await session.abortTransaction();
+          throw err;
+        } finally {
+          await session.endSession();
         }
-
-        const user = await User.findById(req.query.userId);
-
-        await Notification.create({
-          user: order.user,
-          message: `Your order ${order.id} has been placed successfully.`,
-        });
-
-        sendNotification(
-          order.id,
-          user.email,
-          user.fullName,
-          tableData,
-          moneyFormatter.format(order.shippingFee),
-          moneyFormatter.format(order.totalPayment)
-        );
-
-        // this order become valid now
-        order.isValid = true;
-        await order.save();
-        res.redirect("http://localhost:3000/result?success");
       }
     }
   );
@@ -406,229 +443,259 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
     throw new Error("Order not found.");
   }
 
-  if (
-    order.status === "Canceled" ||
-    order.status === "Completed" ||
-    order.status === "Return/Refund"
-  ) {
-    res.status(403);
-    throw new Error("Unable to update the order status.");
-  } else {
-    if (req.body.status === "Canceled") {
-      if (order.paymentMethod === "Cash") {
-        order.canceledAt = new Date().toISOString();
-        order.status = req.body.status;
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    if (
+      order.status === "Canceled" ||
+      order.status === "Completed" ||
+      order.status === "Return/Refund"
+    ) {
+      res.status(403);
+      throw new Error("Unable to update the order status.");
+    } else {
+      if (req.body.status === "Canceled") {
+        if (order.paymentMethod === "Cash") {
+          order.canceledAt = new Date().toISOString();
+          order.status = req.body.status;
 
-        await Notification.create({
-          user: order.user,
-          message: `Your order ${order.id} has been canceled.`,
-        });
+          await new Notification({
+            user: order.user,
+            message: `Your order ${order.id} has been canceled.`,
+          }).save({ session });
 
-        sendMail(
-          {
-            to: order.user.email,
-            subject: "Order Updates",
-            html: `<p>Your order ${order.id} has been canceled.</p>`,
-          },
-          (err, info) => {
-            if (err) {
-              console.log(err);
-            }
-          }
-        );
-      } else if (order.paymentMethod === "Paypal") {
-        order.returnAt = new Date().toISOString();
-        order.status = "Return/Refund";
-
-        await Notification.create({
-          user: order.user,
-          message: `Your order ${order.id} has been canceled and is being refunded.`,
-        });
-
-        sendMail(
-          {
-            to: order.user.email,
-            subject: "Order Updates",
-            html: `<p>Your order ${order.id} has been canceled and is being refunded.</p>`,
-          },
-          (err, info) => {
-            if (err) {
-              console.log(err);
-            }
-          }
-        );
-      }
-
-      // restore products' quantity after canceling or returning
-      for (const item of order.orderItems) {
-        await Product.findByIdAndUpdate(item.product, {
-          $inc: {
-            quantity: item.quantity,
-          },
-        });
-      }
-    }
-  }
-
-  if (order.status === "To Pay" && req.body.status === "To Ship") {
-    if (!req.body.shipper) {
-      res.status(400);
-      throw new Error("Please choose a shipper for this order.");
-    }
-
-    order.confirmedAt = new Date().toISOString();
-    order.status = req.body.status;
-    order.shipper = req.body.shipper;
-
-    await Notification.create({
-      user: order.user,
-      message: `Your order ${order.id} has been confirmed and packed.`,
-    });
-
-    sendMail(
-      {
-        to: order.user.email,
-        subject: "Order Updates",
-        html: `<p>Your order ${order.id} has been confirmed and packed.</p>`,
-      },
-      (err, info) => {
-        if (err) {
-          console.log(err);
-        }
-      }
-    );
-  }
-
-  if (order.status === "To Ship" && req.body.status === "To Receive") {
-    order.shippedOutAt = new Date().toISOString();
-    order.status = req.body.status;
-
-    await Notification.create({
-      user: order.user,
-      message: `Your order ${order.id} has been shipped out.`,
-    });
-
-    sendMail(
-      {
-        to: order.user.email,
-        subject: "Order Updates",
-        html: `<p>Your order ${order.id} has been shipped out.</p>`,
-      },
-      (err, info) => {
-        if (err) {
-          console.log(err);
-        }
-      }
-    );
-  }
-
-  if (order.status === "To Receive" && req.body.status === "Completed") {
-    order.completedAt = new Date().toISOString();
-    order.status = req.body.status;
-
-    await Notification.create({
-      user: order.user,
-      message: `Your order ${order.id} has been delivered.`,
-    });
-
-    // update products' sold and avgImportPrice after successfully delivery
-    for (const orderItem of order.orderItems) {
-      // find all import batches that contains this product
-      const receipts = await Receipt.find({
-        "products.product": orderItem.product,
-      });
-
-      // calculate avgImportPrice at that time
-      let totalImportPrice = 0;
-      let remain = orderItem.quantity;
-
-      for (const receipt of receipts) {
-        // get product details in that receipt
-        const productInReceipt = receipt.products.find(
-          (p) => p.product.toString() === orderItem.product.toString()
-        );
-
-        // check if this import batch is still in use
-        if (productInReceipt.sold === productInReceipt.quantity) {
-          continue;
-        }
-
-        if (remain + productInReceipt.sold <= productInReceipt.quantity) {
-          totalImportPrice += productInReceipt.price * remain;
-
-          // update receipt's sold field
-          // You must include the array field as part of the query document.
-          await Receipt.updateOne(
+          sendMail(
             {
-              _id: receipt._id,
-              "products.product": orderItem.product,
+              to: order.user.email,
+              subject: "Order Updates",
+              html: `<p>Your order ${order.id} has been canceled.</p>`,
             },
+            (err, info) => {
+              if (err) {
+                console.log(err);
+              }
+            }
+          );
+        } else if (order.paymentMethod === "Paypal") {
+          order.returnAt = new Date().toISOString();
+          order.status = "Return/Refund";
+
+          await new Notification({
+            user: order.user,
+            message: `Your order ${order.id} has been canceled and is being refunded.`,
+          }).save({ session });
+
+          sendMail(
+            {
+              to: order.user.email,
+              subject: "Order Updates",
+              html: `<p>Your order ${order.id} has been canceled and is being refunded.</p>`,
+            },
+            (err, info) => {
+              if (err) {
+                console.log(err);
+              }
+            }
+          );
+        }
+
+        // restore products' quantity after canceling or returning
+        for (const item of order.orderItems) {
+          await Product.findByIdAndUpdate(
+            item.product,
             {
               $inc: {
-                "products.$.sold": remain,
+                quantity: item.quantity,
               },
-            }
-          );
-
-          // done
-          break;
-        } else {
-          remain -= productInReceipt.quantity - productInReceipt.sold;
-          totalImportPrice +=
-            (productInReceipt.quantity - productInReceipt.sold) *
-            productInReceipt.price;
-
-          await Receipt.updateOne(
-            {
-              _id: receipt._id,
-              "products.product": orderItem.product,
             },
-            {
-              $set: {
-                "products.$.sold": productInReceipt.quantity,
-              },
-            }
+            { session }
           );
         }
       }
-
-      let avgImportPrice = Math.round(totalImportPrice / orderItem.quantity);
-      // update orderItem's avgImportPrice
-      await Order.updateOne(
-        {
-          _id: order._id,
-          "orderItems.product": orderItem.product,
-        },
-        {
-          $set: {
-            "orderItems.$.avgImportPrice": avgImportPrice,
-          },
-        }
-      );
-
-      // update product's sold field
-      await Product.findByIdAndUpdate(orderItem.product, {
-        $inc: {
-          sold: orderItem.quantity,
-        },
-      });
     }
 
-    sendMail(
-      {
-        to: order.user.email,
-        subject: "Order Updates",
-        html: `<p>Your order ${order.id} has been delivered.</p>`,
-      },
-      (err, info) => {
-        if (err) {
-          console.log(err);
-        }
+    if (order.status === "To Pay" && req.body.status === "To Ship") {
+      if (!req.body.shipper) {
+        res.status(400);
+        throw new Error("Please choose a shipper for this order.");
       }
-    );
-  }
 
-  await order.save();
+      order.confirmedAt = new Date().toISOString();
+      order.status = req.body.status;
+      order.shipper = req.body.shipper;
+
+      await new Notification({
+        user: order.user,
+        message: `Your order ${order.id} has been confirmed and packed.`,
+      }).save({ session });
+
+      sendMail(
+        {
+          to: order.user.email,
+          subject: "Order Updates",
+          html: `<p>Your order ${order.id} has been confirmed and packed.</p>`,
+        },
+        (err, info) => {
+          if (err) {
+            console.log(err);
+          }
+        }
+      );
+    }
+
+    if (order.status === "To Ship" && req.body.status === "To Receive") {
+      order.shippedOutAt = new Date().toISOString();
+      order.status = req.body.status;
+
+      await new Notification({
+        user: order.user,
+        message: `Your order ${order.id} has been shipped out.`,
+      }).save({ session });
+
+      sendMail(
+        {
+          to: order.user.email,
+          subject: "Order Updates",
+          html: `<p>Your order ${order.id} has been shipped out.</p>`,
+        },
+        (err, info) => {
+          if (err) {
+            console.log(err);
+          }
+        }
+      );
+    }
+
+    if (order.status === "To Receive" && req.body.status === "Completed") {
+      order.completedAt = new Date().toISOString();
+      order.status = req.body.status;
+
+      await new Notification({
+        user: order.user,
+        message: `Your order ${order.id} has been delivered.`,
+      }).save({ session });
+
+      // update products' sold and avgImportPrice after successfully delivery
+      for (const orderItem of order.orderItems) {
+        // find all import batches that contains this product
+        const receipts = await Receipt.find({
+          "products.product": orderItem.product,
+        });
+
+        // calculate avgImportPrice at that time
+        let totalImportPrice = 0;
+        let remain = orderItem.quantity;
+
+        for (const receipt of receipts) {
+          // get product details in that receipt
+          const productInReceipt = receipt.products.find(
+            (p) => p.product.toString() === orderItem.product.toString()
+          );
+
+          // check if this import batch is still in use
+          if (productInReceipt.sold === productInReceipt.quantity) {
+            continue;
+          }
+
+          if (remain + productInReceipt.sold <= productInReceipt.quantity) {
+            totalImportPrice += productInReceipt.price * remain;
+
+            // update receipt's sold field
+            // You must include the array field as part of the query document.
+            await Receipt.updateOne(
+              {
+                _id: receipt._id,
+                "products.product": orderItem.product,
+              },
+              {
+                $inc: {
+                  "products.$.sold": remain,
+                },
+              },
+              {
+                session,
+              }
+            );
+
+            // done
+            break;
+          } else {
+            remain -= productInReceipt.quantity - productInReceipt.sold;
+            totalImportPrice +=
+              (productInReceipt.quantity - productInReceipt.sold) *
+              productInReceipt.price;
+
+            await Receipt.updateOne(
+              {
+                _id: receipt._id,
+                "products.product": orderItem.product,
+              },
+              {
+                $set: {
+                  "products.$.sold": productInReceipt.quantity,
+                },
+              },
+              {
+                session,
+              }
+            );
+          }
+        }
+
+        let avgImportPrice = Math.round(totalImportPrice / orderItem.quantity);
+        // update orderItem's avgImportPrice
+        await Order.updateOne(
+          {
+            _id: order._id,
+            "orderItems.product": orderItem.product,
+          },
+          {
+            $set: {
+              "orderItems.$.avgImportPrice": avgImportPrice,
+            },
+          },
+          {
+            session,
+          }
+        );
+
+        // update product's sold field
+        await Product.findByIdAndUpdate(
+          orderItem.product,
+          {
+            $inc: {
+              sold: orderItem.quantity,
+            },
+          },
+          {
+            session,
+          }
+        );
+      }
+
+      sendMail(
+        {
+          to: order.user.email,
+          subject: "Order Updates",
+          html: `<p>Your order ${order.id} has been delivered.</p>`,
+        },
+        (err, info) => {
+          if (err) {
+            console.log(err);
+          }
+        }
+      );
+    }
+
+    await order.save({ session });
+
+    await session.commitTransaction();
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    await session.endSession();
+  }
 
   res.json(
     await Order.findById(order.id).populate([
@@ -643,7 +710,7 @@ const updateOrderStatus = asyncHandler(async (req, res, next) => {
       },
       {
         path: "shipper",
-      }
+      },
     ])
   );
 });

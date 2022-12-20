@@ -3,6 +3,7 @@ const { validationResult } = require("express-validator");
 const Category = require("../models/categoryModel");
 const Product = require("../models/productModel");
 const cloudinary = require("../configs/cloudinary");
+const mongoose = require("mongoose");
 
 // @desc    Add a new category
 // @route   POST /api/categories
@@ -22,10 +23,11 @@ const addCategory = asyncHandler(async (req, res, next) => {
     throw new Error("This category already exists.");
   }
 
-  const session = await Category.startSession();
+  const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const newCategory = await Category.create({ name });
+    const newCategory = new Category({ name });
+    await newCategory.save({ session });
 
     // upload thumbnail
     if (req.file) {
@@ -47,12 +49,9 @@ const addCategory = asyncHandler(async (req, res, next) => {
       }
     }
 
-    await newCategory.save();
-
     await session.commitTransaction();
   } catch (err) {
     await session.abortTransaction();
-    console.log("hello");
     throw err;
   } finally {
     await session.endSession();
@@ -79,19 +78,33 @@ const deleteCategory = asyncHandler(async (req, res, next) => {
     throw new Error("Category not found.");
   }
 
-  if (category?.thumbnail?.publicId) {
-    await cloudinary.uploader.destroy(category?.thumbnail?.publicId);
-  }
-
-  await Category.findByIdAndDelete(req.params.id);
-  await Product.updateMany(
-    { category: req.params.id },
-    {
-      $set: {
-        category: null,
-      },
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    if (category?.thumbnail?.publicId) {
+      await cloudinary.uploader.destroy(category?.thumbnail?.publicId);
     }
-  );
+
+    await Category.findByIdAndDelete(req.params.id, { session });
+    await Product.updateMany(
+      { category: req.params.id },
+      {
+        $set: {
+          category: null,
+        },
+      },
+      {
+        session,
+      }
+    );
+
+    await session.commitTransaction();
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    await session.endSession();
+  }
 
   res.json(await Category.find({}));
 });

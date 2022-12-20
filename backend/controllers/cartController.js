@@ -4,6 +4,7 @@ const asyncHandler = require("express-async-handler");
 const CartItem = require("../models/cartItemModel");
 const Promotion = require("../models/promotionModel");
 const moment = require("moment");
+const mongoose = require("mongoose");
 
 // @desc    Add a product to cart
 // @route   POST /api/cart/add?productId=
@@ -95,8 +96,19 @@ const removeFromCart = asyncHandler(async (req, res, next) => {
 const removeMultipleFromCart = asyncHandler(async (req, res, next) => {
   const { items } = req.body;
 
-  for (let item of items) {
-    await CartItem.deleteOne({ _id: item });
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    for (let item of items) {
+      await CartItem.deleteOne({ _id: item }, { session });
+    }
+
+    await session.commitTransaction();
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    await session.endSession();
   }
 
   res.json(items);

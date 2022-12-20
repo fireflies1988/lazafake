@@ -20,7 +20,7 @@ import {
 import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import ProductList from "../components/ProductList";
 import { addToCartAsync } from "../features/cart/cartSlice";
 import { getProductsAsync } from "../features/product/productSlice";
@@ -50,6 +50,7 @@ function ProductDetails() {
   const [sepcificationsData, setSepcificationsData] = useState();
   const dispatch = useDispatch();
   const [activeTabKey, setActiveTabKey] = useState("description");
+  const navigate = useNavigate();
 
   const { reviews } = useSelector((state) => state.review);
 
@@ -189,7 +190,24 @@ function ProductDetails() {
               >
                 Add to Cart
               </Button>
-              <Button type="primary" size="large">
+              <Button
+                type="primary"
+                size="large"
+                onClick={() => {
+                  if (user) {
+                    dispatch(
+                      addToCartAsync({
+                        productId: product._id,
+                        quantity: quantity,
+                      })
+                    );
+
+                    navigate("/cart");
+                  } else {
+                    antMessage.info("You need to login to use this feature!");
+                  }
+                }}
+              >
                 Buy Now
               </Button>
             </Space>

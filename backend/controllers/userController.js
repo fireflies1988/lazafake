@@ -11,6 +11,7 @@ const Order = require("../models/orderModel");
 const Notification = require("../models/notificationModel");
 const mailService = require("../services/mailService");
 const crypto = require("crypto");
+const mongoose = require("mongoose");
 
 // @desc    Register
 // @route   POST /api/users
@@ -268,75 +269,90 @@ const cancelOrder = asyncHandler(async (req, res, next) => {
     throw new Error("Can't cancel the order.");
   }
 
-  if (order.paymentMethod === "Cash") {
-    order.canceledAt = new Date().toISOString();
-    order.status = "Canceled";
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    if (order.paymentMethod === "Cash") {
+      order.canceledAt = new Date().toISOString();
+      order.status = "Canceled";
 
-    await Notification.create({
-      user: order.user,
-      message: `Your order ${order.id} has been canceled.`,
-    });
+      await new Notification({
+        user: order.user,
+        message: `Your order ${order.id} has been canceled.`,
+      }).save({ session });
 
-    mailService.sendMail(
-      {
-        to: order.user.email,
-        subject: "Order Updates",
-        html: `<p>Your order ${order.id} has been canceled.</p>`,
-      },
-      (err, info) => {
-        if (err) {
-          console.log(err);
-        }
-      }
-    );
-  } else {
-    order.returnAt = new Date().toISOString();
-    order.status = "Return/Refund";
-
-    await Notification.create({
-      user: order.user,
-      message: `Your order ${order.id} has been canceled and is being refunded.`,
-    });
-
-    mailService.sendMail(
-      {
-        to: order.user.email,
-        subject: "Order Updates",
-        html: `<p>Your order ${order.id} has been canceled and is being refunded.</p>`,
-      },
-      (err, info) => {
-        if (err) {
-          console.log(err);
-        }
-      }
-    );
-  }
-
-  // restore products' quantity after canceling or returning
-  for (const item of order.orderItems) {
-    await Product.findByIdAndUpdate(item.product, {
-      $inc: {
-        quantity: item.quantity,
-      },
-    });
-  }
-
-  order.cancellationReason = req.body.cancellationReason;
-  await order.save();
-
-  res.json(
-    await Order.findById(order.id).populate([
-      {
-        path: "orderItems",
-        populate: {
-          path: "product",
+      mailService.sendMail(
+        {
+          to: order.user.email,
+          subject: "Order Updates",
+          html: `<p>Your order ${order.id} has been canceled.</p>`,
         },
-      },
-      {
-        path: "user",
-      },
-    ])
-  );
+        (err, info) => {
+          if (err) {
+            console.log(err);
+          }
+        }
+      );
+    } else {
+      order.returnAt = new Date().toISOString();
+      order.status = "Return/Refund";
+
+      await new Notification({
+        user: order.user,
+        message: `Your order ${order.id} has been canceled and is being refunded.`,
+      }).save({ session });
+
+      mailService.sendMail(
+        {
+          to: order.user.email,
+          subject: "Order Updates",
+          html: `<p>Your order ${order.id} has been canceled and is being refunded.</p>`,
+        },
+        (err, info) => {
+          if (err) {
+            console.log(err);
+          }
+        }
+      );
+    }
+
+    // restore products' quantity after canceling or returning
+    for (const item of order.orderItems) {
+      await Product.findByIdAndUpdate(
+        item.product,
+        {
+          $inc: {
+            quantity: item.quantity,
+          },
+        },
+        { session }
+      );
+    }
+
+    order.cancellationReason = req.body.cancellationReason;
+    await order.save({ session });
+
+    await session.commitTransaction();
+
+    res.json(
+      await Order.findById(order.id).populate([
+        {
+          path: "orderItems",
+          populate: {
+            path: "product",
+          },
+        },
+        {
+          path: "user",
+        },
+      ])
+    );
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    await session.endSession();
+  }
 });
 
 // @desc    Get my notifications

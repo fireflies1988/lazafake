@@ -9,6 +9,7 @@ const Review = require("../models/reviewModel");
 const PriceChange = require("../models/priceChangeModel");
 const Receipt = require("../models/receiptModel");
 const Promotion = require("../models/promotionModel");
+const mongoose = require("mongoose");
 
 // @desc    Add a new product
 // @route   POST /api/products
@@ -102,15 +103,26 @@ const changeProductPrice = asyncHandler(async (req, res, next) => {
 
   product.price = newPrice;
 
-  await PriceChange.create({
-    user: req.user.id,
-    product: req.params.id,
-    oldPrice: oldPrice,
-    newPrice: newPrice,
-  });
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    await PriceChange.create({
+      user: req.user.id,
+      product: req.params.id,
+      oldPrice: oldPrice,
+      newPrice: newPrice,
+    });
 
-  await product.save();
-  res.json(product);
+    await product.save();
+    await session.commitTransaction();
+
+    res.json(product);
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    await session.endSession();
+  }
 });
 
 // @desc    Add a new product image
@@ -397,8 +409,19 @@ const updateProduct = asyncHandler(async (req, res, next) => {
     }
   }
 
-  await product.save();
-  await Product.findByIdAndUpdate(req.params.id, updatedFields);
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    await product.save();
+    await Product.findByIdAndUpdate(req.params.id, updatedFields);
+
+    await session.commitTransaction();
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    await session.endSession();
+  }
 
   res.json(await Product.findById(product.id).populate("category"));
 });

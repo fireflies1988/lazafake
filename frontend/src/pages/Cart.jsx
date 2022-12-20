@@ -6,7 +6,7 @@ import {
   Space,
   Spin,
   Table,
-  Typography,
+  Typography
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,7 +15,7 @@ import {
   changeQtyAsync,
   getCartItems,
   removeFromCartAsync,
-  removeMultipleFromCartAsync,
+  removeMultipleFromCartAsync
 } from "../features/cart/cartSlice";
 import { moneyFormatter, reverseMoneyFormattedText } from "../utils";
 const { Text } = Typography;
@@ -175,7 +175,7 @@ function Cart() {
             <Text strong type="danger" style={{ fontSize: "16px" }}>
               Total ({selectedRowKeys.length} items):{" "}
               {moneyFormatter.format(
-                data.reduce((sum, object) => {
+                data?.reduce((sum, object) => {
                   if (selectedRowKeys.includes(object.key)) {
                     sum += reverseMoneyFormattedText(object.totalPrice);
                   }
