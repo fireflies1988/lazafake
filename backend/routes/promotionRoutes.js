@@ -9,6 +9,7 @@ const {
   getPromotions,
   deletePromotion,
   editPromotion,
+  terminatePromotion,
 } = require("../controllers/promotionController");
 
 router.post(
@@ -19,14 +20,30 @@ router.post(
   addPromotion
 );
 
-router.get("/", auth, checkPermission([Role.Admin, Role.SpAdmin]), getPromotions);
-router.delete("/:id", auth, checkPermission([Role.Admin, Role.SpAdmin]), deletePromotion);
+router.get(
+  "/",
+  auth,
+  checkPermission([Role.Admin, Role.SpAdmin]),
+  getPromotions
+);
+router.delete(
+  "/:id",
+  auth,
+  checkPermission([Role.Admin, Role.SpAdmin]),
+  deletePromotion
+);
 router.put(
   "/:id",
   auth,
   checkPermission([Role.Admin, Role.SpAdmin]),
   validate("addPromotion"),
   editPromotion
+);
+router.patch(
+  "/:id/terminate",
+  auth,
+  checkPermission([Role.Admin, Role.SpAdmin]),
+  terminatePromotion
 );
 
 module.exports = router;

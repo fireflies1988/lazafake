@@ -77,11 +77,28 @@ async function deletePromotionAsync(promotionId, accessToken) {
   return response.data;
 }
 
+// terminate a happening promotion
+async function terminatePromotionAsync(promotionId, accessToken) {
+  const response = await axios.patch(
+    `${API_URL}/${promotionId}/terminate`,
+    null,
+    {
+      headers: {
+        Authorization: "Bearer " + accessToken,
+      },
+    }
+  );
+  console.log("terminatePromotionAsync", response);
+
+  return response.data;
+}
+
 const promotionService = {
   addPromotionAsync,
   getPromotionsAsync,
   deletePromotionAsync,
   editPromotionAsync,
+  terminatePromotionAsync,
 };
 
 export default promotionService;

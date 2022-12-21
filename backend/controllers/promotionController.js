@@ -225,6 +225,33 @@ const deletePromotion = asyncHandler(async (req, res, next) => {
   res.json(promotion);
 });
 
+// @desc    Terminate promotion
+// @route   PATCH /api/promotions/:id/terminate
+// @access  Private (admin)
+const terminatePromotion = asyncHandler(async (req, res, next) => {
+  const promotion = await Promotion.findById(req.params.id);
+  if (!promotion) {
+    res.status(400);
+    throw new Error("Promotion not found.");
+  }
+
+  if (
+    !moment().isBetween(promotion.from, promotion.to) ||
+    promotion.terminated === true
+  ) {
+    res.status(409);
+    throw new Error(
+      "You can't terminate the promotion that is not started or already ended."
+    );
+  }
+
+  promotion.terminated = true;
+  promotion.terminatedAt = new Date().toISOString();
+  promotion.save();
+
+  res.json(promotion);
+});
+
 // @desc    Get promotions
 // @route   GET /api/promotions
 // @access  Private (admin)
@@ -263,4 +290,5 @@ module.exports = {
   deletePromotion,
   getPromotions,
   editPromotion,
+  terminatePromotion,
 };

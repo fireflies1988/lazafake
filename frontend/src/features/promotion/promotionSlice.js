@@ -72,6 +72,22 @@ export const deletePromotionAsync = createAsyncThunk(
   }
 );
 
+// terminate a happening promotion
+export const terminatePromotionAsync = createAsyncThunk(
+  "promotion/terminate",
+  async (promotionId, thunkAPI) => {
+    try {
+      const accessToken = thunkAPI.getState().auth.user?.accessToken;
+      return await promotionService.terminatePromotionAsync(
+        promotionId,
+        accessToken
+      );
+    } catch (err) {
+      return handleError(err, thunkAPI, "terminatePromotionAsync", false);
+    }
+  }
+);
+
 export const promotionSlice = createSlice({
   name: "promotion",
   initialState,
@@ -149,6 +165,22 @@ export const promotionSlice = createSlice({
         state.message = "Deleted successfully.";
       })
       .addCase(deletePromotionAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(terminatePromotionAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(terminatePromotionAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.promotions = state.promotions.filter(
+          (p) => p._id !== action.payload._id
+        );
+        state.message = "Terminated successfully.";
+      })
+      .addCase(terminatePromotionAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

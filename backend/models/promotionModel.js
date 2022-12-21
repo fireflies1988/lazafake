@@ -40,6 +40,9 @@ const promotionSchema = mongoose.Schema(
       default: false,
       required: true,
     },
+    terminatedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

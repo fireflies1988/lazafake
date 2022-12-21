@@ -5,6 +5,7 @@ import {
   reset,
   changeSegmented,
   deletePromotionAsync,
+  terminatePromotionAsync,
 } from "../../features/promotion/promotionSlice";
 import { moneyFormatter, showError } from "../../utils";
 import Highlighter from "react-highlight-words";
@@ -51,8 +52,13 @@ function Promotions() {
         note: promotions[i]?.note,
         from: moment(promotions[i]?.from).format("YYYY-MM-DD HH:mm:ss"),
         to: moment(promotions[i]?.to).format("YYYY-MM-DD HH:mm:ss"),
+        terminatedAt: promotions[i]?.terminatedAt
+          ? moment(promotions[i]?.terminatedAt).format("YYYY-MM-DD HH:mm:ss")
+          : "",
         products: promotions[i]?.products,
-        createdAt: moment(promotions[i]?.createdAt).format("YYYY-MM-DD HH:mm:ss"),
+        createdAt: moment(promotions[i]?.createdAt).format(
+          "YYYY-MM-DD HH:mm:ss"
+        ),
       });
     }
     setOuterData(tempOuterData);
@@ -209,6 +215,11 @@ function Promotions() {
       sorter: (a, b) => moment(a.createdAt).unix() - moment(b.createdAt).unix(),
     },
     {
+      title: "Terminated At",
+      dataIndex: "terminatedAt",
+      key: "terminatedAt",
+    },
+    {
       title: "Created By",
       dataIndex: "createdBy",
       key: "createdBy",
@@ -258,7 +269,9 @@ function Promotions() {
             <Popconfirm
               placement="bottomRight"
               title="Are you sure to terminate this promotion?"
-              onConfirm={() => {}}
+              onConfirm={() => {
+                dispatch(terminatePromotionAsync(record.promotionId));
+              }}
               okText="Yes"
               cancelText="No"
             >
