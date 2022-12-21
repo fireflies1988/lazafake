@@ -49,6 +49,7 @@ const addCategory = asyncHandler(async (req, res, next) => {
       }
     }
 
+    await newCategory.save({ session });
     await session.commitTransaction();
   } catch (err) {
     await session.abortTransaction();
@@ -78,6 +79,16 @@ const deleteCategory = asyncHandler(async (req, res, next) => {
     throw new Error("Category not found.");
   }
 
+  if (category?.deletable && category.deletable === false) {
+    res.status(403);
+    throw new Error("You can't delete this category");
+  }
+
+  const unableToDeleteCategory = await Category.findOne({ name: "Other" });
+  const newCategoryId = unableToDeleteCategory
+    ? unableToDeleteCategory.id
+    : null;
+
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
@@ -90,7 +101,7 @@ const deleteCategory = asyncHandler(async (req, res, next) => {
       { category: req.params.id },
       {
         $set: {
-          category: null,
+          category: newCategoryId,
         },
       },
       {

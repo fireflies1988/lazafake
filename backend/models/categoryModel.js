@@ -10,7 +10,10 @@ const categorySchema = mongoose.Schema(
     thumbnail: {
       publicId: String,
       url: String,
-    }
+    },
+    deletable: {
+      type: Boolean,
+    },
   },
   {
     timestamps: true,

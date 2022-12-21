@@ -179,17 +179,19 @@ function Categories() {
           >
             Edit
           </Button>
-          <Popconfirm
-            placement="topLeft"
-            title="Are you sure you want to delete this address?"
-            onConfirm={() => dispatch(deleteCategoryAsync(record._id))}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button type="primary" danger size="small">
-              Delete
-            </Button>
-          </Popconfirm>
+          {record.name !== "Other" && (
+            <Popconfirm
+              placement="topLeft"
+              title="Are you sure you want to delete this category?"
+              onConfirm={() => dispatch(deleteCategoryAsync(record._id))}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button type="primary" danger size="small">
+                Delete
+              </Button>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -222,7 +224,9 @@ function Categories() {
         _id: categories[i]._id,
         categoryId: categories[i]._id,
         name: categories[i].name,
-        createdAt: moment(categories[i].createdAt).format("YYYY-MM-DD HH:mm:ss"),
+        createdAt: moment(categories[i].createdAt).format(
+          "YYYY-MM-DD HH:mm:ss"
+        ),
         thumbnail: categories[i]?.thumbnail?.url,
       });
     }
