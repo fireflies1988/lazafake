@@ -23,7 +23,7 @@ import {
   addPromotionAsync,
   editPromotionAsync,
 } from "../../features/promotion/promotionSlice";
-import { moneyFormatter, showError } from "../../utils";
+import { moneyFormatter, removeAccents, showError } from "../../utils";
 import dayjs from "dayjs";
 const { RangePicker } = DatePicker;
 
@@ -276,7 +276,9 @@ function PromotionModal({ open, onCancel, record, type }) {
           onChange={handleChange}
           options={options}
           filterOption={(input, option) =>
-            (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+            removeAccents(option?.label ?? "")
+              .toLowerCase()
+              .includes(removeAccents(input).toLowerCase())
           }
         />
         <br />

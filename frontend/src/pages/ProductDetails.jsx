@@ -133,6 +133,9 @@ function ProductDetails() {
               <Divider type="vertical" />
               {product?.sold} Sold
             </Text>
+
+            <Text style={{ fontSize: "16px" }}>Brand: {product?.brand}</Text>
+
             <Text type="warning" style={{ fontSize: "20px" }}>
               {moneyFormatter.format(product?.price - product?.discount)}
             </Text>

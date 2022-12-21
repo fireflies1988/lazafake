@@ -13,6 +13,7 @@ const {
   addProductImage,
   listProduct,
   changeProductPrice,
+  getBrands,
 } = require("../controllers/productController");
 const upload = require("../configs/multer");
 
@@ -66,5 +67,7 @@ router.post(
   validate("changeProductPrice"),
   changeProductPrice
 );
+
+router.get("/brands", getBrands);
 
 module.exports = router;

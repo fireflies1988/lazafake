@@ -38,7 +38,7 @@ function WarehouseReceipts() {
         receiptId: receipts[i]._id,
         importedBy: receipts[i]?.user?.email,
         products: receipts[i]?.products,
-        createdAt: receipts[i]?.createdAt,
+        createdAt: moment(receipts[i]?.createdAt).format("YYYY-MM-DD HH:mm:ss"),
         totalPrice: receipts[i]?.totalPrice,
       });
     }

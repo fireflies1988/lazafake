@@ -18,7 +18,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import ProductList from "../components/ProductList";
 import { getCategoriesAsync } from "../features/category/categorySlice";
-import { getProductsAsync } from "../features/product/productSlice";
+import {
+  getBrandsAsync,
+  getProductsAsync,
+} from "../features/product/productSlice";
+import { removeAccents } from "../utils";
 const { Text } = Typography;
 
 function SearchPage() {
@@ -30,16 +34,20 @@ function SearchPage() {
   const [onSale, setOnSale] = useState(
     searchParams.get("onSale") === "true" ? true : false
   );
+  const [brandsSelect, setBrandsSelect] = useState([]);
   console.log(onSale);
 
   const dispatch = useDispatch();
   const { categories } = useSelector((state) => state.category);
-  const { products, isLoading: loadingProducts } = useSelector(
-    (state) => state.product
-  );
+  const {
+    products,
+    brands,
+    isLoading: loadingProducts,
+  } = useSelector((state) => state.product);
 
   useEffect(() => {
     dispatch(getCategoriesAsync());
+    dispatch(getBrandsAsync());
   }, []);
 
   useEffect(() => {
@@ -49,6 +57,8 @@ function SearchPage() {
     searchParams.forEach((value, key) => {
       params[key] = value;
     });
+
+    console.log(params);
 
     dispatch(getProductsAsync(params));
   }, [searchParams]);
@@ -96,6 +106,17 @@ function SearchPage() {
     setSearchParams(searchParams);
   }
 
+  function handleChangeBrands(values) {
+    setBrandsSelect(values);
+    if (values && values.length > 0) {
+      searchParams.set("brands", values);
+    } else {
+      searchParams.delete("brands");
+    }
+
+    setSearchParams(searchParams);
+  }
+
   function onSaleCheck(e) {
     setOnSale(e.target.checked);
     searchParams.set("onSale", e.target.checked);
@@ -126,7 +147,9 @@ function SearchPage() {
             showSearch
             optionFilterProp="label"
             filterOption={(input, option) =>
-              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+              removeAccents(option?.label ?? "")
+                .toLowerCase()
+                .includes(removeAccents(input).toLowerCase())
             }
             options={categories.map((c, index) => ({
               label: c.name,
@@ -135,10 +158,26 @@ function SearchPage() {
           />
           <Divider style={{ margin: "0.5rem 0" }} />
           <Text strong>Brands</Text>
-          <Checkbox defaultChecked={false}>Brand 1</Checkbox>
-          <Checkbox defaultChecked={false}>Brand 2</Checkbox>
-          <Checkbox defaultChecked={false}>Brand 2</Checkbox>
-          <Checkbox defaultChecked={false}>Brand 2</Checkbox>
+          <Select
+            value={brandsSelect}
+            mode="multiple"
+            loading={loadingProducts}
+            allowClear
+            style={{
+              width: "100%",
+            }}
+            placeholder="Select brands"
+            onChange={handleChangeBrands}
+            options={brands.map((brand) => ({
+              label: brand,
+              value: brand,
+            }))}
+            filterOption={(input, option) =>
+              removeAccents(option?.label ?? "")
+                .toLowerCase()
+                .includes(removeAccents(input).toLowerCase())
+            }
+          />
 
           <Divider style={{ margin: "0.5rem 0" }} />
           <Text strong>Promotion</Text>

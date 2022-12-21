@@ -191,7 +191,10 @@ const getProducts = asyncHandler(async (req, res, next) => {
         removeAccents(p?.specifications ?? "")
           .toLowerCase()
           .includes(keyword) ||
-        removeAccents(p?.category.name).toLowerCase().includes(keyword)
+        removeAccents(p?.category.name).toLowerCase().includes(keyword) ||
+        removeAccents(p?.brand ?? "")
+          .toLowerCase()
+          .includes(keyword)
     );
   }
 
@@ -203,6 +206,14 @@ const getProducts = asyncHandler(async (req, res, next) => {
 
   if (req.query.category) {
     products = products.filter((p) => p?.category.name === req.query.category);
+  }
+
+  if (req.query.brands) {
+    products = products.filter((p) =>
+      removeAccents(req.query.brands)
+        .toLowerCase()
+        .includes(removeAccents(p?.brand ?? "").toLowerCase())
+    );
   }
 
   if (req.query.minPrice) {
@@ -244,7 +255,6 @@ const getProducts = asyncHandler(async (req, res, next) => {
       value: Number.MAX_VALUE,
     };
     for (let order of orders) {
-      console.log(order);
       if (
         order.orderItems
           .map((i) => i.product.toString())
@@ -307,6 +317,29 @@ const getProducts = asyncHandler(async (req, res, next) => {
   }
 
   res.status(200).json(products);
+});
+
+const toTitleCase = (phrase) =>
+  phrase
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+// @desc    Get brands
+// @route   GET /api/products/brands
+// @access  Public
+const getBrands = asyncHandler(async (req, res, next) => {
+  const products = await Product.find({});
+  const brands = new Set();
+  for (const product of products) {
+    if (product?.brand) {
+      brands.add(product.brand.trim().toLowerCase());
+    }
+  }
+
+  res.json(Array.from(brands).map((b) => toTitleCase(b)));
 });
 
 // @desc    Delete product
@@ -380,13 +413,19 @@ const updateProduct = asyncHandler(async (req, res, next) => {
   }
 
   // delete removed images
-  if (deletedImages?.length > 0) {
+  if (Array.isArray(deletedImages)) {
     for (const imageId of deletedImages) {
       const productImage = product.images.id(imageId);
       if (productImage) {
         await cloudinary.uploader.destroy(productImage.publicId);
         product.images.pull(imageId);
       }
+    }
+  } else {
+    const productImage = product.images.id(deletedImages);
+    if (productImage) {
+      await cloudinary.uploader.destroy(productImage.publicId);
+      product.images.pull(deletedImages);
     }
   }
 
@@ -435,4 +474,5 @@ module.exports = {
   addProductImage,
   listProduct,
   changeProductPrice,
+  getBrands,
 };

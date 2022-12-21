@@ -261,8 +261,8 @@ function Users() {
         email: users[i].email,
         phoneNumber: users[i]?.phoneNumber,
         gender: users[i].gender,
-        dateOfBirth: users[i]?.dateOfBirth,
-        createdAt: users[i].createdAt,
+        dateOfBirth: users[i]?.dateOfBirth ? moment(users[i]?.dateOfBirth).format("YYYY-MM-DD") : "",
+        createdAt: moment(users[i].createdAt).format("YYYY-MM-DD HH:mm:ss"),
         role: users[i].role,
       });
     }

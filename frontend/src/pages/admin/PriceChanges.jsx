@@ -238,7 +238,7 @@ function PriceChanges() {
         category: priceChanges[i].product.category.name,
         oldPrice: priceChanges[i].oldPrice,
         newPrice: priceChanges[i].newPrice,
-        changedAt: priceChanges[i].createdAt,
+        changedAt: moment(priceChanges[i].createdAt).format("YYYY-MM-DD HH:mm:ss"),
       });
     }
     setData(tempData);

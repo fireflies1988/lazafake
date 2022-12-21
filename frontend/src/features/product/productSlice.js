@@ -4,6 +4,7 @@ import productService from "./productService";
 
 const initialState = {
   products: [],
+  brands: [],
   segmented: "",
   isError: false,
   isSuccess: false,
@@ -56,7 +57,7 @@ export const changeProductPriceAsync = createAsyncThunk(
   }
 );
 
-// get product
+// get products
 export const getProductsAsync = createAsyncThunk(
   "product/getAll",
   async (queryParams, thunkAPI) => {
@@ -64,6 +65,18 @@ export const getProductsAsync = createAsyncThunk(
       return await productService.getProductsAsync(queryParams);
     } catch (err) {
       return handleError(err, thunkAPI, "getProductsAsync", false);
+    }
+  }
+);
+
+// get brands
+export const getBrandsAsync = createAsyncThunk(
+  "product/brands",
+  async (_, thunkAPI) => {
+    try {
+      return await productService.getBrandsAsync();
+    } catch (err) {
+      return handleError(err, thunkAPI, "getBrandsAsync", false);
     }
   }
 );
@@ -144,6 +157,18 @@ export const productSlice = createSlice({
         state.products = action.payload;
       })
       .addCase(getProductsAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(getBrandsAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getBrandsAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.brands = action.payload;
+      })
+      .addCase(getBrandsAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

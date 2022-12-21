@@ -55,8 +55,12 @@ function PnLStatement() {
         key: i.toString(),
         orderId: filteredOrders[i]._id,
         orderItems: filteredOrders[i]?.orderItems,
-        completedAt: filteredOrders[i]?.completedAt,
-        createdAt: filteredOrders[i]?.createdAt,
+        completedAt: moment(filteredOrders[i]?.completedAt).format(
+          "YYYY-MM-DD HH:mm:ss"
+        ),
+        createdAt: moment(filteredOrders[i]?.createdAt).format(
+          "YYYY-MM-DD HH:mm:ss"
+        ),
         revenue:
           filteredOrders[i]?.totalPayment - filteredOrders[i]?.shippingFee,
         profit:
@@ -206,8 +210,8 @@ function PnLStatement() {
         key: i.toString(),
         orderId: orders[i]?._id,
         orderItems: orders[i]?.orderItems,
-        completedAt: orders[i]?.completedAt,
-        createdAt: orders[i]?.createdAt,
+        completedAt: moment(orders[i]?.completedAt).format("YYYY-MM-DD HH:mm:ss"),
+        createdAt: moment(orders[i]?.createdAt).format("YYYY-MM-DD HH:mm:ss"),
         revenue: orders[i]?.totalPayment - filteredOrders[i]?.shippingFee,
         profit:
           orders[i]?.totalPayment -

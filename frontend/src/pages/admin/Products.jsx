@@ -18,7 +18,7 @@ import {
   reset,
   changeSegmented,
 } from "../../features/product/productSlice";
-import { moneyFormatter, showError } from "../../utils";
+import { moneyFormatter, removeAccents, showError } from "../../utils";
 import Highlighter from "react-highlight-words";
 import { getCategoriesAsync } from "../../features/category/categorySlice";
 import moment from "moment";
@@ -180,6 +180,12 @@ function Products() {
       ...getColumnSearchProps("name"),
     },
     {
+      title: "Brand",
+      dataIndex: "brand",
+      key: "brand",
+      ...getColumnSearchProps("brand"),
+    },
+    {
       title: "Price",
       dataIndex: "price",
       key: "price",
@@ -298,6 +304,7 @@ function Products() {
         key: i,
         productId: products[i]._id,
         name: products[i].name,
+        brand: products[i]?.brand,
         price: products[i].price,
         quantity: products[i].quantity,
         sold: products[i].sold,
@@ -305,7 +312,7 @@ function Products() {
         category: products[i]?.category?.name,
         thumbnail:
           products[i]?.images?.length > 0 ? products[i]?.images[0]?.url : "",
-        createdAt: products[i].createdAt,
+        createdAt: moment(products[i].createdAt).format("YYYY-MM-DD HH:mm:ss"),
       });
     }
     setData(tempData);

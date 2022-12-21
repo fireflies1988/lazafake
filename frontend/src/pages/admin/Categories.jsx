@@ -222,7 +222,7 @@ function Categories() {
         _id: categories[i]._id,
         categoryId: categories[i]._id,
         name: categories[i].name,
-        createdAt: categories[i].createdAt,
+        createdAt: moment(categories[i].createdAt).format("YYYY-MM-DD HH:mm:ss"),
         thumbnail: categories[i]?.thumbnail?.url,
       });
     }

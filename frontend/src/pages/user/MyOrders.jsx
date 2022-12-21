@@ -212,8 +212,10 @@ function MyOrders() {
         orderDetails: orders[i],
         shippingAddress: orders[i]?.shippingAddress,
         orderItems: orders[i].orderItems,
-        orderedAt: orders[i].createdAt,
-        finishedAt: orders[i]?.completedAt ?? "",
+        orderedAt: moment(orders[i].createdAt).format("YYYY-MM-DD HH:mm:ss"),
+        finishedAt: orders[i]?.completedAt
+          ? moment(orders[i]?.completedAt).format("YYYY-MM-DD HH:mm:ss")
+          : "",
         paymentMethod:
           orders[i].paymentMethod === "Cash" ? "Cash On Delivery" : "Paypal",
         shippingFee: moneyFormatter.format(orders[i].shippingFee),

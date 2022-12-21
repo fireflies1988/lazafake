@@ -57,6 +57,14 @@ async function getProductsAsync(queryParams = null) {
   return response.data;
 }
 
+// get brands
+async function getBrandsAsync() {
+  const response = await axios.get(`${API_URL}/brands`);
+  console.log("getBrandsAsync", response);
+
+  return response.data;
+}
+
 // delete product
 async function deleteProductAsync(productId, accessToken) {
   const response = await axios.delete(API_URL + `/${productId}`, {
@@ -88,6 +96,7 @@ const productService = {
   updateProductAsync,
   listProductAsync,
   changeProductPriceAsync,
+  getBrandsAsync,
 };
 
 export default productService;

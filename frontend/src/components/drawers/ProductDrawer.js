@@ -58,6 +58,7 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
 
   useEffect(() => {
     if (type === "edit") {
+      form.resetFields();
       const product = products.find((p) => p._id === productId);
       console.log("product", product);
       if (product) {
@@ -131,10 +132,14 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
       .then((values) => {
         console.log("Product drawer: ", values);
         console.log("fileList: ", fileList);
+        console.log("deletedImages: ", deletedImages);
 
         const formData = new FormData();
         // convert values to formData
         formData.append("name", values.name);
+        if (values?.brand?.trim()) {
+          formData.append("brand", values.brand);
+        }
         formData.append("quantity", values.quantity);
         formData.append("description", values.description);
         if (values.category) {
@@ -184,7 +189,7 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
     const response = await crawlTikiProductAsync(tikiLink);
 
     console.log(response);
-    const { brand, specifications, imageUrl, ...rest } = response;
+    const { specifications, imageUrl, ...rest } = response;
 
     // set initial fields value
     form.setFieldsValue(rest);
@@ -311,6 +316,10 @@ function ProductDrawer({ open, onClose, title, type, productId }) {
             </Form.Item>
           </>
         )}
+
+        <Form.Item name="brand" label="Brand">
+          <Input />
+        </Form.Item>
 
         <Spin spinning={loadingCategories}>
           <Form.Item

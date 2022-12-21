@@ -49,10 +49,10 @@ function Promotions() {
         createdBy: promotions[i]?.user?.email,
         name: promotions[i]?.name,
         note: promotions[i]?.note,
-        from: promotions[i]?.from,
-        to: promotions[i]?.to,
+        from: moment(promotions[i]?.from).format("YYYY-MM-DD HH:mm:ss"),
+        to: moment(promotions[i]?.to).format("YYYY-MM-DD HH:mm:ss"),
         products: promotions[i]?.products,
-        createdAt: promotions[i]?.createdAt,
+        createdAt: moment(promotions[i]?.createdAt).format("YYYY-MM-DD HH:mm:ss"),
       });
     }
     setOuterData(tempOuterData);
