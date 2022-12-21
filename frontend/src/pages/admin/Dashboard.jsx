@@ -1,10 +1,11 @@
 import { Button, Col, Row, Space } from "antd";
-import React from "react";
+import React, { useRef } from "react";
 import OrderStatistics from "../../components/statistics/OrderStatistics";
 import ProductStatistics from "../../components/statistics/ProductStatistics";
 import UserStatistics from "../../components/statistics/UserStatistics";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import ReactToPrint from "react-to-print";
 
 function exportPdf() {
   const input = document.getElementById("divToPrint");
@@ -20,9 +21,11 @@ function exportPdf() {
 }
 
 function Dashboard() {
+  const componentRef = useRef();
+
   return (
     <Space direction="vertical" style={{ display: "flex" }} size="middle">
-      <Row gutter={[16, 16]} id="divToPrint">
+      <Row gutter={[16, 16]} id="divToPrint" ref={componentRef}>
         <Col span={12}>
           <UserStatistics />
         </Col>
@@ -35,9 +38,13 @@ function Dashboard() {
           <OrderStatistics />
         </Col>
       </Row>
-      <Button type="primary" onClick={exportPdf}>
+      <ReactToPrint
+        trigger={() => <Button type="primary">Print Statistics</Button>}
+        content={() => componentRef.current}
+      />
+      {/* <Button type="primary" onClick={exportPdf}>
         Export Pdf
-      </Button>
+      </Button> */}
     </Space>
   );
 }

@@ -11,17 +11,19 @@ import {
   Typography,
 } from "antd";
 import moment from "moment";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllOrdersAsync, reset } from "../../features/order/orderSlice";
 import { moneyFormatter, showError } from "../../utils";
-const { Text } = Typography;
+import ReactToPrint from "react-to-print";
+const { Text, Title } = Typography;
 const { RangePicker } = DatePicker;
 
 function PnLStatement() {
   const { orders, isSuccess, isError, isLoading, message } = useSelector(
     (state) => state.order
   );
+  const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
   const [filteredOrders, setFilteredOrders] = useState([]);
@@ -31,6 +33,7 @@ function PnLStatement() {
   const [totalRevenue2, setTotalRevenue2] = useState();
   const [totalProfit, setTotalProfit] = useState();
   const [totalProfit2, setTotalProfit2] = useState();
+  const componentRef = useRef();
 
   useEffect(() => {
     dispatch(getAllOrdersAsync());
@@ -210,7 +213,9 @@ function PnLStatement() {
         key: i.toString(),
         orderId: orders[i]?._id,
         orderItems: orders[i]?.orderItems,
-        completedAt: moment(orders[i]?.completedAt).format("YYYY-MM-DD HH:mm:ss"),
+        completedAt: moment(orders[i]?.completedAt).format(
+          "YYYY-MM-DD HH:mm:ss"
+        ),
         createdAt: moment(orders[i]?.createdAt).format("YYYY-MM-DD HH:mm:ss"),
         revenue: orders[i]?.totalPayment - filteredOrders[i]?.shippingFee,
         profit:
@@ -418,8 +423,21 @@ function PnLStatement() {
     setTotalProfit2(tempOuterData2.reduce((acc, cur) => acc + cur.profit, 0));
   }
 
+  const [form1] = Form.useForm();
+  const [form2] = Form.useForm();
+  const time1 = Form.useWatch("datePicker", form1);
+  const time2 = Form.useWatch("datePicker", form2);
+
   return (
-    <Card title="Profit And Loss Statement">
+    <Card
+      title="Profit And Loss Statement"
+      extra={
+        <ReactToPrint
+          trigger={() => <Button type="primary">Print PnL Statement</Button>}
+          content={() => componentRef.current}
+        />
+      }
+    >
       <Space direction="vertical" style={{ display: "flex" }} size="middle">
         <Radio.Group
           options={options}
@@ -429,7 +447,11 @@ function PnLStatement() {
         />
 
         {type === "Detail" && (
-          <Form initialValues={{ by: "All the time" }} onFinish={onFinish}>
+          <Form
+            initialValues={{ by: "All the time" }}
+            onFinish={onFinish}
+            form={form1}
+          >
             <Form.Item name="by">
               <Radio.Group onChange={(e) => setBy1(e.target.value)} value={by1}>
                 <Radio value="All the time">All the time</Radio>
@@ -467,7 +489,11 @@ function PnLStatement() {
 
         {type === "Range" && (
           <>
-            <Form initialValues={{ by: "date" }} onFinish={onFinish2}>
+            <Form
+              initialValues={{ by: "date" }}
+              onFinish={onFinish2}
+              form={form2}
+            >
               <Form.Item name="by">
                 <Radio.Group
                   onChange={(e) => setBy2(e.target.value)}
@@ -506,65 +532,194 @@ function PnLStatement() {
 
         <Spin spinning={isLoading}>
           {type === "Detail" ? (
-            <Table
-              columns={outerColumns}
-              expandable={{ expandedRowRender }}
-              dataSource={outerData}
-              bordered
-              scroll={{
-                y: 720,
+            <div
+              ref={componentRef}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                flexDirection: "column",
               }}
-              pagination={false}
-              footer={() => (
+            >
+              <Text strong style={{ fontSize: "20px" }}>
+                PROFIT AND LOSS STATEMENT DETAIL
+              </Text>
+
+              {by1 === "All the time" && <Text>Time: All the time</Text>}
+              {by1 === "date" && (
+                <Text>
+                  Time:{" "}
+                  <b>{moment(time1?.toISOString()).format("YYYY-MM-DD")}</b>
+                </Text>
+              )}
+              {by1 === "month" && (
+                <Text>
+                  Time: <b>{moment(time1?.toISOString()).format("YYYY-MM")}</b>
+                </Text>
+              )}
+              {by1 === "year" && (
+                <Text>
+                  Time: <b>{moment(time1?.toISOString()).format("YYYY")}</b>
+                </Text>
+              )}
+
+              <br />
+
+              <Table
+                columns={outerColumns}
+                expandable={{ expandedRowRender }}
+                dataSource={outerData}
+                bordered
+                scroll={{
+                  y: 720,
+                }}
+                pagination={false}
+                footer={() => (
+                  <Space
+                    direction="vertical"
+                    style={{ display: "flex", alignItems: "flex-end" }}
+                  >
+                    <Space
+                      style={{
+                        width: "250px",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Text>Total Revenue: </Text>
+                      <Text strong>{moneyFormatter.format(totalRevenue)}</Text>
+                    </Space>
+                    <Space
+                      style={{
+                        width: "250px",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Text>Total Profit: </Text>
+                      <Text strong>{moneyFormatter.format(totalProfit)}</Text>
+                    </Space>
+                  </Space>
+                )}
+              />
+
+              <br />
+              <div
+                style={{
+                  width: "350px",
+                  alignSelf: "flex-end",
+                }}
+              >
                 <Space
                   direction="vertical"
-                  style={{ display: "flex", alignItems: "flex-end" }}
+                  style={{ display: "flex", alignItems: "center" }}
                 >
-                  <Space
-                    style={{ width: "250px", justifyContent: "space-between" }}
-                  >
-                    <Text>Total Revenue: </Text>
-                    <Text strong>{moneyFormatter.format(totalRevenue)}</Text>
-                  </Space>
-                  <Space
-                    style={{ width: "250px", justifyContent: "space-between" }}
-                  >
-                    <Text>Total Profit: </Text>
-                    <Text strong>{moneyFormatter.format(totalProfit)}</Text>
-                  </Space>
+                  <Text>Ho Chi Minh City, {moment().format("LL")}</Text>
+                  <Text>Statement by</Text>
+                  <br />
+                  <Text>{user?.fullName}</Text>
                 </Space>
-              )}
-            />
+              </div>
+            </div>
           ) : (
-            <Table
-              columns={outerColumns2}
-              expandable={{ expandedRowRender: expandedRowRender2 }}
-              dataSource={outerData2}
-              bordered
-              scroll={{
-                y: 720,
+            <div
+              ref={componentRef}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                flexDirection: "column",
               }}
-              pagination={false}
-              footer={() => (
+            >
+              <Text strong style={{ fontSize: "20px" }}>
+                PROFIT AND LOSS STATEMENT
+              </Text>
+
+              {time2 && (
+                <>
+                  {by2 === "date" && (
+                    <Text>
+                      From:{" "}
+                      <b>
+                        {moment(time2[0]?.toISOString()).format("YYYY-MM-DD")}
+                      </b>{" "}
+                      to:{" "}
+                      <b>
+                        {moment(time2[1]?.toISOString()).format("YYYY-MM-DD")}
+                      </b>
+                    </Text>
+                  )}
+                  {by2 === "month" && (
+                    <Text>
+                      From:{" "}
+                      <b>{moment(time2[0]?.toISOString()).format("YYYY-MM")}</b>{" "}
+                      to:{" "}
+                      <b>{moment(time2[1]?.toISOString()).format("YYYY-MM")}</b>
+                    </Text>
+                  )}
+                  {by2 === "year" && (
+                    <Text>
+                      From:{" "}
+                      <b>{moment(time2[0]?.toISOString()).format("YYYY")}</b>{" "}
+                      to:{" "}
+                      <b>{moment(time2[1]?.toISOString()).format("YYYY")}</b>
+                    </Text>
+                  )}
+                </>
+              )}
+
+              <br />
+
+              <Table
+                columns={outerColumns2}
+                expandable={{ expandedRowRender: expandedRowRender2 }}
+                dataSource={outerData2}
+                bordered
+                scroll={{
+                  y: 720,
+                }}
+                pagination={false}
+                footer={() => (
+                  <Space
+                    direction="vertical"
+                    style={{ display: "flex", alignItems: "flex-end" }}
+                  >
+                    <Space
+                      style={{
+                        width: "250px",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Text>Total Revenue: </Text>
+                      <Text strong>{moneyFormatter.format(totalRevenue2)}</Text>
+                    </Space>
+                    <Space
+                      style={{
+                        width: "250px",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Text>Total Profit: </Text>
+                      <Text strong>{moneyFormatter.format(totalProfit2)}</Text>
+                    </Space>
+                  </Space>
+                )}
+              />
+
+              <br />
+              <div
+                style={{
+                  width: "350px",
+                  alignSelf: "flex-end",
+                }}
+              >
                 <Space
                   direction="vertical"
-                  style={{ display: "flex", alignItems: "flex-end" }}
+                  style={{ display: "flex", alignItems: "center" }}
                 >
-                  <Space
-                    style={{ width: "250px", justifyContent: "space-between" }}
-                  >
-                    <Text>Total Revenue: </Text>
-                    <Text strong>{moneyFormatter.format(totalRevenue2)}</Text>
-                  </Space>
-                  <Space
-                    style={{ width: "250px", justifyContent: "space-between" }}
-                  >
-                    <Text>Total Profit: </Text>
-                    <Text strong>{moneyFormatter.format(totalProfit2)}</Text>
-                  </Space>
+                  <Text>Ho Chi Minh City, {moment().format("LL")}</Text>
+                  <Text>Statement by</Text>
+                  <br />
+                  <Text>{user?.fullName}</Text>
                 </Space>
-              )}
-            />
+              </div>
+            </div>
           )}
         </Spin>
       </Space>
