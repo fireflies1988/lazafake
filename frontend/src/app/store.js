@@ -9,6 +9,7 @@ import reviewReducer from "../features/review/reviewSlice";
 import receiptReducer from "../features/receipt/receiptSlice";
 import priceHistoryReducer from "../features/priceHistory/priceHistorySlice";
 import promotionReducer from "../features/promotion/promotionSlice";
+import bannerReducer from "../features/banner/bannerSlice";
 
 export const store = configureStore({
   reducer: {
@@ -22,5 +23,6 @@ export const store = configureStore({
     receipt: receiptReducer,
     priceHistory: priceHistoryReducer,
     promotion: promotionReducer,
+    banner: bannerReducer,
   },
 });

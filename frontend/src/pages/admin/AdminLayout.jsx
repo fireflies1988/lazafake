@@ -10,6 +10,7 @@ import { BiCategory } from "react-icons/bi";
 import { BsInboxes, BsReceipt } from "react-icons/bs";
 import { MdOutlinePriceChange, MdQueryStats } from "react-icons/md";
 import { useSelector } from "react-redux";
+import { TbSlideshow } from "react-icons/tb";
 
 const items = [
   {
@@ -21,6 +22,11 @@ const items = [
     label: <a href="/admin/statement">Profit & Loss Statement</a>,
     key: "statement",
     icon: <MdQueryStats />,
+  },
+  {
+    label: <a href="/admin/banners">Banners</a>,
+    key: "banners",
+    icon: <TbSlideshow />,
   },
   {
     label: <a href="/admin/users">Users</a>,

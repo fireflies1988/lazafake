@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import AdminLayout from "./pages/admin/AdminLayout";
+import Banners from "./pages/admin/Banners";
 import Categories from "./pages/admin/Categories";
 import Dashboard from "./pages/admin/Dashboard";
 import Orders from "./pages/admin/Orders";
@@ -83,6 +84,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="statement" element={<PnLStatement />} />
             <Route path="categories" element={<Categories />} />
+            <Route path="banners" element={<Banners />} />
             <Route path="users" element={<Users />} />
             <Route path="receipts" element={<WarehouseReceipts />} />
             <Route path="price-history" element={<PriceChanges />} />

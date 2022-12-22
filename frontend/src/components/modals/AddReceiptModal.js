@@ -51,6 +51,7 @@ function AddReceiptModal({ open, onCancel }) {
 
   useEffect(() => {
     if (isSuccess) {
+      dispatch(getProductsAsync());
       antMessage.success(message);
       setSelectValues([]);
       setPreviousSelect([]);
