@@ -9,7 +9,11 @@ connectDb();
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.ORIGIN || "http://localhost:3000",
+  })
+);
 
 // accepting body data
 app.use(express.json());
